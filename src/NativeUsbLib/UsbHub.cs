@@ -91,7 +91,7 @@ namespace NativeUsbLib
 
             // Open a handle to the host controller.
             handel1 = UsbApi.CreateFile(devicePath, UsbApi.GENERIC_WRITE, UsbApi.FILE_SHARE_WRITE, IntPtr.Zero, UsbApi.OPEN_EXISTING, 0, IntPtr.Zero);
-            if (handel1.ToInt32() != UsbApi.INVALID_HANDLE_VALUE)
+            if (handel1.ToInt64() != UsbApi.INVALID_HANDLE_VALUE)
             {
 
                 UsbApi.USB_ROOT_HUB_NAME rootHubName = new UsbApi.USB_ROOT_HUB_NAME();
@@ -117,7 +117,7 @@ namespace NativeUsbLib
 
                 // Now let's open the hub (based upon the hub name we got above).
                 handel2 = UsbApi.CreateFile(this.DevicePath, UsbApi.GENERIC_WRITE, UsbApi.FILE_SHARE_WRITE, IntPtr.Zero, UsbApi.OPEN_EXISTING, 0, IntPtr.Zero);
-                if (handel2.ToInt32() != UsbApi.INVALID_HANDLE_VALUE)
+                if (handel2.ToInt64() != UsbApi.INVALID_HANDLE_VALUE)
                 {
 
                     UsbApi.USB_NODE_INFORMATION NodeInfo = new UsbApi.USB_NODE_INFORMATION();

@@ -319,7 +319,7 @@ namespace NativeUsbLib
                 return;
 
             IntPtr handel = UsbApi.CreateFile(devicePath, UsbApi.GENERIC_WRITE, UsbApi.FILE_SHARE_WRITE, IntPtr.Zero, UsbApi.OPEN_EXISTING, 0, IntPtr.Zero);
-            if (handel.ToInt32() != UsbApi.INVALID_HANDLE_VALUE)
+            if (handel.ToInt64() != UsbApi.INVALID_HANDLE_VALUE)
             {
                 // We use this to zero fill a buffer
                 string NullString = new string((char)0, UsbApi.MAX_BUFFER_SIZE / Marshal.SystemDefaultCharSize);
@@ -339,7 +339,7 @@ namespace NativeUsbLib
                 // Use an IOCTL call to request the String Descriptor
                 if (UsbApi.DeviceIoControl(handel, UsbApi.IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION, ptrRequest1, nBytes, ptrRequest1, nBytes, out nBytesReturned, IntPtr.Zero))
                 {
-                    IntPtr ptr = new IntPtr(ptrRequest1.ToInt32() + Marshal.SizeOf(Request1));
+                    IntPtr ptr = new IntPtr(ptrRequest1.ToInt64() + Marshal.SizeOf(Request1));
 
                     UsbApi.USB_CONFIGURATION_DESCRIPTOR configurationDescriptor = new UsbApi.USB_CONFIGURATION_DESCRIPTOR();
                     configurationDescriptor = (UsbApi.USB_CONFIGURATION_DESCRIPTOR)Marshal.PtrToStructure(ptr, typeof(UsbApi.USB_CONFIGURATION_DESCRIPTOR));
@@ -351,7 +351,7 @@ namespace NativeUsbLib
                     else
                         m_ConfigurationDescriptor.Add(configurationDescriptor);
 
-                    int p = (int)ptr;
+                    long p = (long)ptr;
                     p += Marshal.SizeOf(configurationDescriptor) - 1;
                     ptr = (IntPtr)p;
 
@@ -367,7 +367,7 @@ namespace NativeUsbLib
                         else
                             m_InterfaceDescriptor.Add(interfaceDescriptor);
 
-                        p = (int)ptr;
+                        p = (long)ptr;
                         p += Marshal.SizeOf(interfaceDescriptor);
 
                         if (interfaceDescriptor.bInterfaceClass == 0x03)
@@ -386,7 +386,7 @@ namespace NativeUsbLib
                                 else
                                     m_HdiDescriptor.Add(hdiDescriptor);
 
-                                p = (int)ptr;
+                                p = (long)ptr;
                                 p += Marshal.SizeOf(hdiDescriptor);
                                 p--;
 
@@ -406,7 +406,7 @@ namespace NativeUsbLib
                             else
                                 m_EndpointDescriptor.Add(endpointDescriptor1);
 
-                            p = (int)ptr;
+                            p = (long)ptr;
                             p += Marshal.SizeOf(endpointDescriptor1) - 1;
                             ptr = (IntPtr)p;
                         }
@@ -438,7 +438,7 @@ namespace NativeUsbLib
                         // the Request structure.  Because this location is not "covered"
                         // by the structure allocation, we're forced to zero out this
                         // chunk of memory by using the StringToHGlobalAuto() hack above
-                        IntPtr ptrStringDesc = new IntPtr(ptrRequest.ToInt32() + Marshal.SizeOf(Request));
+                        IntPtr ptrStringDesc = new IntPtr(ptrRequest.ToInt64() + Marshal.SizeOf(Request));
                         UsbApi.USB_STRING_DESCRIPTOR StringDesc = (UsbApi.USB_STRING_DESCRIPTOR)Marshal.PtrToStructure(ptrStringDesc, typeof(UsbApi.USB_STRING_DESCRIPTOR));
                         m_Manufacturer = StringDesc.bString;
                     }
@@ -464,7 +464,7 @@ namespace NativeUsbLib
                     {
 
                         // The location of the string descriptor is immediately after the request structure.
-                        IntPtr ptrStringDesc = new IntPtr(ptrRequest.ToInt32() + Marshal.SizeOf(Request));
+                        IntPtr ptrStringDesc = new IntPtr(ptrRequest.ToInt64() + Marshal.SizeOf(Request));
                         UsbApi.USB_STRING_DESCRIPTOR StringDesc = (UsbApi.USB_STRING_DESCRIPTOR)Marshal.PtrToStructure(ptrStringDesc, typeof(UsbApi.USB_STRING_DESCRIPTOR));
                         m_SerialNumber = StringDesc.bString;
                     }
@@ -490,7 +490,7 @@ namespace NativeUsbLib
                     {
 
                         // the location of the string descriptor is immediately after the Request structure
-                        IntPtr ptrStringDesc = new IntPtr(ptrRequest.ToInt32() + Marshal.SizeOf(Request));
+                        IntPtr ptrStringDesc = new IntPtr(ptrRequest.ToInt64() + Marshal.SizeOf(Request));
                         UsbApi.USB_STRING_DESCRIPTOR StringDesc = (UsbApi.USB_STRING_DESCRIPTOR)Marshal.PtrToStructure(ptrStringDesc, typeof(UsbApi.USB_STRING_DESCRIPTOR));
                         m_Product = StringDesc.bString;
                     }
@@ -578,7 +578,7 @@ namespace NativeUsbLib
             // Use the "enumerator form" of the SetupDiGetClassDevs API 
             // to generate a list of all USB devices
             IntPtr handel = UsbApi.SetupDiGetClassDevs(0, DevEnum, IntPtr.Zero, UsbApi.DIGCF_PRESENT | UsbApi.DIGCF_ALLCLASSES);
-            if (handel.ToInt32() != UsbApi.INVALID_HANDLE_VALUE)
+            if (handel.ToInt64() != UsbApi.INVALID_HANDLE_VALUE)
             {
 
                 IntPtr ptr = Marshal.AllocHGlobal(UsbApi.MAX_BUFFER_SIZE);
@@ -640,7 +640,7 @@ namespace NativeUsbLib
             // Use the "enumerator form" of the SetupDiGetClassDevs API 
             // to generate a list of all USB devices
             IntPtr handel = UsbApi.SetupDiGetClassDevs(0, DevEnum, IntPtr.Zero, UsbApi.DIGCF_PRESENT | UsbApi.DIGCF_ALLCLASSES);
-            if (handel.ToInt32() != UsbApi.INVALID_HANDLE_VALUE)
+            if (handel.ToInt64() != UsbApi.INVALID_HANDLE_VALUE)
             {
 
                 IntPtr ptr = Marshal.AllocHGlobal(UsbApi.MAX_BUFFER_SIZE);
@@ -700,7 +700,7 @@ namespace NativeUsbLib
             // Generate a list of all USB devices
             var guidDevInterfaceUsbDevice = new Guid("A5DCBF10-6530-11D2-901F-00C04FB951ED");
             IntPtr handel = UsbApi.SetupDiGetClassDevs(ref guidDevInterfaceUsbDevice, 0, IntPtr.Zero, UsbApi.DIGCF_PRESENT | UsbApi.DIGCF_DEVICEINTERFACE);
-            if (handel.ToInt32() != UsbApi.INVALID_HANDLE_VALUE)
+            if (handel.ToInt64() != UsbApi.INVALID_HANDLE_VALUE)
             {
 
                 IntPtr ptr = Marshal.AllocHGlobal(UsbApi.MAX_BUFFER_SIZE);
@@ -771,7 +771,7 @@ namespace NativeUsbLib
             UsbApi.HidD_GetHidGuid(out guidHid);	// next, get the GUID from Windows that it uses to represent the HID USB interface
 
             IntPtr handel = UsbApi.SetupDiGetClassDevs(ref guidHid, 0, IntPtr.Zero, UsbApi.DIGCF_PRESENT | UsbApi.DIGCF_DEVICEINTERFACE);
-            if (handel.ToInt32() != UsbApi.INVALID_HANDLE_VALUE)
+            if (handel.ToInt64() != UsbApi.INVALID_HANDLE_VALUE)
             {
 
                 IntPtr ptr = Marshal.AllocHGlobal(UsbApi.MAX_BUFFER_SIZE);
@@ -886,7 +886,7 @@ namespace NativeUsbLib
 
             // Open a handle to the Hub device
             handel1 = UsbApi.CreateFile(devicePath, UsbApi.GENERIC_WRITE, UsbApi.FILE_SHARE_WRITE, IntPtr.Zero, UsbApi.OPEN_EXISTING, 0, IntPtr.Zero);
-            if (handel1.ToInt32() != UsbApi.INVALID_HANDLE_VALUE)
+            if (handel1.ToInt64() != UsbApi.INVALID_HANDLE_VALUE)
             {
                 nBytes = Marshal.SizeOf(typeof(UsbApi.USB_NODE_CONNECTION_INFORMATION_EX));
                 IntPtr ptrNodeConnection = Marshal.AllocHGlobal(nBytes);
