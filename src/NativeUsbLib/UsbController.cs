@@ -53,7 +53,7 @@ namespace NativeUsbLib
 
                 // Build a device interface detail data structure.
                 UsbApi.SP_DEVICE_INTERFACE_DETAIL_DATA deviceInterfaceDetailData = new UsbApi.SP_DEVICE_INTERFACE_DETAIL_DATA();
-                deviceInterfaceDetailData.cbSize = 4 + Marshal.SystemDefaultCharSize; // trust me :)
+                deviceInterfaceDetailData.cbSize = UIntPtr.Size == 8 ? 8 : (int)(4 + (uint)Marshal.SystemDefaultCharSize);
 
                 // Now we can get some more detailed informations.
                 int nRequiredSize = 0;

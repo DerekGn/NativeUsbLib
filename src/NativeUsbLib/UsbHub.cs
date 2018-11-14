@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 #endregion
 
@@ -146,8 +147,9 @@ namespace NativeUsbLib
                         //this.childs.Add(new UsbPort(this, index, this.DevicePath));
                         this.devices.Add(DeviceFactory.BuildDevice(this, index, this.DevicePath));
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
+                        Trace.TraceError("Unhandled exception occurred: {0}", e.ToString());
                     }
                 }
             }

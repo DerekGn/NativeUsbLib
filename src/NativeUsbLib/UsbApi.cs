@@ -482,7 +482,7 @@ namespace NativeUsbLib
         {
             public int cbSize;
             public Guid ClassGuid;
-            public IntPtr DevInst;
+            public Int32 DevInst;
             public IntPtr Reserved;
         }
 
