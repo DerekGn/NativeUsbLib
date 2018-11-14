@@ -5,6 +5,8 @@ namespace EnumerateUsb
 {
     class Program
     {
+        private static int nestLevel = 0;
+
         static void Main(string[] args)
         {
             try
@@ -24,7 +26,7 @@ namespace EnumerateUsb
         {
             if (controller != null)
             {
-                Console.WriteLine($"Controller: [{controller.DeviceDescription}]");
+                WriteLine($"Controller: [{controller.DeviceDescription}]");
 
                 foreach (UsbHub hub in controller.Hubs)
                 {
@@ -35,21 +37,23 @@ namespace EnumerateUsb
             }
             else
             {
-                Console.WriteLine("Controller  = null");
+                WriteLine("Controller  = null");
             }
         }
 
         private static void ShowHub(UsbHub hub)
         {
+            IncrementNestLevel();
+
             if (hub != null)
             {
                 if (hub.IsRootHub)
                 {
-                    Console.WriteLine($"[{hub.DeviceDescription}]");
+                    WriteLine($"[{hub.DeviceDescription}]");
                 }
                 else
                 {
-                    Console.WriteLine($"Port[{hub.AdapterNumber}] DeviceConnected: {hub.DeviceDescription}");
+                    WriteLine($"Port[{hub.AdapterNumber}] DeviceConnected: {hub.DeviceDescription}");
                 }
 
                 foreach (Device device in hub.Devices)
@@ -59,8 +63,10 @@ namespace EnumerateUsb
             }
             else
             {
-                Console.WriteLine("Hub = null");
+                WriteLine("Hub = null");
             }
+
+            DecrementNestLevel();
         }
 
         private static void ShowDevice(Device device)
@@ -73,6 +79,8 @@ namespace EnumerateUsb
                 }
                 else
                 {
+                    IncrementNestLevel();
+
                     string s = "Port[" + device.AdapterNumber + "]";
                     if (device.IsConnected)
                     {
@@ -83,13 +91,30 @@ namespace EnumerateUsb
                         s += " NoDeviceConnected";
                     }
 
-                    Console.WriteLine(s);
+                    WriteLine(s);
+
+                    DecrementNestLevel();
                 }
             }
             else
             {
-                Console.WriteLine("Device = null");
+                WriteLine("Device = null");
             }
+        }
+
+        private static void WriteLine(string value)
+        {
+            Console.WriteLine($"{string.Empty.PadLeft(nestLevel, '.')}{value}");
+        }
+
+        private static void IncrementNestLevel()
+        {
+            nestLevel++;
+        }
+
+        private static void DecrementNestLevel()
+        {
+            nestLevel--;
         }
     }
 }
