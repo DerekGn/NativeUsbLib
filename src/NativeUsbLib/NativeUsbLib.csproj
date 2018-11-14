@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net20;net45;net46</TargetFrameworks>
+    <Platforms>AnyCPU;x64</Platforms>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Company>inovel elektronik gmbh</Company>
+    <Authors>Nick Vetter, Derek Goslin</Authors>
+    <Copyright>copyright © inovel gmbh 2008 - 2018</Copyright>
+    <RepositoryType>github</RepositoryType>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <PackageReleaseNotes>1.1.0
+Original release
+1.2.0
+Nuget packaged release
+Updated to handle x64</PackageReleaseNotes>
+    <Version>1.2.0</Version>
+    <PackageTags>usb windows</PackageTags>
+    <RepositoryUrl>https://github.com/DerekGn/NativeUsbLib</RepositoryUrl>
+    <Description>A .net library for the enumeration of usb devices, hubs and controllers</Description>
+    <PackageLicenseUrl>https://github.com/DerekGn/NativeUsbLib</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/DerekGn/NativeUsbLib</PackageProjectUrl>
+  </PropertyGroup>
+
+</Project>
