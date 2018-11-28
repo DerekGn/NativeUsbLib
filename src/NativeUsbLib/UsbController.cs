@@ -1,5 +1,3 @@
-#region references
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,8 +5,6 @@ using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
 using NativeUsbLib.Exceptions;
 using System.Diagnostics;
-
-#endregion
 
 namespace NativeUsbLib
 {

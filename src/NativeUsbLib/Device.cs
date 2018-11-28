@@ -219,7 +219,7 @@ namespace NativeUsbLib
                     };
 
                 request1.SetupPacket.WLength = (short) (nBytes - Marshal.SizeOf(request1));
-                request1.SetupPacket.WIndex = 0x409; // Language Code
+                
                 // Geez, I wish C# had a Marshal.MemSet() method
                 IntPtr ptrRequest1 = Marshal.StringToHGlobalAuto(nullString);
                 Marshal.StructureToPtr(request1, ptrRequest1, true);
@@ -235,8 +235,10 @@ namespace NativeUsbLib
 
                     if (ConfigurationDescriptor == null)
                     {
-                        ConfigurationDescriptor = new List<UsbApi.UsbConfigurationDescriptor>();
-                        ConfigurationDescriptor.Add(configurationDescriptor);
+                        ConfigurationDescriptor = new List<UsbApi.UsbConfigurationDescriptor>
+                        {
+                            configurationDescriptor
+                        };
                     }
                     else
                         ConfigurationDescriptor.Add(configurationDescriptor);
