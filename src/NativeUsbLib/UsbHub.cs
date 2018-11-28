@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using NativeUsbLib.Exceptions;
 
 #endregion
 
@@ -39,19 +40,19 @@ namespace NativeUsbLib
         /// </value>
         public bool IsRootHub { get; } = false;
 
-        private UsbApi.USB_NODE_INFORMATION m_NodeInformation;
+        private UsbApi.UsbNodeInformation m_NodeInformation;
         /// <summary>
         /// Gets or sets the node information.
         /// </summary>
         /// <value>The node information.</value>
-        public UsbApi.USB_NODE_INFORMATION NodeInformation
+        public UsbApi.UsbNodeInformation NodeInformation
         {
             get { return m_NodeInformation; }
             set
             {
                 m_NodeInformation = value;
                 IsBusPowered = Convert.ToBoolean(m_NodeInformation.HubInformation.HubIsBusPowered);
-                PortCount = m_NodeInformation.HubInformation.HubDescriptor.bNumberOfPorts;
+                PortCount = m_NodeInformation.HubInformation.HubDescriptor.BNumberOfPorts;
             }
         }
 
@@ -67,7 +68,7 @@ namespace NativeUsbLib
         /// <param name="parent">The parent.</param>
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="devicePath">The device path.</param>
-        public UsbHub(Device parent, UsbApi.USB_DEVICE_DESCRIPTOR deviceDescriptor, string devicePath)
+        public UsbHub(Device parent, UsbApi.UsbDeviceDescriptor deviceDescriptor, string devicePath)
             : base(parent, deviceDescriptor, -1, devicePath)
         {
             DeviceDescription = "Standard-USB-Hub";
@@ -76,18 +77,18 @@ namespace NativeUsbLib
             int nBytesReturned;
 
             // Open a handle to the host controller.
-            IntPtr handel1 = UsbApi.CreateFile(devicePath, UsbApi.GENERIC_WRITE, UsbApi.FILE_SHARE_WRITE, IntPtr.Zero, UsbApi.OPEN_EXISTING, 0, IntPtr.Zero);
-            if (handel1.ToInt64() != UsbApi.INVALID_HANDLE_VALUE)
+            IntPtr handel1 = UsbApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero, UsbApi.OpenExisting, 0, IntPtr.Zero);
+            if (handel1.ToInt64() != UsbApi.InvalidHandleValue)
             {
 
-                UsbApi.USB_ROOT_HUB_NAME rootHubName = new UsbApi.USB_ROOT_HUB_NAME();
+                UsbApi.UsbRootHubName rootHubName = new UsbApi.UsbRootHubName();
                 int nBytes = Marshal.SizeOf(rootHubName);
                 IntPtr ptrRootHubName = Marshal.AllocHGlobal(nBytes);
 
                 // Get the root hub name.
-                if (UsbApi.DeviceIoControl(handel1, UsbApi.IOCTL_USB_GET_ROOT_HUB_NAME, ptrRootHubName, nBytes, ptrRootHubName, nBytes, out nBytesReturned, IntPtr.Zero))
+                if (UsbApi.DeviceIoControl(handel1, UsbApi.IoctlUsbGetRootHubName, ptrRootHubName, nBytes, ptrRootHubName, nBytes, out nBytesReturned, IntPtr.Zero))
                 {
-                    rootHubName = (UsbApi.USB_ROOT_HUB_NAME)Marshal.PtrToStructure(ptrRootHubName, typeof(UsbApi.USB_ROOT_HUB_NAME));
+                    rootHubName = (UsbApi.UsbRootHubName)Marshal.PtrToStructure(ptrRootHubName, typeof(UsbApi.UsbRootHubName));
 
                     if (rootHubName.ActualLength > 0)
                     {
@@ -102,20 +103,20 @@ namespace NativeUsbLib
                 // TODO: Get the driver key name for the root hub.
 
                 // Now let's open the hub (based upon the hub name we got above).
-                IntPtr handel2 = UsbApi.CreateFile(DevicePath, UsbApi.GENERIC_WRITE, UsbApi.FILE_SHARE_WRITE, IntPtr.Zero, UsbApi.OPEN_EXISTING, 0, IntPtr.Zero);
-                if (handel2.ToInt64() != UsbApi.INVALID_HANDLE_VALUE)
+                IntPtr handel2 = UsbApi.CreateFile(DevicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero, UsbApi.OpenExisting, 0, IntPtr.Zero);
+                if (handel2.ToInt64() != UsbApi.InvalidHandleValue)
                 {
 
-                    UsbApi.USB_NODE_INFORMATION nodeInfo =
-                        new UsbApi.USB_NODE_INFORMATION {NodeType = UsbApi.USB_HUB_NODE.UsbHub};
+                    UsbApi.UsbNodeInformation nodeInfo =
+                        new UsbApi.UsbNodeInformation {NodeType = UsbApi.UsbHubNode.UsbHub};
                     nBytes = Marshal.SizeOf(nodeInfo);
                     IntPtr ptrNodeInfo = Marshal.AllocHGlobal(nBytes);
                     Marshal.StructureToPtr(nodeInfo, ptrNodeInfo, true);
 
                     // Get the hub information.
-                    if (UsbApi.DeviceIoControl(handel2, UsbApi.IOCTL_USB_GET_NODE_INFORMATION, ptrNodeInfo, nBytes, ptrNodeInfo, nBytes, out nBytesReturned, IntPtr.Zero))
+                    if (UsbApi.DeviceIoControl(handel2, UsbApi.IoctlUsbGetNodeInformation, ptrNodeInfo, nBytes, ptrNodeInfo, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
-                        NodeInformation = (UsbApi.USB_NODE_INFORMATION)Marshal.PtrToStructure(ptrNodeInfo, typeof(UsbApi.USB_NODE_INFORMATION));
+                        NodeInformation = (UsbApi.UsbNodeInformation)Marshal.PtrToStructure(ptrNodeInfo, typeof(UsbApi.UsbNodeInformation));
                     }
 
                     Marshal.FreeHGlobal(ptrNodeInfo);
@@ -130,7 +131,6 @@ namespace NativeUsbLib
                     // Initialize a new port and save the port.
                     try
                     {
-                        //this.childs.Add(new UsbPort(this, index, this.DevicePath));
                         Devices.Add(DeviceFactory.BuildDevice(this, index, DevicePath));
                     }
                     catch (Exception e)
@@ -140,7 +140,7 @@ namespace NativeUsbLib
                 }
             }
             else
-                throw new Exception("No port found!");
+                throw new UsbHubException("No port found!");
         }
 
         #endregion

@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
+using NativeUsbLib.Exceptions;
+using System.Diagnostics;
 
 #endregion
 
@@ -17,8 +19,7 @@ namespace NativeUsbLib
     {
         #region fields
 
-        private readonly Guid m_Guid = new Guid(UsbApi.GUID_DEVINTERFACE_HUBCONTROLLER);
-        private Guid m_InterfaceClassGuid = Guid.Empty;
+        private readonly Guid m_Guid = new Guid(UsbApi.GuidDevinterfaceHubcontroller);
 
         #endregion
 
@@ -39,44 +40,42 @@ namespace NativeUsbLib
 
             try
             {
-                ptr = Marshal.AllocHGlobal(UsbApi.MAX_BUFFER_SIZE);
-                handle = UsbApi.SetupDiGetClassDevs(ref m_Guid, 0, IntPtr.Zero, UsbApi.DIGCF_PRESENT | UsbApi.DIGCF_DEVICEINTERFACE);
+                ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
+                handle = UsbApi.SetupDiGetClassDevs(ref m_Guid, 0, IntPtr.Zero, UsbApi.DigcfPresent | UsbApi.DigcfDeviceinterface);
 
                 // Create a device interface data structure
-                UsbApi.SP_DEVICE_INTERFACE_DATA deviceInterfaceData = new UsbApi.SP_DEVICE_INTERFACE_DATA();
-                deviceInterfaceData.cbSize = Marshal.SizeOf(deviceInterfaceData);
+                UsbApi.SpDeviceInterfaceData deviceInterfaceData = new UsbApi.SpDeviceInterfaceData();
+                deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
 
                 // Start the enumeration.
                 Boolean success = UsbApi.SetupDiEnumDeviceInterfaces(handle, IntPtr.Zero, ref m_Guid, index, ref deviceInterfaceData);
                 if (success)
                 {
-                    m_InterfaceClassGuid = deviceInterfaceData.InterfaceClassGuid;
-
                     // Build a DevInfo data structure.
-                    UsbApi.SP_DEVINFO_DATA deviceInfoData = new UsbApi.SP_DEVINFO_DATA();
-                    deviceInfoData.cbSize = Marshal.SizeOf(deviceInfoData);
+                    UsbApi.SpDevinfoData deviceInfoData = new UsbApi.SpDevinfoData();
+                    deviceInfoData.CbSize = Marshal.SizeOf(deviceInfoData);
 
                     // Build a device interface detail data structure.
-                    UsbApi.SP_DEVICE_INTERFACE_DETAIL_DATA deviceInterfaceDetailData =
-                        new UsbApi.SP_DEVICE_INTERFACE_DETAIL_DATA
+                    UsbApi.SpDeviceInterfaceDetailData deviceInterfaceDetailData =
+                        new UsbApi.SpDeviceInterfaceDetailData
                         {
-                            cbSize = UIntPtr.Size == 8 ? 8 : (int) (4 + (uint) Marshal.SystemDefaultCharSize)
+                            CbSize = UIntPtr.Size == 8 ? 8 : (int) (4 + (uint) Marshal.SystemDefaultCharSize)
                         };
 
                     // Now we can get some more detailed informations.
                     int nRequiredSize = 0;
-                    int nBytes = UsbApi.MAX_BUFFER_SIZE;
+                    int nBytes = UsbApi.MaxBufferSize;
                     if (UsbApi.SetupDiGetDeviceInterfaceDetail(handle, ref deviceInterfaceData, ref deviceInterfaceDetailData, nBytes, ref nRequiredSize, ref deviceInfoData))
                     {
                         DevicePath = deviceInterfaceDetailData.DevicePath;
 
                         // Get the device description and driver key name.
                         int requiredSize = 0;
-                        int regType = UsbApi.REG_SZ;
+                        int regType = UsbApi.RegSz;
 
-                        if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData, UsbApi.SPDRP_DEVICEDESC, ref regType, ptr, UsbApi.MAX_BUFFER_SIZE, ref requiredSize))
+                        if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData, UsbApi.SpdrpDevicedesc, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
                             DeviceDescription = Marshal.PtrToStringAuto(ptr);
-                        if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData, UsbApi.SPDRP_DRIVER, ref regType, ptr, UsbApi.MAX_BUFFER_SIZE, ref requiredSize))
+                        if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData, UsbApi.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
                             DriverKey = Marshal.PtrToStringAuto(ptr);
                     }
 
@@ -86,13 +85,13 @@ namespace NativeUsbLib
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.Message);
-                        //this.m_UsbHub = null;
-                        throw new Exception(ex.Message);
+                        Trace.WriteLine(ex.Message);
+                        
+                        throw new UsbControllerException(ex.Message);
                     }
                 }
                 else
-                    throw new Exception("No usb controller found!");
+                    throw new UsbControllerException("No usb controller found!");
             }
             finally
             {

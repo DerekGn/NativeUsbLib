@@ -3,7 +3,7 @@ using System;
 
 namespace EnumerateUsb
 {
-    class Program
+    static class Program
     {
         private static int _nestLevel;
 
