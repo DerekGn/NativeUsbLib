@@ -1,11 +1,8 @@
-#region references
-
 using System;
 using System.Text;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-#endregion
 
 namespace NativeUsbLib
 {
@@ -162,7 +159,7 @@ namespace NativeUsbLib
         //    DeviceInLegacyHub
         //} USB_CONNECTION_STATUS, *PUSB_CONNECTION_STATUS;
 
-        public enum USB_CONNECTION_STATUS : int
+        public enum USB_CONNECTION_STATUS
         {
             NoDeviceConnected,
             DeviceConnected,
@@ -241,7 +238,7 @@ namespace NativeUsbLib
         /// <summary>
         /// Device registry property codes
         /// </summary>
-        public enum SPDRP : int
+        public enum SPDRP
         {
             /// <summary>
             /// DeviceDesc (R/W)
@@ -924,10 +921,10 @@ namespace NativeUsbLib
         //original winapi SetupDiGetClassDevs methode
         //HDEVINFO SetupDiGetClassDevs( const GUID* ClassGuid, PCTSTR Enumerator, HWND hwndParent, DWORD Flags );
         [DllImport( "setupapi.dll", CharSet = CharSet.Auto )]
-        public static extern IntPtr SetupDiGetClassDevs( ref Guid ClassGuid, int Enumerator, IntPtr hwndParent, int Flags ); // 1st form using a ClassGUID
+        internal static extern IntPtr SetupDiGetClassDevs( ref Guid ClassGuid, int Enumerator, IntPtr hwndParent, int Flags ); // 1st form using a ClassGUID
 
         [DllImport( "setupapi.dll", CharSet = CharSet.Auto )]
-        public static extern IntPtr SetupDiGetClassDevs( int ClassGuid, string Enumerator, IntPtr hwndParent, int Flags ); // 2nd form uses an Enumerator
+        internal static extern IntPtr SetupDiGetClassDevs( int ClassGuid, string Enumerator, IntPtr hwndParent, int Flags ); // 2nd form uses an Enumerator
 
         [DllImport("setupapi.dll")]
         internal static extern IntPtr SetupDiGetClassDevsEx(IntPtr ClassGuid, [MarshalAs(UnmanagedType.LPStr)]String enumerator, IntPtr hwndParent, Int32 Flags, IntPtr DeviceInfoSet, [MarshalAs(UnmanagedType.LPStr)]String MachineName, IntPtr Reserved);
@@ -935,138 +932,138 @@ namespace NativeUsbLib
         //original winapi SetupDiEnumDeviceInterfaces methode
         //BOOL SetupDiEnumDeviceInterfaces( HDEVINFO DeviceInfoSet, PSP_DEVINFO_DATA DeviceInfoData, const GUID* InterfaceClassGuid, DWORD MemberIndex, PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData );
         [DllImport( "setupapi.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        public static extern bool SetupDiEnumDeviceInterfaces( IntPtr DeviceInfoSet, IntPtr DeviceInfoData, ref Guid InterfaceClassGuid, int MemberIndex, ref SP_DEVICE_INTERFACE_DATA DeviceInterfaceData );
+        internal static extern bool SetupDiEnumDeviceInterfaces( IntPtr DeviceInfoSet, IntPtr DeviceInfoData, ref Guid InterfaceClassGuid, int MemberIndex, ref SP_DEVICE_INTERFACE_DATA DeviceInterfaceData );
 
         //original winapi SetupDiGetDeviceInterfaceDetail methode
         //BOOL SetupDiGetDeviceInterfaceDetail( HDEVINFO DeviceInfoSet, PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData, PSP_DEVICE_INTERFACE_DETAIL_DATA DeviceInterfaceDetailData, DWORD DeviceInterfaceDetailDataSize, PDWORD RequiredSize, PSP_DEVINFO_DATA DeviceInfoData );
         [DllImport( "setupapi.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        public static extern bool SetupDiGetDeviceInterfaceDetail( IntPtr DeviceInfoSet, ref SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, ref SP_DEVICE_INTERFACE_DETAIL_DATA DeviceInterfaceDetailData, int DeviceInterfaceDetailDataSize, ref int RequiredSize, ref SP_DEVINFO_DATA DeviceInfoData );
+        internal static extern bool SetupDiGetDeviceInterfaceDetail( IntPtr DeviceInfoSet, ref SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, ref SP_DEVICE_INTERFACE_DETAIL_DATA DeviceInterfaceDetailData, int DeviceInterfaceDetailDataSize, ref int RequiredSize, ref SP_DEVINFO_DATA DeviceInfoData );
 
         //original winapi SetupDiGetDeviceRegistryProperty methode
         //BOOL SetupDiGetDeviceRegistryProperty( HDEVINFO DeviceInfoSet, PSP_DEVINFO_DATA DeviceInfoData, DWORD Property, PDWORD PropertyRegDataType, PBYTE PropertyBuffer, DWORD PropertyBufferSize, PDWORD RequiredSize );
         [DllImport( "setupapi.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        public static extern bool SetupDiGetDeviceRegistryProperty( IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int iProperty, ref int PropertyRegDataType, IntPtr PropertyBuffer, int PropertyBufferSize, ref int RequiredSize );
+        internal static extern bool SetupDiGetDeviceRegistryProperty( IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int iProperty, ref int PropertyRegDataType, IntPtr PropertyBuffer, int PropertyBufferSize, ref int RequiredSize );
 
         //original winapi SetupDiEnumDeviceInfo methode
         //BOOL SetupDiEnumDeviceInfo( HDEVINFO DeviceInfoSet, DWORD MemberIndex, PSP_DEVINFO_DATA DeviceInfoData );
         [DllImport( "setupapi.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        public static extern bool SetupDiEnumDeviceInfo( IntPtr DeviceInfoSet, int MemberIndex, ref SP_DEVINFO_DATA DeviceInfoData );
+        internal static extern bool SetupDiEnumDeviceInfo( IntPtr DeviceInfoSet, int MemberIndex, ref SP_DEVINFO_DATA DeviceInfoData );
 
         //original winapi SetupDiDestroyDeviceInfoList methode
         //BOOL SetupDiDestroyDeviceInfoList( HDEVINFO DeviceInfoSet );
         [DllImport( "setupapi.dll", SetLastError = true )]
-        public static extern bool SetupDiDestroyDeviceInfoList( IntPtr DeviceInfoSet );
+        internal static extern bool SetupDiDestroyDeviceInfoList( IntPtr DeviceInfoSet );
 
         //original winapi SetupDiGetDeviceInstanceId methode
         //WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInstanceId( IN HDEVINFO  DeviceInfoSet, IN PSP_DEVINFO_DATA  DeviceInfoData, OUT PTSTR  DeviceInstanceId, IN DWORD  DeviceInstanceIdSize, OUT PDWORD  RequiredSize  OPTIONAL );
         [DllImport( "setupapi.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        public static extern bool SetupDiGetDeviceInstanceId( IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, StringBuilder DeviceInstanceId, int DeviceInstanceIdSize, out int RequiredSize );
+        internal static extern bool SetupDiGetDeviceInstanceId( IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, StringBuilder DeviceInstanceId, int DeviceInstanceIdSize, out int RequiredSize );
 
         //original winapi DeviceIoControl methode
         //BOOL DeviceIoControl( HANDLE hDevice, DWORD dwIoControlCode, LPVOID lpInBuffer, DWORD nInBufferSize, LPVOID lpOutBuffer, DWORD nOutBufferSize, LPDWORD lpBytesReturned, LPOVERLAPPED lpOverlapped );
         [DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        public static extern bool DeviceIoControl( IntPtr hDevice, int dwIoControlCode, IntPtr lpInBuffer, int nInBufferSize, IntPtr lpOutBuffer, int nOutBufferSize, out int lpBytesReturned, IntPtr lpOverlapped );
+        internal static extern bool DeviceIoControl( IntPtr hDevice, int dwIoControlCode, IntPtr lpInBuffer, int nInBufferSize, IntPtr lpOutBuffer, int nOutBufferSize, out int lpBytesReturned, IntPtr lpOverlapped );
 
         //original winapi CreateFile methode
         //HANDLE CreateFile( LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile );
         [DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        public static extern IntPtr CreateFile( string lpFileName, uint dwDesiredAccess, int dwShareMode, IntPtr lpSecurityAttributes, int dwCreationDisposition, int dwFlagsAndAttributes, IntPtr hTemplateFile );
+        internal static extern IntPtr CreateFile( string lpFileName, uint dwDesiredAccess, int dwShareMode, IntPtr lpSecurityAttributes, int dwCreationDisposition, int dwFlagsAndAttributes, IntPtr hTemplateFile );
 
         // CreateFile() returning SafeHandle is better for use with HidD_xxxx methods
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        public static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+        internal static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
 
         //original winapi CloseHandle methode
         //BOOL CloseHandle( HANDLE hObject );
         [DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        public static extern bool CloseHandle( IntPtr hObject );
+        internal static extern bool CloseHandle( IntPtr hObject );
 
         //original winapi SetupDiSetClassInstallParams methode
         //WINSETUPAPI BOOL WINAPI SetupDiSetClassInstallParams( IN HDEVINFO  DeviceInfoSet, IN PSP_DEVINFO_DATA  DeviceInfoData,  IN PSP_CLASSINSTALL_HEADER  ClassInstallParams,  IN DWORD  ClassInstallParamsSize );
         [DllImport( "setupapi.dll" )]
-        public static extern bool SetupDiSetClassInstallParams( IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref SP_CLASSINSTALL_HEADER ClassInstallParams, int ClassInstallParamsSize );
+        internal static extern bool SetupDiSetClassInstallParams( IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref SP_CLASSINSTALL_HEADER ClassInstallParams, int ClassInstallParamsSize );
 
         //original winapi SetupDiCallClassInstaller methode
         //WINSETUPAPI BOOL WINAPI SetupDiCallClassInstaller( IN DI_FUNCTION  InstallFunction, IN HDEVINFO  DeviceInfoSet, IN PSP_DEVINFO_DATA  DeviceInfoData );
         [DllImport( "setupapi.dll" )]
-        public static extern bool SetupDiCallClassInstaller( int InstallFunction, IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData );
+        internal static extern bool SetupDiCallClassInstaller( int InstallFunction, IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData );
 
         //original winapi IsSystemResumeAutomatic methode
         //BOOL WINAPI IsSystemResumeAutomatic(void);
         [DllImport( "kernel32.dll" )]
-        public static extern bool IsSystemResumeAutomatic();
+        internal static extern bool IsSystemResumeAutomatic();
 
         //original winapi SetupDiGetDeviceInfoListClass methode
         //WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInfoListClass( IN HDEVINFO  DeviceInfoSet, OUT LPGUID  ClassGuid );
         //[DllImport( "setupapi.dll" )]
-        //public static extern bool SetupDiGetDeviceInfoListClass( IntPtr DeviceInfoSet, out Guid ClassGuid );
+        //internal static extern bool SetupDiGetDeviceInfoListClass( IntPtr DeviceInfoSet, out Guid ClassGuid );
         
         //[DllImport( "setupapi.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        //public static extern bool SetupDiClassGuidsFromName( StringBuilder ClassName, out Guid[] ClassGuidList, int ClassGuidListSize, out int RequiredSize);
+        //internal static extern bool SetupDiClassGuidsFromName( StringBuilder ClassName, out Guid[] ClassGuidList, int ClassGuidListSize, out int RequiredSize);
 
         [DllImport( "setupapi.dll" )]
-        public static extern bool SetupDiClassGuidsFromNameA( string ClassN, ref Guid guids, UInt32 ClassNameSize, ref UInt32 ReqSize );
+        internal static extern bool SetupDiClassGuidsFromNameA( string ClassN, ref Guid guids, UInt32 ClassNameSize, ref UInt32 ReqSize );
 
         //[DllImport("setupapi.dll")]
         //internal static extern Int32 SetupDiGetDeviceInstanceId(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, StringBuilder DeviceInstanceId, Int32 DeviceInstanceIdSize, ref Int32 RequiredSize);
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        public static extern IntPtr OpenFile(string lpFileName, out IntPtr lpReOpenBuff, uint style);
+        internal static extern IntPtr OpenFile(string lpFileName, out IntPtr lpReOpenBuff, uint style);
 
         [DllImport("Setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, uint iEnumerator, int hwndParent, int Flags);
+        internal static extern IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, uint iEnumerator, int hwndParent, int Flags);
 
         [DllImport("Setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool SetupDiEnumDeviceInfo(IntPtr lpInfoSet, UInt32 dwIndex, SP_DEVINFO_DATA1 devInfoData);
+        internal static extern bool SetupDiEnumDeviceInfo(IntPtr lpInfoSet, UInt32 dwIndex, SP_DEVINFO_DATA1 devInfoData);
 
         [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr lpInfoSet, SP_DEVINFO_DATA1 DeviceInfoData, UInt32 Property, UInt32 PropertyRegDataType, StringBuilder PropertyBuffer, UInt32 PropertyBufferSize, IntPtr RequiredSize);
+        internal static extern bool SetupDiGetDeviceRegistryProperty(IntPtr lpInfoSet, SP_DEVINFO_DATA1 DeviceInfoData, UInt32 Property, UInt32 PropertyRegDataType, StringBuilder PropertyBuffer, UInt32 PropertyBufferSize, IntPtr RequiredSize);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern int GetLastError();
+        internal static extern int GetLastError();
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern void SetLastError(int error);
+        internal static extern void SetLastError(int error);
 
         [DllImport("kernel32.dll")]
-        public static extern bool ReadFile(IntPtr hFile, byte[] lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead, IntPtr lpOverlapped);
+        internal static extern bool ReadFile(IntPtr hFile, byte[] lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead, IntPtr lpOverlapped);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool ReadFile(IntPtr hFile, [Out] byte[] lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead, [In] ref System.Threading.NativeOverlapped lpOverlapped);
+        internal static extern bool ReadFile(IntPtr hFile, [Out] byte[] lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead, [In] ref System.Threading.NativeOverlapped lpOverlapped);
 
         [DllImport("quickusb.dll", CharSet = CharSet.Ansi)]
-        public static extern int QuickUsbOpen(out IntPtr handle, string devName);
+        internal static extern int QuickUsbOpen(out IntPtr handle, string devName);
 
         // Hid.dll definitions
         // Length for use with HID Api functions
         public const int HidStringLength = 128;
 
         [DllImport("hid.dll", SetLastError = true)]
-        public static extern void HidD_GetHidGuid(out Guid gHid);
+        internal static extern void HidD_GetHidGuid(out Guid gHid);
 
         [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool HidD_GetManufacturerString(SafeFileHandle hidDevice, StringBuilder Buffer, Int32 BufferLength);
+        internal static extern bool HidD_GetManufacturerString(SafeFileHandle hidDevice, StringBuilder Buffer, Int32 BufferLength);
 
         [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool HidD_GetProductString(IntPtr handle, out IntPtr data, ulong maxBytes);
+        internal static extern bool HidD_GetProductString(IntPtr handle, out IntPtr data, ulong maxBytes);
 
         [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern Boolean HidD_GetSerialNumberString(SafeFileHandle hidDevice, StringBuilder Buffer, Int32 BufferLength);
+        internal static extern Boolean HidD_GetSerialNumberString(SafeFileHandle hidDevice, StringBuilder Buffer, Int32 BufferLength);
 
         [DllImport("hid.dll", SetLastError = true)]
-        public static extern Boolean HidD_GetAttributes(SafeFileHandle HidDeviceObject, ref HIDD_ATTRIBUTES Attributes);
+        internal static extern Boolean HidD_GetAttributes(SafeFileHandle HidDeviceObject, ref HIDD_ATTRIBUTES Attributes);
 
         [DllImport("hid.dll", SetLastError = true)]
-        public static extern Boolean HidD_GetFeature(SafeFileHandle HidDeviceObject, Byte[] lpReportBuffer, Int32 ReportBufferLength);
+        internal static extern Boolean HidD_GetFeature(SafeFileHandle HidDeviceObject, Byte[] lpReportBuffer, Int32 ReportBufferLength);
 
         [DllImport("hid.dll", SetLastError = true)]
-        public static extern Boolean HidD_SetFeature(SafeFileHandle HidDeviceObject, Byte[] lpReportBuffer, Int32 ReportBufferLength);
+        internal static extern Boolean HidD_SetFeature(SafeFileHandle HidDeviceObject, Byte[] lpReportBuffer, Int32 ReportBufferLength);
 
         [DllImport("hid.dll", SetLastError = true)]
-        public static extern Boolean HidD_FlushQueue(SafeFileHandle HidDeviceObject);
+        internal static extern Boolean HidD_FlushQueue(SafeFileHandle HidDeviceObject);
 
         [DllImport("hid.dll", SetLastError = true)]
-        public static extern Boolean HidD_GetIndexedString(SafeFileHandle HidDeviceObject, Int32 StringIndex, Byte[] lpString, Int32 BufferLength);
+        internal static extern Boolean HidD_GetIndexedString(SafeFileHandle HidDeviceObject, Int32 StringIndex, Byte[] lpString, Int32 BufferLength);
 
         #endregion
 

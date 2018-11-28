@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
+using System.Collections.ObjectModel;
 
 #endregion
 
@@ -56,17 +57,6 @@ namespace NativeUsbLib
 
         #endregion
 
-        #region destructor
-
-        /// <summary>
-        /// Releases unmanaged resources and performs other cleanup operations before the
-        /// <see cref="UsbBus"/> is reclaimed by garbage collection.
-        /// </summary>
-        ~UsbBus()
-        {
-        }
-
-        #endregion
 
         #endregion
 
@@ -83,7 +73,7 @@ namespace NativeUsbLib
                 // Initialize a new controller and save the index of the controller.
                 try
                 {
-                    this.devices.Add(new UsbController(this, index));
+                    Devices.Add(new UsbController(this, index));
                 }
                 catch
                 {
@@ -91,7 +81,7 @@ namespace NativeUsbLib
                 }
             }
 
-            if (this.devices.Count >= 0)
+            if (Devices.Count >= 0)
                 return true;
 
             return false;
@@ -107,7 +97,7 @@ namespace NativeUsbLib
         /// <returns></returns>
         public bool Refresh()
         {
-            this.devices.Clear();
+            Devices.Clear();
             return ScanBus();
         }
 
@@ -115,7 +105,7 @@ namespace NativeUsbLib
 
         private void ScanHubs(ushort vendorid, ushort productid, string serial, UsbHub hub, ref List<UsbDevice> devices)
         {
-            foreach (Device device in hub.Devices)
+            foreach (Device device in hub.ChildDevices)
             {
                 if (device.IsHub)
                     ScanHubs(vendorid, productid, serial, device as UsbHub, ref devices);
@@ -160,13 +150,13 @@ namespace NativeUsbLib
         /// Gets the controller.
         /// </summary>
         /// <value>The controller.</value>
-        public System.Collections.ObjectModel.ReadOnlyCollection<UsbController> Controller
+        public ReadOnlyCollection<UsbController> Controller
         {
             get
             {
-                UsbController[] _cont = new UsbController[devices.Count];
-                devices.CopyTo(_cont);
-                return new System.Collections.ObjectModel.ReadOnlyCollection<UsbController>(_cont);
+                UsbController[] controllers = new UsbController[Devices.Count];
+                Devices.CopyTo(controllers);
+                return new ReadOnlyCollection<UsbController>(controllers);
             }
         }
 

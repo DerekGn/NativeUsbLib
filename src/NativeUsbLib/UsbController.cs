@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
+using System.Collections.ObjectModel;
 
 #endregion
 
@@ -16,8 +17,8 @@ namespace NativeUsbLib
     {
         #region fields
 
+        private readonly Guid m_Guid = new Guid(UsbApi.GUID_DEVINTERFACE_HUBCONTROLLER);
         private Guid m_InterfaceClassGuid = Guid.Empty;
-        private Guid m_Guid = new Guid(UsbApi.GUID_DEVINTERFACE_HUBCONTROLLER);
 
         #endregion
 
@@ -39,7 +40,6 @@ namespace NativeUsbLib
             try
             {
                 ptr = Marshal.AllocHGlobal(UsbApi.MAX_BUFFER_SIZE);
-                bool success = true;
                 handle = UsbApi.SetupDiGetClassDevs(ref m_Guid, 0, IntPtr.Zero, UsbApi.DIGCF_PRESENT | UsbApi.DIGCF_DEVICEINTERFACE);
 
                 // Create a device interface data structure
@@ -47,7 +47,7 @@ namespace NativeUsbLib
                 deviceInterfaceData.cbSize = Marshal.SizeOf(deviceInterfaceData);
 
                 // Start the enumeration.
-                success = UsbApi.SetupDiEnumDeviceInterfaces(handle, IntPtr.Zero, ref m_Guid, index, ref deviceInterfaceData);
+                Boolean success = UsbApi.SetupDiEnumDeviceInterfaces(handle, IntPtr.Zero, ref m_Guid, index, ref deviceInterfaceData);
                 if (success)
                 {
                     m_InterfaceClassGuid = deviceInterfaceData.InterfaceClassGuid;
@@ -57,29 +57,32 @@ namespace NativeUsbLib
                     deviceInfoData.cbSize = Marshal.SizeOf(deviceInfoData);
 
                     // Build a device interface detail data structure.
-                    UsbApi.SP_DEVICE_INTERFACE_DETAIL_DATA deviceInterfaceDetailData = new UsbApi.SP_DEVICE_INTERFACE_DETAIL_DATA();
-                    deviceInterfaceDetailData.cbSize = UIntPtr.Size == 8 ? 8 : (int)(4 + (uint)Marshal.SystemDefaultCharSize);
+                    UsbApi.SP_DEVICE_INTERFACE_DETAIL_DATA deviceInterfaceDetailData =
+                        new UsbApi.SP_DEVICE_INTERFACE_DETAIL_DATA
+                        {
+                            cbSize = UIntPtr.Size == 8 ? 8 : (int) (4 + (uint) Marshal.SystemDefaultCharSize)
+                        };
 
                     // Now we can get some more detailed informations.
                     int nRequiredSize = 0;
                     int nBytes = UsbApi.MAX_BUFFER_SIZE;
                     if (UsbApi.SetupDiGetDeviceInterfaceDetail(handle, ref deviceInterfaceData, ref deviceInterfaceDetailData, nBytes, ref nRequiredSize, ref deviceInfoData))
                     {
-                        this.m_DevicePath = deviceInterfaceDetailData.DevicePath;
+                        DevicePath = deviceInterfaceDetailData.DevicePath;
 
                         // Get the device description and driver key name.
                         int requiredSize = 0;
                         int regType = UsbApi.REG_SZ;
 
                         if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData, UsbApi.SPDRP_DEVICEDESC, ref regType, ptr, UsbApi.MAX_BUFFER_SIZE, ref requiredSize))
-                            this.m_DeviceDescription = Marshal.PtrToStringAuto(ptr);
+                            DeviceDescription = Marshal.PtrToStringAuto(ptr);
                         if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData, UsbApi.SPDRP_DRIVER, ref regType, ptr, UsbApi.MAX_BUFFER_SIZE, ref requiredSize))
-                            this.m_DriverKey = Marshal.PtrToStringAuto(ptr);
+                            DriverKey = Marshal.PtrToStringAuto(ptr);
                     }
 
                     try
                     {
-                        this.devices.Add(new UsbHub(this, null, this.m_DevicePath));
+                        Devices.Add(new UsbHub(this, null, DevicePath));
                     }
                     catch (Exception ex)
                     {
@@ -103,18 +106,6 @@ namespace NativeUsbLib
 
         #endregion
 
-        #region destructor
-
-        /// <summary>
-        /// Releases unmanaged resources and performs other cleanup operations before the
-        /// <see cref="UsbController"/> is reclaimed by garbage collection.
-        /// </summary>
-        ~UsbController()
-        {
-        }
-
-        #endregion
-
         #endregion
 
         #region proberties
@@ -125,13 +116,13 @@ namespace NativeUsbLib
         /// Gets the hubs.
         /// </summary>
         /// <value>The hubs.</value>
-        public System.Collections.ObjectModel.ReadOnlyCollection<UsbHub> Hubs
+        public ReadOnlyCollection<UsbHub> Hubs
         {
             get
             {
-                UsbHub[] _hub = new UsbHub[devices.Count];
-                devices.CopyTo(_hub);
-                return new System.Collections.ObjectModel.ReadOnlyCollection<UsbHub>(_hub);
+                UsbHub[] hubs = new UsbHub[Devices.Count];
+                Devices.CopyTo(hubs);
+                return new ReadOnlyCollection<UsbHub>(hubs);
             }
         }
 
