@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
@@ -16,7 +16,7 @@ namespace NativeUsbLib
 
         #region constants
 
-        public const uint GenericRead = 0x80000000; 
+        public const uint GenericRead = 0x80000000;
         public const uint GenericWrite = 0x40000000;
         public const uint GenericExecute = 0x20000000;
         public const uint GenericAll = 0x10000000;
@@ -34,6 +34,7 @@ namespace NativeUsbLib
         public const int IoctlGetHcdDriverkeyName = 0x220424;
         public const int IoctlUsbGetRootHubName = 0x220408;
         public const int IoctlUsbGetNodeInformation = 0x220408;
+        public const int IoctlUsbGetNodeInformationEx = 0x220454;
         public const int IoctlUsbGetNodeConnectionInformationEx = 0x220448;
         public const int IoctlUsbGetDescriptorFromNodeConnection = 0x220410;
         public const int IoctlUsbGetNodeConnectionName = 0x220414;
@@ -54,12 +55,12 @@ namespace NativeUsbLib
         public const int DifPropertychange = 0x00000012;
         public const int DicsFlagGlobal = 0x00000001;
 
-        public const int DigcfDefault = 0x00000001;  // only valid with DIGCF_DEVICEINTERFACE
+        public const int DigcfDefault = 0x00000001; // only valid with DIGCF_DEVICEINTERFACE
         public const int DigcfPresent = 0x00000002;
         public const int DigcfAllclasses = 0x00000004;
         public const int DigcfProfile = 0x00000008;
         public const int DigcfDeviceinterface = 0x00000010;
- 
+
         public const int SpdrpDriver = 0x9;
         public const int SpdrpDevicedesc = 0x0;
 
@@ -102,13 +103,19 @@ namespace NativeUsbLib
             GangedPowerSwitching = 0x00,
             IndividualPotPowerSwitching = 0x01,
             // to do
-
         }
 
         public enum UsbHubNode
         {
             UsbHub,
             UsbMiParent
+        }
+
+        public enum UsbHubType : byte
+        {
+            UsbRootHub = 1,
+            Usb20Hub = 2,
+            Usb30Hub = 3
         }
 
         public enum UsbDescriptorType : byte
@@ -118,7 +125,8 @@ namespace NativeUsbLib
             StringDescriptorType = 0x3,
             InterfaceDescriptorType = 0x4,
             EndpointDescriptorType = 0x5,
-            HubDescriptor = 0x29
+            Hub20Descriptor = 0x29,
+            Hub30Descriptor = 0x2A
         }
 
         public enum UsbConfiguration : byte
@@ -150,7 +158,7 @@ namespace NativeUsbLib
             DeviceHubNestedTooDeeply,
             DeviceInLegacyHub
         }
-        
+
         public enum UsbDeviceSpeed : byte
         {
             UsbLowSpeed,
@@ -177,9 +185,9 @@ namespace NativeUsbLib
             LowSpeed = 0x0200,
             HighSpeed = 0x0400,
             TestMode = 0x0800,
-            Indicator = 0x1000, 
-        // these are the bits which cause the hub port state machine to keep moving 
-        //kHubPortStateChangeMask = kHubPortConnection | kHubPortEnabled | kHubPortSuspend | kHubPortOverCurrent | kHubPortBeingReset 
+            Indicator = 0x1000,
+            // these are the bits which cause the hub port state machine to keep moving 
+            //kHubPortStateChangeMask = kHubPortConnection | kHubPortEnabled | kHubPortSuspend | kHubPortOverCurrent | kHubPortBeingReset 
         }
 
         public enum HubStatus : byte
@@ -191,7 +199,7 @@ namespace NativeUsbLib
         }
 
         public enum PortIndicatorSlectors : byte
-        { 
+        {
             IndicatorAutomatic = 0,
             IndicatorAmber,
             IndicatorGreen,
@@ -400,27 +408,28 @@ namespace NativeUsbLib
 
         #region structures
 
-        [StructLayout( LayoutKind.Sequential )]
+        [StructLayout(LayoutKind.Sequential)]
         public struct SpClassinstallHeader
         {
             public int CbSize;
             public int InstallFunction;
         }
-        
-        [StructLayout( LayoutKind.Sequential )]
+
+        [StructLayout(LayoutKind.Sequential)]
         public struct SpPropchangeParams
         {
             public SpClassinstallHeader ClassInstallHeader;
             public int StateChange;
             public int Scope;
             public int HwProfile;
+
             public void Init()
             {
                 ClassInstallHeader = new SpClassinstallHeader();
             }
         }
-        
-        [StructLayout( LayoutKind.Sequential )]
+
+        [StructLayout(LayoutKind.Sequential)]
         public struct SpDevinfoData
         {
             public int CbSize;
@@ -429,7 +438,7 @@ namespace NativeUsbLib
             public IntPtr Reserved;
         }
 
-        [StructLayout( LayoutKind.Sequential )]
+        [StructLayout(LayoutKind.Sequential)]
         public struct SpDeviceInterfaceData
         {
             public int CbSize;
@@ -437,32 +446,35 @@ namespace NativeUsbLib
             public DeviceInterfaceDataFlags Flags;
             public IntPtr Reserved;
         }
-        
-        [StructLayout( LayoutKind.Sequential, CharSet = CharSet.Auto )]
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct SpDeviceInterfaceDetailData
         {
             public int CbSize;
-            [MarshalAs( UnmanagedType.ByValTStr, SizeConst = MaxBufferSize )]
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaxBufferSize)]
             public string DevicePath;
         }
-        
-        [StructLayout( LayoutKind.Sequential, CharSet = CharSet.Auto )]
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct UsbHcdDriverkeyName
         {
             public int ActualLength;
-            [MarshalAs( UnmanagedType.ByValTStr, SizeConst = MaxBufferSize )]
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaxBufferSize)]
             public string DriverKeyName;
         }
 
-        [StructLayout( LayoutKind.Sequential, CharSet = CharSet.Auto )]
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct UsbRootHubName
         {
             public int ActualLength;
-            [MarshalAs( UnmanagedType.ByValTStr, SizeConst = MaxBufferSize )]
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaxBufferSize)]
             public string RootHubName;
         }
 
-        [StructLayout( LayoutKind.Sequential, Pack = 1 )]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct UsbHubDescriptor
         {
             public byte BDescriptorLength;
@@ -471,25 +483,53 @@ namespace NativeUsbLib
             public short WHubCharacteristics;
             public byte BPowerOnToPowerGood;
             public byte BHubControlCurrent;
-            [MarshalAs( UnmanagedType.ByValArray, SizeConst = 64 )]
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
             public byte[] BRemoveAndPowerMask;
         }
 
-        [StructLayout( LayoutKind.Sequential )]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct Usb30HubDescriptor
+        {
+            public byte bLength;
+            public UsbDescriptorType bDescriptorType;
+            public byte bNumberOfPorts;
+            public ushort wHubCharacteristics;
+            public byte bPowerOnToPowerGood;
+            public byte bHubControlCurrent;
+            public byte bHubHdrDecLat;
+            public ushort wHubDelay;
+            public ushort DeviceRemovable;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
         public struct UsbHubInformation
         {
             public UsbHubDescriptor HubDescriptor;
             public bool HubIsBusPowered;
         }
-        
-        [StructLayout( LayoutKind.Sequential )]
+
+        [StructLayout(LayoutKind.Sequential)]
         public struct UsbNodeInformation
         {
             public UsbHubNode NodeType;
             public UsbHubInformation HubInformation;
         }
 
-        [StructLayout( LayoutKind.Sequential, Pack = 1 )]
+        [StructLayout(LayoutKind.Explicit)]
+        public struct UsbHubInformationEx
+        {
+            [FieldOffset(0)]
+            public UsbHubType HubType;
+            [FieldOffset(1)]
+            public ushort HighestPortNumber;
+            //[FieldOffset(2)]
+            //public UsbHubDescriptor UsbHubDescriptor;
+            //[FieldOffset(2)]
+            //public Usb30HubDescriptor Usb30HubDescriptor;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct UsbNodeConnectionInformationEx
         {
             public int ConnectionIndex;
@@ -502,7 +542,7 @@ namespace NativeUsbLib
             public UsbConnectionStatus ConnectionStatus;
         }
 
-        [StructLayout( LayoutKind.Sequential, Pack = 1 )]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public class UsbDeviceDescriptor
         {
             public byte BLength;
@@ -521,7 +561,7 @@ namespace NativeUsbLib
             public byte BNumConfigurations;
         }
 
-        [StructLayout( LayoutKind.Sequential )]
+        [StructLayout(LayoutKind.Sequential)]
         public struct UsbEndpointDescriptor
         {
             public byte BLength;
@@ -532,16 +572,17 @@ namespace NativeUsbLib
             public byte BInterval;
         }
 
-        [StructLayout( LayoutKind.Sequential, CharSet = CharSet.Auto )]
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct UsbStringDescriptor
         {
             public byte BLength;
             public UsbDescriptorType BDescriptorType;
-            [MarshalAs( UnmanagedType.ByValTStr, SizeConst = MaximumUsbStringLength )]
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaximumUsbStringLength)]
             public string BString;
         }
-        
-        [StructLayout( LayoutKind.Sequential )]
+
+        [StructLayout(LayoutKind.Sequential)]
         public struct UsbSetupPacket
         {
             public byte BmRequest;
@@ -551,32 +592,34 @@ namespace NativeUsbLib
             public short WLength;
         }
 
-        [StructLayout( LayoutKind.Sequential )]
+        [StructLayout(LayoutKind.Sequential)]
         public struct UsbDescriptorRequest
         {
             public int ConnectionIndex;
             public UsbSetupPacket SetupPacket;
         }
-        
-        [StructLayout( LayoutKind.Sequential, CharSet = CharSet.Auto )]
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct UsbNodeConnectionName
         {
             public int ConnectionIndex;
             public int ActualLength;
-            [MarshalAs( UnmanagedType.ByValTStr, SizeConst = MaxBufferSize )]
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaxBufferSize)]
             public string NodeName;
         }
-        
-        [StructLayout( LayoutKind.Sequential, CharSet = CharSet.Auto )]
-        public struct UsbNodeConnectionDriverkeyName               // Yes, this is the same as the structure above...
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        public struct UsbNodeConnectionDriverkeyName // Yes, this is the same as the structure above...
         {
             public int ConnectionIndex;
             public int ActualLength;
-            [MarshalAs( UnmanagedType.ByValTStr, SizeConst = MaxBufferSize )]
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaxBufferSize)]
             public string DriverKeyName;
         }
 
-        [StructLayout( LayoutKind.Sequential )]
+        [StructLayout(LayoutKind.Sequential)]
         public struct StorageDeviceNumber
         {
             public int DeviceType;
@@ -644,7 +687,7 @@ namespace NativeUsbLib
             public ushort PortNumber;
             public ushort PortStatus;
         }
-        
+
         [StructLayout(LayoutKind.Sequential)]
         public class UsbUnicodeName
         {
@@ -670,69 +713,89 @@ namespace NativeUsbLib
 
         #region methodes
 
-        [DllImport( "setupapi.dll", CharSet = CharSet.Auto )]
-        internal static extern IntPtr SetupDiGetClassDevs( ref Guid classGuid, int enumerator, IntPtr hwndParent, int flags ); // 1st form using a ClassGUID
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
+        internal static extern IntPtr SetupDiGetClassDevs(ref Guid classGuid, int enumerator, IntPtr hwndParent,
+            int flags); // 1st form using a ClassGUID
 
-        [DllImport( "setupapi.dll", CharSet = CharSet.Auto )]
-        internal static extern IntPtr SetupDiGetClassDevs( int classGuid, string enumerator, IntPtr hwndParent, int flags ); // 2nd form uses an Enumerator
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
+        internal static extern IntPtr SetupDiGetClassDevs(int classGuid, string enumerator, IntPtr hwndParent,
+            int flags); // 2nd form uses an Enumerator
 
         [DllImport("setupapi.dll")]
-        internal static extern IntPtr SetupDiGetClassDevsEx(IntPtr classGuid, [MarshalAs(UnmanagedType.LPStr)]String enumerator, IntPtr hwndParent, Int32 flags, IntPtr deviceInfoSet, [MarshalAs(UnmanagedType.LPStr)]String machineName, IntPtr reserved);
+        internal static extern IntPtr SetupDiGetClassDevsEx(IntPtr classGuid,
+            [MarshalAs(UnmanagedType.LPStr)] String enumerator, IntPtr hwndParent, Int32 flags, IntPtr deviceInfoSet,
+            [MarshalAs(UnmanagedType.LPStr)] String machineName, IntPtr reserved);
 
-        [DllImport( "setupapi.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        internal static extern bool SetupDiEnumDeviceInterfaces( IntPtr deviceInfoSet, IntPtr deviceInfoData, ref Guid interfaceClassGuid, int memberIndex, ref SpDeviceInterfaceData deviceInterfaceData );
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern bool SetupDiEnumDeviceInterfaces(IntPtr deviceInfoSet, IntPtr deviceInfoData,
+            ref Guid interfaceClassGuid, int memberIndex, ref SpDeviceInterfaceData deviceInterfaceData);
 
-        [DllImport( "setupapi.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        internal static extern bool SetupDiGetDeviceInterfaceDetail( IntPtr deviceInfoSet, ref SpDeviceInterfaceData deviceInterfaceData, ref SpDeviceInterfaceDetailData deviceInterfaceDetailData, int deviceInterfaceDetailDataSize, ref int requiredSize, ref SpDevinfoData deviceInfoData );
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr deviceInfoSet,
+            ref SpDeviceInterfaceData deviceInterfaceData, ref SpDeviceInterfaceDetailData deviceInterfaceDetailData,
+            int deviceInterfaceDetailDataSize, ref int requiredSize, ref SpDevinfoData deviceInfoData);
 
-        [DllImport( "setupapi.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        internal static extern bool SetupDiGetDeviceRegistryProperty( IntPtr deviceInfoSet, ref SpDevinfoData deviceInfoData, int iProperty, ref int propertyRegDataType, IntPtr propertyBuffer, int propertyBufferSize, ref int requiredSize );
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet,
+            ref SpDevinfoData deviceInfoData, int iProperty, ref int propertyRegDataType, IntPtr propertyBuffer,
+            int propertyBufferSize, ref int requiredSize);
 
-        [DllImport( "setupapi.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        internal static extern bool SetupDiEnumDeviceInfo( IntPtr deviceInfoSet, int memberIndex, ref SpDevinfoData deviceInfoData );
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern bool SetupDiEnumDeviceInfo(IntPtr deviceInfoSet, int memberIndex,
+            ref SpDevinfoData deviceInfoData);
 
-        [DllImport( "setupapi.dll", SetLastError = true )]
-        internal static extern bool SetupDiDestroyDeviceInfoList( IntPtr deviceInfoSet );
+        [DllImport("setupapi.dll", SetLastError = true)]
+        internal static extern bool SetupDiDestroyDeviceInfoList(IntPtr deviceInfoSet);
 
-        [DllImport( "setupapi.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        internal static extern bool SetupDiGetDeviceInstanceId( IntPtr deviceInfoSet, ref SpDevinfoData deviceInfoData, StringBuilder deviceInstanceId, int deviceInstanceIdSize, out int requiredSize );
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SpDevinfoData deviceInfoData,
+            StringBuilder deviceInstanceId, int deviceInstanceIdSize, out int requiredSize);
 
-        [DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        internal static extern bool DeviceIoControl( IntPtr hDevice, int dwIoControlCode, IntPtr lpInBuffer, int nInBufferSize, IntPtr lpOutBuffer, int nOutBufferSize, out int lpBytesReturned, IntPtr lpOverlapped );
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern bool DeviceIoControl(IntPtr hDevice, int dwIoControlCode, IntPtr lpInBuffer,
+            int nInBufferSize, IntPtr lpOutBuffer, int nOutBufferSize, out int lpBytesReturned, IntPtr lpOverlapped);
 
-        [DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        internal static extern IntPtr CreateFile( string lpFileName, uint dwDesiredAccess, int dwShareMode, IntPtr lpSecurityAttributes, int dwCreationDisposition, int dwFlagsAndAttributes, IntPtr hTemplateFile );
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern IntPtr CreateFile(string lpFileName, uint dwDesiredAccess, int dwShareMode,
+            IntPtr lpSecurityAttributes, int dwCreationDisposition, int dwFlagsAndAttributes, IntPtr hTemplateFile);
 
         // CreateFile() returning SafeHandle is better for use with HidD_xxxx methods
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        internal static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+        internal static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode,
+            IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
 
-        [DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Auto )]
-        internal static extern bool CloseHandle( IntPtr hObject );
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern bool CloseHandle(IntPtr hObject);
 
-        [DllImport( "setupapi.dll" )]
-        internal static extern bool SetupDiSetClassInstallParams( IntPtr deviceInfoSet, ref SpDevinfoData deviceInfoData, ref SpClassinstallHeader classInstallParams, int classInstallParamsSize );
+        [DllImport("setupapi.dll")]
+        internal static extern bool SetupDiSetClassInstallParams(IntPtr deviceInfoSet, ref SpDevinfoData deviceInfoData,
+            ref SpClassinstallHeader classInstallParams, int classInstallParamsSize);
 
-        [DllImport( "setupapi.dll" )]
-        internal static extern bool SetupDiCallClassInstaller( int installFunction, IntPtr deviceInfoSet, ref SpDevinfoData deviceInfoData );
+        [DllImport("setupapi.dll")]
+        internal static extern bool SetupDiCallClassInstaller(int installFunction, IntPtr deviceInfoSet,
+            ref SpDevinfoData deviceInfoData);
 
-        [DllImport( "kernel32.dll" )]
+        [DllImport("kernel32.dll")]
         internal static extern bool IsSystemResumeAutomatic();
 
-        [DllImport( "setupapi.dll" )]
-        internal static extern bool SetupDiClassGuidsFromNameA( string classN, ref Guid guids, UInt32 classNameSize, ref UInt32 reqSize );
+        [DllImport("setupapi.dll")]
+        internal static extern bool SetupDiClassGuidsFromNameA(string classN, ref Guid guids, UInt32 classNameSize,
+            ref UInt32 reqSize);
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern IntPtr OpenFile(string lpFileName, out IntPtr lpReOpenBuff, uint style);
 
         [DllImport("Setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern IntPtr SetupDiGetClassDevs(ref Guid classGuid, uint iEnumerator, int hwndParent, int flags);
+        internal static extern IntPtr SetupDiGetClassDevs(ref Guid classGuid, uint iEnumerator, int hwndParent,
+            int flags);
 
         [DllImport("Setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern bool SetupDiEnumDeviceInfo(IntPtr lpInfoSet, UInt32 dwIndex, SpDevinfoData1 devInfoData);
 
         [DllImport("setupapi.dll", SetLastError = true)]
-        internal static extern bool SetupDiGetDeviceRegistryProperty(IntPtr lpInfoSet, SpDevinfoData1 deviceInfoData, UInt32 property, UInt32 propertyRegDataType, StringBuilder propertyBuffer, UInt32 propertyBufferSize, IntPtr requiredSize);
+        internal static extern bool SetupDiGetDeviceRegistryProperty(IntPtr lpInfoSet, SpDevinfoData1 deviceInfoData,
+            UInt32 property, UInt32 propertyRegDataType, StringBuilder propertyBuffer, UInt32 propertyBufferSize,
+            IntPtr requiredSize);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern int GetLastError();
@@ -741,10 +804,12 @@ namespace NativeUsbLib
         internal static extern void SetLastError(int error);
 
         [DllImport("kernel32.dll")]
-        internal static extern bool ReadFile(IntPtr hFile, byte[] lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead, IntPtr lpOverlapped);
+        internal static extern bool ReadFile(IntPtr hFile, byte[] lpBuffer, uint nNumberOfBytesToRead,
+            out uint lpNumberOfBytesRead, IntPtr lpOverlapped);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        internal static extern bool ReadFile(IntPtr hFile, [Out] byte[] lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead, [In] ref System.Threading.NativeOverlapped lpOverlapped);
+        internal static extern bool ReadFile(IntPtr hFile, [Out] byte[] lpBuffer, uint nNumberOfBytesToRead,
+            out uint lpNumberOfBytesRead, [In] ref System.Threading.NativeOverlapped lpOverlapped);
 
         [DllImport("quickusb.dll", CharSet = CharSet.Ansi)]
         internal static extern int QuickUsbOpen(out IntPtr handle, string devName);
@@ -757,28 +822,34 @@ namespace NativeUsbLib
         internal static extern void HidD_GetHidGuid(out Guid gHid);
 
         [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern bool HidD_GetManufacturerString(SafeFileHandle hidDevice, StringBuilder buffer, Int32 bufferLength);
+        internal static extern bool HidD_GetManufacturerString(SafeFileHandle hidDevice, StringBuilder buffer,
+            Int32 bufferLength);
 
         [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern bool HidD_GetProductString(IntPtr handle, out IntPtr data, ulong maxBytes);
 
         [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern Boolean HidD_GetSerialNumberString(SafeFileHandle hidDevice, StringBuilder buffer, Int32 bufferLength);
+        internal static extern Boolean HidD_GetSerialNumberString(SafeFileHandle hidDevice, StringBuilder buffer,
+            Int32 bufferLength);
 
         [DllImport("hid.dll", SetLastError = true)]
-        internal static extern Boolean HidD_GetAttributes(SafeFileHandle hidDeviceObject, ref HiddAttributes attributes);
+        internal static extern Boolean
+            HidD_GetAttributes(SafeFileHandle hidDeviceObject, ref HiddAttributes attributes);
 
         [DllImport("hid.dll", SetLastError = true)]
-        internal static extern Boolean HidD_GetFeature(SafeFileHandle hidDeviceObject, Byte[] lpReportBuffer, Int32 reportBufferLength);
+        internal static extern Boolean HidD_GetFeature(SafeFileHandle hidDeviceObject, Byte[] lpReportBuffer,
+            Int32 reportBufferLength);
 
         [DllImport("hid.dll", SetLastError = true)]
-        internal static extern Boolean HidD_SetFeature(SafeFileHandle hidDeviceObject, Byte[] lpReportBuffer, Int32 reportBufferLength);
+        internal static extern Boolean HidD_SetFeature(SafeFileHandle hidDeviceObject, Byte[] lpReportBuffer,
+            Int32 reportBufferLength);
 
         [DllImport("hid.dll", SetLastError = true)]
         internal static extern Boolean HidD_FlushQueue(SafeFileHandle hidDeviceObject);
 
         [DllImport("hid.dll", SetLastError = true)]
-        internal static extern Boolean HidD_GetIndexedString(SafeFileHandle hidDeviceObject, Int32 stringIndex, Byte[] lpString, Int32 bufferLength);
+        internal static extern Boolean HidD_GetIndexedString(SafeFileHandle hidDeviceObject, Int32 stringIndex,
+            Byte[] lpString, Int32 bufferLength);
 
         #endregion
 

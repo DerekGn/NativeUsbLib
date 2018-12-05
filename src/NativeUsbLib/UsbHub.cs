@@ -45,7 +45,7 @@ namespace NativeUsbLib
         public UsbApi.UsbNodeInformation NodeInformation
         {
             get { return m_NodeInformation; }
-            set
+            protected set
             {
                 m_NodeInformation = value;
                 IsBusPowered = Convert.ToBoolean(m_NodeInformation.HubInformation.HubIsBusPowered);
@@ -54,37 +54,11 @@ namespace NativeUsbLib
         }
 
         /// <summary>
-        /// Gets or sets the node information.
+        /// Gets or sets the usb hub information.
         /// </summary>
-        /// <value>The node information.</value>
-        public UsbHubInformation NodeInformationX { get; protected set; }
-
-        /// <summary>
-        /// Gets the port count.
-        /// </summary>
-        /// <value>The port count.</value>
-        //public int PortCountX
-        //{
-        //    get
-        //    {
-        //        //NodeInformationX.
-        //    };
-        //}
-
-        /// <summary>
-        /// Gets a value indicating whether this instance is bus powered.
-        /// </summary>
-        /// <value>
-        /// 	<c>true</c> if this instance is bus powered; otherwise, <c>false</c>.
-        /// </value>
-        //public bool IsBusPoweredX
-        //{
-        //    get
-        //    {
-        //        return 
-        //    };
-        //}
-
+        /// <value>The usb hub information.</value>
+        public UsbApi.UsbHubInformationEx HubInformation { get; protected set; }
+        
         #endregion
 
         #region constructor/destructor
@@ -106,16 +80,15 @@ namespace NativeUsbLib
             int nBytesReturned;
 
             // Open a handle to the host controller.
-            IntPtr handel1 = UsbApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero, UsbApi.OpenExisting, 0, IntPtr.Zero);
-            if (handel1.ToInt64() != UsbApi.InvalidHandleValue)
+            IntPtr hostControllerHandle = UsbApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero, UsbApi.OpenExisting, 0, IntPtr.Zero);
+            if (hostControllerHandle.ToInt64() != UsbApi.InvalidHandleValue)
             {
-
                 UsbApi.UsbRootHubName rootHubName = new UsbApi.UsbRootHubName();
                 int nBytes = Marshal.SizeOf(rootHubName);
                 IntPtr ptrRootHubName = Marshal.AllocHGlobal(nBytes);
 
                 // Get the root hub name.
-                if (UsbApi.DeviceIoControl(handel1, UsbApi.IoctlUsbGetRootHubName, ptrRootHubName, nBytes, ptrRootHubName, nBytes, out nBytesReturned, IntPtr.Zero))
+                if (UsbApi.DeviceIoControl(hostControllerHandle, UsbApi.IoctlUsbGetRootHubName, ptrRootHubName, nBytes, ptrRootHubName, nBytes, out nBytesReturned, IntPtr.Zero))
                 {
                     rootHubName = (UsbApi.UsbRootHubName)Marshal.PtrToStructure(ptrRootHubName, typeof(UsbApi.UsbRootHubName));
 
@@ -132,46 +105,39 @@ namespace NativeUsbLib
                 // TODO: Get the driver key name for the root hub.
 
                 // Now let's open the hub (based upon the hub name we got above).
-                IntPtr handel2 = UsbApi.CreateFile(DevicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero, UsbApi.OpenExisting, 0, IntPtr.Zero);
-                if (handel2.ToInt64() != UsbApi.InvalidHandleValue)
+                IntPtr hubHandle = UsbApi.CreateFile(DevicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero, UsbApi.OpenExisting, 0, IntPtr.Zero);
+                if (hubHandle.ToInt64() != UsbApi.InvalidHandleValue)
                 {
-                    OperatingSystem osVersionInfo = Environment.OSVersion;
-                    
-                    if (osVersionInfo.Version.Major >= 6 && osVersionInfo.Version.Minor >= 2)
+                    UsbApi.UsbNodeInformation nodeInfo =
+                        new UsbApi.UsbNodeInformation { NodeType = UsbApi.UsbHubNode.UsbHub };
+                    nBytes = Marshal.SizeOf(nodeInfo);
+                    IntPtr ptrNodeInfo = Marshal.AllocHGlobal(nBytes);
+                    Marshal.StructureToPtr(nodeInfo, ptrNodeInfo, true);
+
+                    if (UsbApi.DeviceIoControl(hubHandle, UsbApi.IoctlUsbGetNodeInformation, ptrNodeInfo, nBytes, ptrNodeInfo, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
-                        //UsbApi.UsbNodeInformationEx nodeInfo =
-                        //    new UsbApi.UsbNodeInformationEx { NodeType = UsbApi.UsbHubNode.UsbHub };
-                        //nBytes = Marshal.SizeOf(nodeInfo);
-                        //IntPtr ptrNodeInfo = Marshal.AllocHGlobal(nBytes);
-                        //Marshal.StructureToPtr(nodeInfo, ptrNodeInfo, true);
-
-                        //if (UsbApi.DeviceIoControl(handel2, UsbApi.IoctlUsbGetNodeInformationEx, ptrNodeInfo, nBytes, ptrNodeInfo, nBytes, out nBytesReturned, IntPtr.Zero))
-                        //{
-                        //    NodeInformationX = new UsbThreeNodeInformation((UsbApi.UsbNodeInformationEx)Marshal.PtrToStructure(ptrNodeInfo, typeof(UsbApi.UsbNodeInformationEx)));
-                        //}
-                        //Marshal.FreeHGlobal(ptrNodeInfo);
-                    }
-                    else
-                    {
-                        UsbApi.UsbNodeInformation nodeInfo =
-                            new UsbApi.UsbNodeInformation { NodeType = UsbApi.UsbHubNode.UsbHub };
-                        nBytes = Marshal.SizeOf(nodeInfo);
-                        IntPtr ptrNodeInfo = Marshal.AllocHGlobal(nBytes);
-                        Marshal.StructureToPtr(nodeInfo, ptrNodeInfo, true);
-
-                        if (UsbApi.DeviceIoControl(handel2, UsbApi.IoctlUsbGetNodeInformation, ptrNodeInfo, nBytes, ptrNodeInfo, nBytes, out nBytesReturned, IntPtr.Zero))
-                        {
-                            NodeInformationX = new UsbTwoHubInformation((UsbApi.UsbNodeInformation)Marshal.PtrToStructure(ptrNodeInfo, typeof(UsbApi.UsbNodeInformation)));
-                            NodeInformation = (UsbApi.UsbNodeInformation) Marshal.PtrToStructure(ptrNodeInfo, typeof(UsbApi.UsbNodeInformation));
-                        }
-
-                        Marshal.FreeHGlobal(ptrNodeInfo);
+                        NodeInformation = (UsbApi.UsbNodeInformation) Marshal.PtrToStructure(ptrNodeInfo, typeof(UsbApi.UsbNodeInformation));
                     }
 
-                    UsbApi.CloseHandle(handel2);
+                    Marshal.FreeHGlobal(ptrNodeInfo);
+
+                    UsbApi.UsbHubInformationEx hubInfo =
+                        new UsbApi.UsbHubInformationEx();
+                    nBytes = Marshal.SizeOf(hubInfo);
+                    IntPtr ptrHubInfo = Marshal.AllocHGlobal(nBytes);
+                    Marshal.StructureToPtr(hubInfo, ptrHubInfo, true);
+
+                    if (UsbApi.DeviceIoControl(hubHandle, UsbApi.IoctlUsbGetNodeInformationEx, ptrHubInfo, nBytes, ptrHubInfo, nBytes, out nBytesReturned, IntPtr.Zero))
+                    {
+                        HubInformation = (UsbApi.UsbHubInformationEx)Marshal.PtrToStructure(ptrHubInfo, typeof(UsbApi.UsbHubInformationEx));
+                    }
+
+                    Marshal.FreeHGlobal(ptrHubInfo);
+
+                    UsbApi.CloseHandle(hubHandle);
                 }
 
-                UsbApi.CloseHandle(handel1);
+                UsbApi.CloseHandle(hostControllerHandle);
 
                 for (int index = 1; index <= PortCount; index++)
                 {

@@ -481,7 +481,7 @@ namespace NativeUsbLib
         /// </summary>
         ~Device()
         {
-            Devices.Clear();
+            Devices?.Clear();
             Devices = null;
             Parent = null;
         }
