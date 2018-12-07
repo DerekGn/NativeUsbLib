@@ -514,17 +514,16 @@ namespace NativeUsbLib
             public UsbHubInformation HubInformation;
         }
 
-        [StructLayout(LayoutKind.Explicit)]
+        [StructLayout(LayoutKind.Explicit, Pack = 1 )]
         public struct UsbHubInformationEx
         {
             [FieldOffset(0)]
             public UsbHubType HubType;
-            [FieldOffset(1)]
+            [FieldOffset(4)]
             public ushort HighestPortNumber;
-            //[FieldOffset(2)]
-            //public UsbHubDescriptor UsbHubDescriptor;
-            [FieldOffset(2)]
-            public Usb30HubDescriptor Usb30HubDescriptor;
+            [FieldOffset(8)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 71)]
+            public byte[] Union;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
