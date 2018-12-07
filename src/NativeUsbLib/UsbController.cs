@@ -81,9 +81,9 @@ namespace NativeUsbLib
                     }
                     catch (Exception ex)
                     {
-                        Trace.WriteLine(ex.Message);
-                        
-                        throw new UsbControllerException(ex.Message);
+                        Trace.TraceError("Unhandled exception occurred: {0}", ex.ToString());
+
+                        throw new UsbControllerException("Unhandled exception occurred", ex);
                     }
                 }
                 else

@@ -4,6 +4,7 @@ using System.Text;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using NativeUsbLib.Exceptions;
+using NativeUsbLib.WinApis;
 
 namespace NativeUsbLib
 {
@@ -80,7 +81,7 @@ namespace NativeUsbLib
             int nBytesReturned;
 
             // Open a handle to the host controller.
-            IntPtr hostControllerHandle = UsbApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero, UsbApi.OpenExisting, 0, IntPtr.Zero);
+            IntPtr hostControllerHandle = KernelApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero, UsbApi.OpenExisting, 0, IntPtr.Zero);
             if (hostControllerHandle.ToInt64() != UsbApi.InvalidHandleValue)
             {
                 UsbApi.UsbRootHubName rootHubName = new UsbApi.UsbRootHubName();
@@ -88,7 +89,7 @@ namespace NativeUsbLib
                 IntPtr ptrRootHubName = Marshal.AllocHGlobal(nBytes);
 
                 // Get the root hub name.
-                if (UsbApi.DeviceIoControl(hostControllerHandle, UsbApi.IoctlUsbGetRootHubName, ptrRootHubName, nBytes, ptrRootHubName, nBytes, out nBytesReturned, IntPtr.Zero))
+                if (KernelApi.DeviceIoControl(hostControllerHandle, UsbApi.IoctlUsbGetRootHubName, ptrRootHubName, nBytes, ptrRootHubName, nBytes, out nBytesReturned, IntPtr.Zero))
                 {
                     rootHubName = (UsbApi.UsbRootHubName)Marshal.PtrToStructure(ptrRootHubName, typeof(UsbApi.UsbRootHubName));
 
@@ -105,7 +106,7 @@ namespace NativeUsbLib
                 // TODO: Get the driver key name for the root hub.
 
                 // Now let's open the hub (based upon the hub name we got above).
-                IntPtr hubHandle = UsbApi.CreateFile(DevicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero, UsbApi.OpenExisting, 0, IntPtr.Zero);
+                IntPtr hubHandle = KernelApi.CreateFile(DevicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero, UsbApi.OpenExisting, 0, IntPtr.Zero);
                 if (hubHandle.ToInt64() != UsbApi.InvalidHandleValue)
                 {
                     UsbApi.UsbNodeInformation nodeInfo =
@@ -114,9 +115,13 @@ namespace NativeUsbLib
                     IntPtr ptrNodeInfo = Marshal.AllocHGlobal(nBytes);
                     Marshal.StructureToPtr(nodeInfo, ptrNodeInfo, true);
 
-                    if (UsbApi.DeviceIoControl(hubHandle, UsbApi.IoctlUsbGetNodeInformation, ptrNodeInfo, nBytes, ptrNodeInfo, nBytes, out nBytesReturned, IntPtr.Zero))
+                    if (KernelApi.DeviceIoControl(hubHandle, UsbApi.IoctlUsbGetNodeInformation, ptrNodeInfo, nBytes, ptrNodeInfo, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
                         NodeInformation = (UsbApi.UsbNodeInformation) Marshal.PtrToStructure(ptrNodeInfo, typeof(UsbApi.UsbNodeInformation));
+                    }
+                    else
+                    {
+                        Trace.TraceError($"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbApi.IoctlUsbGetNodeInformation)}] Result: [{KernelApi.GetLastError():X}]");
                     }
 
                     Marshal.FreeHGlobal(ptrNodeInfo);
@@ -127,17 +132,21 @@ namespace NativeUsbLib
                     IntPtr ptrHubInfo = Marshal.AllocHGlobal(nBytes);
                     Marshal.StructureToPtr(hubInfo, ptrHubInfo, true);
 
-                    if (UsbApi.DeviceIoControl(hubHandle, UsbApi.IoctlUsbGetNodeInformationEx, ptrHubInfo, nBytes, ptrHubInfo, nBytes, out nBytesReturned, IntPtr.Zero))
+                    if (KernelApi.DeviceIoControl(hubHandle, UsbApi.IoctlUsbGetNodeInformationEx, ptrHubInfo, nBytes, ptrHubInfo, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
                         HubInformation = (UsbApi.UsbHubInformationEx)Marshal.PtrToStructure(ptrHubInfo, typeof(UsbApi.UsbHubInformationEx));
+                    }
+                    else
+                    {
+                        Trace.TraceError($"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbApi.IoctlUsbGetNodeInformation)}] Result: [{KernelApi.GetLastError():X}]");
                     }
 
                     Marshal.FreeHGlobal(ptrHubInfo);
 
-                    UsbApi.CloseHandle(hubHandle);
+                    KernelApi.CloseHandle(hubHandle);
                 }
 
-                UsbApi.CloseHandle(hostControllerHandle);
+                KernelApi.CloseHandle(hostControllerHandle);
 
                 for (int index = 1; index <= PortCount; index++)
                 {

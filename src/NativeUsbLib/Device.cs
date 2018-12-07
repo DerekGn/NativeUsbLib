@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using NativeUsbLib.WinApis;
 
 namespace NativeUsbLib
 {
@@ -83,7 +84,7 @@ namespace NativeUsbLib
         /// Gets the hdi descriptor.
         /// </summary>
         /// <value>The hdi descriptor.</value>
-        public List<UsbApi.HidDescriptor> HdiDescriptor { get; } = null;
+        public List<HidApi.HidDescriptor> HdiDescriptor { get; } = null;
 
 
         /// <summary>
@@ -197,7 +198,7 @@ namespace NativeUsbLib
             if (devicePath == null)
                 return;
 
-            IntPtr handel = UsbApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero,
+            IntPtr handel = KernelApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero,
                 UsbApi.OpenExisting, 0, IntPtr.Zero);
             if (handel.ToInt64() != UsbApi.InvalidHandleValue)
             {
@@ -225,7 +226,7 @@ namespace NativeUsbLib
                 Marshal.StructureToPtr(request1, ptrRequest1, true);
 
                 // Use an IOCTL call to request the String Descriptor
-                if (UsbApi.DeviceIoControl(handel, UsbApi.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest1,
+                if (KernelApi.DeviceIoControl(handel, UsbApi.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest1,
                     nBytes, ptrRequest1, nBytes, out nBytesReturned, IntPtr.Zero))
                 {
                     IntPtr ptr = new IntPtr(ptrRequest1.ToInt64() + Marshal.SizeOf(request1));
@@ -269,12 +270,12 @@ namespace NativeUsbLib
                             ptr = (IntPtr) p;
                             for (int k = 0; k < interfaceDescriptor.BInterfaceSubClass; k++)
                             {
-                                UsbApi.HidDescriptor hdiDescriptor =
-                                    (UsbApi.HidDescriptor) Marshal.PtrToStructure(ptr, typeof(UsbApi.HidDescriptor));
+                                HidApi.HidDescriptor hdiDescriptor =
+                                    (HidApi.HidDescriptor) Marshal.PtrToStructure(ptr, typeof(HidApi.HidDescriptor));
 
                                 if (HdiDescriptor == null)
                                 {
-                                    HdiDescriptor = new List<UsbApi.HidDescriptor>
+                                    HdiDescriptor = new List<HidApi.HidDescriptor>
                                     {
                                         hdiDescriptor
                                     };
@@ -337,7 +338,7 @@ namespace NativeUsbLib
                     Marshal.StructureToPtr(request, ptrRequest, true);
 
                     // Use an IOCTL call to request the string descriptor.
-                    if (UsbApi.DeviceIoControl(handel, UsbApi.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest,
+                    if (KernelApi.DeviceIoControl(handel, UsbApi.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest,
                         nBytes, ptrRequest, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
                         // The location of the string descriptor is immediately after
@@ -375,7 +376,7 @@ namespace NativeUsbLib
                     Marshal.StructureToPtr(request, ptrRequest, true);
 
                     // Use an IOCTL call to request the string descriptor
-                    if (UsbApi.DeviceIoControl(handel, UsbApi.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest,
+                    if (KernelApi.DeviceIoControl(handel, UsbApi.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest,
                         nBytes, ptrRequest, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
                         // The location of the string descriptor is immediately after the request structure.
@@ -409,7 +410,7 @@ namespace NativeUsbLib
                     Marshal.StructureToPtr(request, ptrRequest, true);
 
                     // Use an IOCTL call to request the string descriptor.
-                    if (UsbApi.DeviceIoControl(handel, UsbApi.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest,
+                    if (KernelApi.DeviceIoControl(handel, UsbApi.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest,
                         nBytes, ptrRequest, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
                         // the location of the string descriptor is immediately after the Request structure
@@ -431,7 +432,7 @@ namespace NativeUsbLib
                 Marshal.StructureToPtr(driverKey, ptrDriverKey, true);
 
                 // Use an IOCTL call to request the Driver Key Name
-                if (UsbApi.DeviceIoControl(handel, UsbApi.IoctlUsbGetNodeConnectionDriverkeyName, ptrDriverKey,
+                if (KernelApi.DeviceIoControl(handel, UsbApi.IoctlUsbGetNodeConnectionDriverkeyName, ptrDriverKey,
                     nBytes, ptrDriverKey, nBytes, out nBytesReturned, IntPtr.Zero))
                 {
                     driverKey = (UsbApi.UsbNodeConnectionDriverkeyName) Marshal.PtrToStructure(ptrDriverKey,
@@ -468,7 +469,7 @@ namespace NativeUsbLib
                 Marshal.FreeHGlobal(ptrDriverKey);
             }
 
-            UsbApi.CloseHandle(handel);
+            KernelApi.CloseHandle(handel);
         }
 
         #endregion
@@ -699,7 +700,7 @@ namespace NativeUsbLib
 
             // Generate a list of all HID devices
             Guid guidHid;
-            UsbApi.HidD_GetHidGuid(
+            HidApi.HidD_GetHidGuid(
                 out guidHid); // next, get the GUID from Windows that it uses to represent the HID USB interface
 
             IntPtr handel = UsbApi.SetupDiGetClassDevs(ref guidHid, 0, IntPtr.Zero,
@@ -763,7 +764,7 @@ namespace NativeUsbLib
         bool HidSerialNumberMatches(string hidDevicePath)
         {
             // kludge: (uint) cast used to select SafeHandle CreateFile() method
-            SafeFileHandle hnd = UsbApi.CreateFile(hidDevicePath,
+            SafeFileHandle hnd = KernelApi.CreateFile(hidDevicePath,
                 UsbApi.GenericWrite | UsbApi.GenericRead,
                 UsbApi.FileShareRead | UsbApi.FileShareWrite,
                 IntPtr.Zero,
@@ -777,8 +778,8 @@ namespace NativeUsbLib
             {
                 try
                 {
-                    var serialNumber = new StringBuilder(UsbApi.HidStringLength);
-                    if (UsbApi.HidD_GetSerialNumberString(hnd, serialNumber, serialNumber.Capacity))
+                    var serialNumber = new StringBuilder(HidApi.HidStringLength);
+                    if (HidApi.HidD_GetSerialNumberString(hnd, serialNumber, serialNumber.Capacity))
                     {
                         return serialNumber.ToString() == SerialNumber;
                     }
@@ -816,7 +817,7 @@ namespace NativeUsbLib
             bool isConnected = false;
 
             // Open a handle to the Hub device
-            IntPtr handel1 = UsbApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero,
+            IntPtr handel1 = KernelApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero,
                 UsbApi.OpenExisting, 0, IntPtr.Zero);
             if (handel1.ToInt64() != UsbApi.InvalidHandleValue)
             {
@@ -826,7 +827,7 @@ namespace NativeUsbLib
                     new UsbApi.UsbNodeConnectionInformationEx {ConnectionIndex = portCount};
                 Marshal.StructureToPtr(nodeConnection, ptrNodeConnection, true);
 
-                if (UsbApi.DeviceIoControl(handel1, UsbApi.IoctlUsbGetNodeConnectionInformationEx,
+                if (KernelApi.DeviceIoControl(handel1, UsbApi.IoctlUsbGetNodeConnectionInformationEx,
                     ptrNodeConnection, nBytes, ptrNodeConnection, nBytes, out nBytesReturned, IntPtr.Zero))
                 {
                     nodeConnection =
@@ -843,7 +844,7 @@ namespace NativeUsbLib
                         ptrNodeConnection = Marshal.AllocHGlobal(nBytes);
                         Marshal.StructureToPtr(nodeConnection, ptrNodeConnection, true);
 
-                        if (UsbApi.DeviceIoControl(handel1, UsbApi.IoctlUsbGetNodeConnectionName,
+                        if (KernelApi.DeviceIoControl(handel1, UsbApi.IoctlUsbGetNodeConnectionName,
                             ptrNodeConnection, nBytes, ptrNodeConnection, nBytes, out nBytesReturned, IntPtr.Zero))
                         {
                             var nameConnection = (UsbApi.UsbNodeConnectionName) Marshal.PtrToStructure(ptrNodeConnection,
@@ -870,7 +871,7 @@ namespace NativeUsbLib
                 }
 
                 Marshal.FreeHGlobal(ptrNodeConnection);
-                UsbApi.CloseHandle(handel1);
+                KernelApi.CloseHandle(handel1);
             }
 
             return device;

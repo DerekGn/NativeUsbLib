@@ -3,7 +3,6 @@ using System.Text;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-
 namespace NativeUsbLib
 {
     public class UsbApi
@@ -483,7 +482,6 @@ namespace NativeUsbLib
             public short WHubCharacteristics;
             public byte BPowerOnToPowerGood;
             public byte BHubControlCurrent;
-
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
             public byte[] BRemoveAndPowerMask;
         }
@@ -525,8 +523,8 @@ namespace NativeUsbLib
             public ushort HighestPortNumber;
             //[FieldOffset(2)]
             //public UsbHubDescriptor UsbHubDescriptor;
-            //[FieldOffset(2)]
-            //public Usb30HubDescriptor Usb30HubDescriptor;
+            [FieldOffset(2)]
+            public Usb30HubDescriptor Usb30HubDescriptor;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -655,24 +653,6 @@ namespace NativeUsbLib
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct HidDescriptorDescList
-        {
-            public byte BReportType;
-            public short WReportLength;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct HidDescriptor
-        {
-            public byte BLength;
-            public UsbDescriptorType BDescriptorType;
-            public short BcdHid;
-            public byte BCountry;
-            public byte BNumDescriptors;
-            public HidDescriptorDescList HidDesclist;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
         public class SpDevinfoData1
         {
             public int CbSize;
@@ -696,14 +676,6 @@ namespace NativeUsbLib
         }
 
         // HID.DLL definitions
-        [StructLayout(LayoutKind.Sequential)]
-        public struct HiddAttributes
-        {
-            public Int32 Size;
-            public Int16 VendorId;
-            public Int16 ProductId;
-            public Int16 VersionNumber;
-        }
 
         #endregion
 
@@ -751,21 +723,7 @@ namespace NativeUsbLib
         internal static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SpDevinfoData deviceInfoData,
             StringBuilder deviceInstanceId, int deviceInstanceIdSize, out int requiredSize);
 
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        internal static extern bool DeviceIoControl(IntPtr hDevice, int dwIoControlCode, IntPtr lpInBuffer,
-            int nInBufferSize, IntPtr lpOutBuffer, int nOutBufferSize, out int lpBytesReturned, IntPtr lpOverlapped);
-
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        internal static extern IntPtr CreateFile(string lpFileName, uint dwDesiredAccess, int dwShareMode,
-            IntPtr lpSecurityAttributes, int dwCreationDisposition, int dwFlagsAndAttributes, IntPtr hTemplateFile);
-
         // CreateFile() returning SafeHandle is better for use with HidD_xxxx methods
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        internal static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode,
-            IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
-
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        internal static extern bool CloseHandle(IntPtr hObject);
 
         [DllImport("setupapi.dll")]
         internal static extern bool SetupDiSetClassInstallParams(IntPtr deviceInfoSet, ref SpDevinfoData deviceInfoData,
@@ -775,15 +733,9 @@ namespace NativeUsbLib
         internal static extern bool SetupDiCallClassInstaller(int installFunction, IntPtr deviceInfoSet,
             ref SpDevinfoData deviceInfoData);
 
-        [DllImport("kernel32.dll")]
-        internal static extern bool IsSystemResumeAutomatic();
-
         [DllImport("setupapi.dll")]
         internal static extern bool SetupDiClassGuidsFromNameA(string classN, ref Guid guids, UInt32 classNameSize,
             ref UInt32 reqSize);
-
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        internal static extern IntPtr OpenFile(string lpFileName, out IntPtr lpReOpenBuff, uint style);
 
         [DllImport("Setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern IntPtr SetupDiGetClassDevs(ref Guid classGuid, uint iEnumerator, int hwndParent,
@@ -797,59 +749,11 @@ namespace NativeUsbLib
             UInt32 property, UInt32 propertyRegDataType, StringBuilder propertyBuffer, UInt32 propertyBufferSize,
             IntPtr requiredSize);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        internal static extern int GetLastError();
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        internal static extern void SetLastError(int error);
-
-        [DllImport("kernel32.dll")]
-        internal static extern bool ReadFile(IntPtr hFile, byte[] lpBuffer, uint nNumberOfBytesToRead,
-            out uint lpNumberOfBytesRead, IntPtr lpOverlapped);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        internal static extern bool ReadFile(IntPtr hFile, [Out] byte[] lpBuffer, uint nNumberOfBytesToRead,
-            out uint lpNumberOfBytesRead, [In] ref System.Threading.NativeOverlapped lpOverlapped);
-
         [DllImport("quickusb.dll", CharSet = CharSet.Ansi)]
         internal static extern int QuickUsbOpen(out IntPtr handle, string devName);
 
         // Hid.dll definitions
         // Length for use with HID Api functions
-        public const int HidStringLength = 128;
-
-        [DllImport("hid.dll", SetLastError = true)]
-        internal static extern void HidD_GetHidGuid(out Guid gHid);
-
-        [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern bool HidD_GetManufacturerString(SafeFileHandle hidDevice, StringBuilder buffer,
-            Int32 bufferLength);
-
-        [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern bool HidD_GetProductString(IntPtr handle, out IntPtr data, ulong maxBytes);
-
-        [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern Boolean HidD_GetSerialNumberString(SafeFileHandle hidDevice, StringBuilder buffer,
-            Int32 bufferLength);
-
-        [DllImport("hid.dll", SetLastError = true)]
-        internal static extern Boolean
-            HidD_GetAttributes(SafeFileHandle hidDeviceObject, ref HiddAttributes attributes);
-
-        [DllImport("hid.dll", SetLastError = true)]
-        internal static extern Boolean HidD_GetFeature(SafeFileHandle hidDeviceObject, Byte[] lpReportBuffer,
-            Int32 reportBufferLength);
-
-        [DllImport("hid.dll", SetLastError = true)]
-        internal static extern Boolean HidD_SetFeature(SafeFileHandle hidDeviceObject, Byte[] lpReportBuffer,
-            Int32 reportBufferLength);
-
-        [DllImport("hid.dll", SetLastError = true)]
-        internal static extern Boolean HidD_FlushQueue(SafeFileHandle hidDeviceObject);
-
-        [DllImport("hid.dll", SetLastError = true)]
-        internal static extern Boolean HidD_GetIndexedString(SafeFileHandle hidDeviceObject, Int32 stringIndex,
-            Byte[] lpString, Int32 bufferLength);
 
         #endregion
 
