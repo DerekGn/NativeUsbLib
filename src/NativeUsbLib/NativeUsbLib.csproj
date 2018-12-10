@@ -25,4 +25,8 @@ Updated to prevent potential unmanaged memory leak in UsbController()</PackageRe
     <PackageProjectUrl>https://github.com/DerekGn/NativeUsbLib</PackageProjectUrl>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="WinApis\Marshalling\" />
+  </ItemGroup>
+
 </Project>
