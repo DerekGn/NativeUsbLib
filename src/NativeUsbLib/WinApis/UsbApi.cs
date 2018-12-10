@@ -2,6 +2,7 @@
 using System.Text;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using NativeUsbLib.WinApis.Marshalling;
 
 namespace NativeUsbLib.WinApis
 {
@@ -514,16 +515,17 @@ namespace NativeUsbLib.WinApis
             public UsbHubInformation HubInformation;
         }
 
-        [StructLayout(LayoutKind.Explicit, Pack = 1 )]
-        public struct UsbHubInformationEx
+        public struct UsbHubInformationEx : IMarshallable
         {
-            [FieldOffset(0)]
             public UsbHubType HubType;
-            [FieldOffset(4)]
             public ushort HighestPortNumber;
-            [FieldOffset(8)]
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 71)]
-            public byte[] Union;
+
+            public int SizeOf => throw new NotImplementedException();
+
+            public void MarshalFrom(IntPtr pointer)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]

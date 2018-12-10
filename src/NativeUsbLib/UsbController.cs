@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
 using NativeUsbLib.Exceptions;
 using System.Diagnostics;
+using NativeUsbLib.WinApis;
 
 namespace NativeUsbLib
 {
