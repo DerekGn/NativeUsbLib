@@ -111,7 +111,7 @@ namespace NativeUsbLib.WinApis
             UsbMiParent
         }
 
-        public enum UsbHubType : byte
+        public enum UsbHubType
         {
             UsbRootHub = 1,
             Usb20Hub = 2,
@@ -483,6 +483,7 @@ namespace NativeUsbLib.WinApis
             public short WHubCharacteristics;
             public byte BPowerOnToPowerGood;
             public byte BHubControlCurrent;
+
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
             public byte[] BRemoveAndPowerMask;
         }
@@ -519,12 +520,14 @@ namespace NativeUsbLib.WinApis
         {
             public UsbHubType HubType;
             public ushort HighestPortNumber;
+            public UsbHubDescriptor UsbHubDescriptor;
+            public Usb30HubDescriptor Usb30HubDescriptor;
 
-            public int SizeOf => throw new NotImplementedException();
+            public int SizeOf => sizeof(UsbHubType) + sizeof(ushort) +
+                                 Math.Max(Marshal.SizeOf(UsbHubDescriptor), Marshal.SizeOf(Usb30HubDescriptor));
 
             public void MarshalFrom(IntPtr pointer)
             {
-                throw new NotImplementedException();
             }
         }
 

@@ -128,13 +128,13 @@ namespace NativeUsbLib
 
                     UsbApi.UsbHubInformationEx hubInfo =
                         new UsbApi.UsbHubInformationEx();
-                    nBytes = Marshal.SizeOf(hubInfo);
+                    nBytes = hubInfo.SizeOf;
                     IntPtr ptrHubInfo = Marshal.AllocHGlobal(nBytes);
-                    Marshal.StructureToPtr(hubInfo, ptrHubInfo, true);
-
+                    
                     if (KernelApi.DeviceIoControl(hubHandle, UsbApi.IoctlUsbGetNodeInformationEx, ptrHubInfo, nBytes, ptrHubInfo, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
-                        HubInformation = (UsbApi.UsbHubInformationEx)Marshal.PtrToStructure(ptrHubInfo, typeof(UsbApi.UsbHubInformationEx));
+                        hubInfo.MarshalFrom(ptrHubInfo);
+                        HubInformation = hubInfo;
                     }
                     else
                     {
