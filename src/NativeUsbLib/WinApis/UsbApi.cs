@@ -3,7 +3,7 @@ using System.Text;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace NativeUsbLib
+namespace NativeUsbLib.WinApis
 {
     public class UsbApi
     {
