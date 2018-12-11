@@ -52,19 +52,19 @@ namespace NativeUsbLib.WinApis
         [StructLayout(LayoutKind.Sequential)]
         public struct HidDescriptor
         {
-            public byte BLength;
-            public UsbApi.UsbDescriptorType BDescriptorType;
+            public byte Length;
+            public UsbApi.UsbDescriptorType DescriptorType;
             public short BcdHid;
-            public byte BCountry;
-            public byte BNumDescriptors;
+            public byte Country;
+            public byte NumDescriptors;
             public HidApi.HidDescriptorDescList HidDesclist;
         }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct HidDescriptorDescList
         {
-            public byte BReportType;
-            public short WReportLength;
+            public byte ReportType;
+            public short ReportLength;
         }
 
         public const int HidStringLength = 128;

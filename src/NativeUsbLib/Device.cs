@@ -25,7 +25,7 @@ namespace NativeUsbLib
         /// <summary>
         /// The childs.
         /// </summary>
-        protected List<Device> Devices = null;
+        public List<Device> Devices = null;
 
         /// <summary>
         /// Gets the childs.
@@ -216,12 +216,12 @@ namespace NativeUsbLib
                             ConnectionIndex = adapterNumber,
                             SetupPacket =
                             {
-                            WValue = (short) UsbApi.UsbConfigurationDescriptorType << 8,
-                            WIndex = 0x409 // Language Code
+                            Value = (short) UsbApi.UsbConfigurationDescriptorType << 8,
+                            Index = 0x409 // Language Code
                         }
                         };
 
-                    request1.SetupPacket.WLength = (short)(nBytes - Marshal.SizeOf(request1));
+                    request1.SetupPacket.Length = (short)(nBytes - Marshal.SizeOf(request1));
 
                     // Geez, I wish C# had a Marshal.MemSet() method
                     IntPtr ptrRequest1 = Marshal.StringToHGlobalAuto(nullString);
@@ -250,7 +250,7 @@ namespace NativeUsbLib
                         p += Marshal.SizeOf(configurationDescriptor) - 1;
                         ptr = (IntPtr)p;
 
-                        for (int i = 0; i < configurationDescriptor.BNumInterface; i++)
+                        for (int i = 0; i < configurationDescriptor.NumInterface; i++)
                         {
                             UsbApi.UsbInterfaceDescriptor interfaceDescriptor =
                                 (UsbApi.UsbInterfaceDescriptor)Marshal.PtrToStructure(ptr,
@@ -266,10 +266,10 @@ namespace NativeUsbLib
                             p = (long)ptr;
                             p += Marshal.SizeOf(interfaceDescriptor);
 
-                            if (interfaceDescriptor.BInterfaceClass == 0x03)
+                            if (interfaceDescriptor.InterfaceClass == 0x03)
                             {
                                 ptr = (IntPtr)p;
-                                for (int k = 0; k < interfaceDescriptor.BInterfaceSubClass; k++)
+                                for (int k = 0; k < interfaceDescriptor.InterfaceSubClass; k++)
                                 {
                                     HidApi.HidDescriptor hdiDescriptor =
                                         (HidApi.HidDescriptor)Marshal.PtrToStructure(ptr, typeof(HidApi.HidDescriptor));
@@ -291,7 +291,7 @@ namespace NativeUsbLib
                             }
 
                             ptr = (IntPtr)p;
-                            for (int j = 0; j < interfaceDescriptor.BNumEndpoints; j++)
+                            for (int j = 0; j < interfaceDescriptor.NumEndpoints; j++)
                             {
                                 UsbApi.UsbEndpointDescriptor endpointDescriptor1 =
                                     (UsbApi.UsbEndpointDescriptor)Marshal.PtrToStructure(ptr,
@@ -335,7 +335,7 @@ namespace NativeUsbLib
 
                     if (DeviceDescriptor != null && DeviceDescriptor.IProduct > 0)
                     {
-                        Product = UsbDescriptorRequestString(handle, adapterNumber, DeviceDescriptor.ISerialNumber);
+                        Product = UsbDescriptorRequestString(handle, adapterNumber, DeviceDescriptor.IProduct);
                     }
 
                     // Get the Driver Key Name (usefull in locating a device)
@@ -406,12 +406,12 @@ namespace NativeUsbLib
                         ConnectionIndex = adapterNumber,
                         SetupPacket =
                         {
-                        WValue = (short) ((UsbApi.UsbStringDescriptorType << 8) +
+                        Value = (short) ((UsbApi.UsbStringDescriptorType << 8) +
                                           descriptorIndex),
-                        WIndex = 0x409 // Language Code
+                        Index = 0x409 // Language Code
                     }
                     };
-                request.SetupPacket.WLength = (short)(nBytes - Marshal.SizeOf(request));
+                request.SetupPacket.Length = (short)(nBytes - Marshal.SizeOf(request));
 
                 // Geez, I wish C# had a Marshal.MemSet() method.
                 ptrRequest = Marshal.StringToHGlobalAuto(nullString);
@@ -430,7 +430,7 @@ namespace NativeUsbLib
                         (UsbApi.UsbStringDescriptor)Marshal.PtrToStructure(ptrStringDesc,
                             typeof(UsbApi.UsbStringDescriptor));
 
-                    result = stringDesc.BString;
+                    result = stringDesc.String;
                 }
                 else
                 {
@@ -854,7 +854,7 @@ namespace NativeUsbLib
 
                 if (isConnected)
                 {
-                    if (nodeConnection.DeviceDescriptor.BDeviceClass == UsbApi.UsbDeviceClass.HubDevice)
+                    if (nodeConnection.DeviceDescriptor.bDeviceClass == UsbApi.UsbDeviceClass.HubDevice)
                     {
                         nBytes = Marshal.SizeOf(typeof(UsbApi.UsbNodeConnectionName));
                         ptrNodeConnection = Marshal.AllocHGlobal(nBytes);

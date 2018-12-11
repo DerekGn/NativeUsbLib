@@ -19,7 +19,7 @@ namespace NativeUsbLib
         /// Gets the port count.
         /// </summary>
         /// <value>The port count.</value>
-        public int PortCount => NodeInformation.HubInformation.HubDescriptor.BNumberOfPorts;
+        public int PortCount => NodeInformation.HubInformation.HubDescriptor.NumberOfPorts;
 
         /// <summary>
         /// Gets a value indicating whether this instance is bus powered.

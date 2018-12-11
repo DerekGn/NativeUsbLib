@@ -480,28 +480,28 @@ namespace NativeUsbLib.WinApis
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct UsbHubDescriptor
         {
-            public byte BDescriptorLength;
-            public UsbDescriptorType BDescriptorType;
-            public byte BNumberOfPorts;
-            public short WHubCharacteristics;
-            public byte BPowerOnToPowerGood;
-            public byte BHubControlCurrent;
+            public byte DescriptorLength;
+            public UsbDescriptorType DescriptorType;
+            public byte NumberOfPorts;
+            public short HubCharacteristics;
+            public byte PowerOnToPowerGood;
+            public byte HubControlCurrent;
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
-            public byte[] BRemoveAndPowerMask;
+            public byte[] RemoveAndPowerMask;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct Usb30HubDescriptor
         {
-            public byte bLength;
-            public UsbDescriptorType bDescriptorType;
-            public byte bNumberOfPorts;
-            public ushort wHubCharacteristics;
-            public byte bPowerOnToPowerGood;
-            public byte bHubControlCurrent;
-            public byte bHubHdrDecLat;
-            public ushort wHubDelay;
+            public byte Length;
+            public UsbDescriptorType DescriptorType;
+            public byte NumberOfPorts;
+            public ushort HubCharacteristics;
+            public byte PowerOnToPowerGood;
+            public byte HubControlCurrent;
+            public byte HubHdrDecLat;
+            public ushort HubDelay;
             public ushort DeviceRemovable;
         }
 
@@ -557,41 +557,41 @@ namespace NativeUsbLib.WinApis
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public class UsbDeviceDescriptor
         {
-            public byte BLength;
-            public UsbDescriptorType BDescriptorType;
-            public short BcdUsb;
-            public UsbDeviceClass BDeviceClass;
-            public byte BDeviceSubClass;
-            public byte BDeviceProtocol;
-            public byte BMaxPacketSize0;
+            public byte Length;
+            public UsbApi.UsbDescriptorType DescriptorType;
+            public short bcdUSB;
+            public UsbApi.UsbDeviceClass bDeviceClass;
+            public byte DeviceSubClass;
+            public byte DeviceProtocol;
+            public byte MaxPacketSize0;
             public ushort IdVendor;
             public ushort IdProduct;
-            public short BcdDevice;
+            public short bcdDevice;
             public byte IManufacturer;
             public byte IProduct;
             public byte ISerialNumber;
-            public byte BNumConfigurations;
+            public byte NumConfigurations;
         }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct UsbEndpointDescriptor
         {
-            public byte BLength;
-            public UsbDescriptorType BDescriptorType;
-            public byte BEndpointAddress;
-            public UsbTransfer BmAttributes;
-            public short WMaxPacketSize;
-            public byte BInterval;
+            public byte Length;
+            public UsbDescriptorType DescriptorType;
+            public byte EndpointAddress;
+            public UsbTransfer Attributes;
+            public short MaxPacketSize;
+            public byte Interval;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct UsbStringDescriptor
         {
-            public byte BLength;
-            public UsbDescriptorType BDescriptorType;
+            public byte Length;
+            public UsbDescriptorType DescriptorType;
 
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaximumUsbStringLength)]
-            public string BString;
+            public string String;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -599,9 +599,9 @@ namespace NativeUsbLib.WinApis
         {
             public byte BmRequest;
             public byte BRequest;
-            public short WValue;
-            public short WIndex;
-            public short WLength;
+            public short Value;
+            public short Index;
+            public short Length;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -642,27 +642,27 @@ namespace NativeUsbLib.WinApis
         [StructLayout(LayoutKind.Sequential)]
         public struct UsbInterfaceDescriptor
         {
-            public byte BLength;
-            public UsbDescriptorType BDescriptorType;
-            public byte BInterfaceNumber;
-            public byte BAlternateSetting;
-            public byte BNumEndpoints;
-            public byte BInterfaceClass;
-            public byte BInterfaceSubClass;
-            public byte BInterfaceProtocol;
+            public byte Length;
+            public UsbDescriptorType DescriptorType;
+            public byte InterfaceNumber;
+            public byte AlternateSetting;
+            public byte NumEndpoints;
+            public byte InterfaceClass;
+            public byte InterfaceSubClass;
+            public byte InterfaceProtocol;
             public byte Interface;
         }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct UsbConfigurationDescriptor
         {
-            public byte BLength;
-            public UsbDescriptorType BDescriptorType;
-            public short WTotalLength;
-            public byte BNumInterface;
-            public byte BConfigurationsValue;
+            public byte Length;
+            public UsbDescriptorType DescriptorType;
+            public short TotalLength;
+            public byte NumInterface;
+            public byte ConfigurationsValue;
             public byte IConfiguration;
-            public UsbConfiguration BmAttributes;
+            public UsbConfiguration Attributes;
             public byte MaxPower;
         }
 
