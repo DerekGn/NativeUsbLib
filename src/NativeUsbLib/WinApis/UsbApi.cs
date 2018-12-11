@@ -156,14 +156,17 @@ namespace NativeUsbLib.WinApis
             DeviceNotEnoughPower,
             DeviceNotEnoughBandwidth,
             DeviceHubNestedTooDeeply,
-            DeviceInLegacyHub
+            DeviceInLegacyHub,
+            DeviceEnumerating,
+            DeviceReset
         }
 
         public enum UsbDeviceSpeed : byte
         {
             UsbLowSpeed,
             UsbFullSpeed,
-            UsbHighSpeed
+            UsbHighSpeed,
+            UsbSuperSpeed
         }
 
         public enum DeviceInterfaceDataFlags : uint
@@ -531,9 +534,10 @@ namespace NativeUsbLib.WinApis
                 HubType = (UsbHubType) Marshal.ReadInt32(pointer);
                 HighestPortNumber = (ushort) Marshal.ReadInt16(pointer, sizeof(UsbHubType));
 
-                //IntPtr.Add(pointer, 6);
+                IntPtr ptr = new IntPtr(pointer.ToInt64() + 6);
 
-                //UsbHubDescriptor = Marshal.PtrToStructure(pointer, typeof(UsbHubDescriptor));
+                UsbHubDescriptor = (UsbHubDescriptor) Marshal.PtrToStructure(ptr, typeof(UsbHubDescriptor));
+                Usb30HubDescriptor = (Usb30HubDescriptor)Marshal.PtrToStructure(ptr, typeof(Usb30HubDescriptor));
             }
         }
 
