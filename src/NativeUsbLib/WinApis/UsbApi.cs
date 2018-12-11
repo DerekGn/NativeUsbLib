@@ -528,6 +528,12 @@ namespace NativeUsbLib.WinApis
 
             public void MarshalFrom(IntPtr pointer)
             {
+                HubType = (UsbHubType) Marshal.ReadInt32(pointer);
+                HighestPortNumber = (ushort) Marshal.ReadInt16(pointer, sizeof(UsbHubType));
+
+                //IntPtr.Add(pointer, 6);
+
+                //UsbHubDescriptor = Marshal.PtrToStructure(pointer, typeof(UsbHubDescriptor));
             }
         }
 
