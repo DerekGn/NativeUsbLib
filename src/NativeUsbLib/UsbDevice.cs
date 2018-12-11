@@ -1,11 +1,8 @@
-#region references
-
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
-
-#endregion
+using NativeUsbLib.WinApis;
 
 namespace NativeUsbLib
 {
@@ -34,7 +31,7 @@ namespace NativeUsbLib
         /// <param name="parent">The parent.</param>
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="adapterNumber">The adapter number.</param>
-        public UsbDevice(Device parent, UsbApi.USB_DEVICE_DESCRIPTOR deviceDescriptor, int adapterNumber)
+        public UsbDevice(Device parent, UsbApi.UsbDeviceDescriptor deviceDescriptor, int adapterNumber)
             : base(parent, deviceDescriptor, adapterNumber, null)
         {
         }
@@ -46,22 +43,9 @@ namespace NativeUsbLib
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="adapterNumber">The adapter number.</param>
         /// <param name="devicePath">The device path.</param>
-        public UsbDevice(Device parent, UsbApi.USB_DEVICE_DESCRIPTOR deviceDescriptor, int adapterNumber, string devicePath)
+        public UsbDevice(Device parent, UsbApi.UsbDeviceDescriptor deviceDescriptor, int adapterNumber, string devicePath)
             : base(parent, deviceDescriptor, adapterNumber, devicePath)
         {
-        }
-
-        #endregion
-
-        #region destructor
-
-        /// <summary>
-        /// Releases unmanaged resources and performs other cleanup operations before the
-        /// <see cref="UsbDevice"/> is reclaimed by garbage collection.
-        /// </summary>
-        ~UsbDevice()
-        {
-
         }
 
         #endregion
@@ -131,32 +115,33 @@ namespace NativeUsbLib
 
         private bool SetDevice(DeviceControlFlags deviceControlFlag, ushort vendorid, ushort productid)
         {
-            bool res = false;
-            Guid myGUID = System.Guid.Empty;
-            UsbApi.SP_DEVINFO_DATA1 DeviceInfoData;
-            DeviceInfoData = new UsbApi.SP_DEVINFO_DATA1();
-            DeviceInfoData.cbSize = 28;
-            DeviceInfoData.DevInst = 0;
-            DeviceInfoData.ClassGuid = System.Guid.Empty;
-            DeviceInfoData.Reserved = 0;
+            Guid myGuid = System.Guid.Empty;
+            var deviceInfoData = new UsbApi.SpDevinfoData1
+            {
+                CbSize = 28,
+                DevInst = 0,
+                ClassGuid = System.Guid.Empty,
+                Reserved = 0
+            };
             UInt32 i = 0;
-            StringBuilder DeviceName = new StringBuilder("");
-            DeviceName.Capacity = UsbApi.MAX_BUFFER_SIZE;
+            StringBuilder deviceName = new StringBuilder()
+            {
+                Capacity = UsbApi.MaxBufferSize
+            };
 
             //The SetupDiGetClassDevs function returns a handle to a device information set that contains requested device information elements for a local machine.
-            IntPtr theDevInfo = UsbApi.SetupDiGetClassDevs(ref myGUID, 0, 0, UsbApi.DIGCF_ALLCLASSES | UsbApi.DIGCF_PRESENT | UsbApi.DIGCF_PROFILE);
-            for (; UsbApi.SetupDiEnumDeviceInfo(theDevInfo, i, DeviceInfoData); )
+            IntPtr theDevInfo = UsbApi.SetupDiGetClassDevs(ref myGuid, 0, 0, UsbApi.DigcfAllclasses | UsbApi.DigcfPresent | UsbApi.DigcfProfile);
+            for (; UsbApi.SetupDiEnumDeviceInfo(theDevInfo, i, deviceInfoData); )
             {
 
-                if (UsbApi.SetupDiGetDeviceRegistryProperty(theDevInfo, DeviceInfoData, (uint)UsbApi.SPDRP.SPDRP_HARDWAREID, 0, DeviceName, UsbApi.MAX_BUFFER_SIZE, IntPtr.Zero))
+                if (UsbApi.SetupDiGetDeviceRegistryProperty(theDevInfo, deviceInfoData, (uint)UsbApi.Spdrp.SpdrpHardwareid, 0, deviceName, UsbApi.MaxBufferSize, IntPtr.Zero))
                 {
-                    if (DeviceName.ToString().Contains(@"USB\Vid_") && DeviceName.ToString().Contains(vendorid.ToString("x")))
+                    if (deviceName.ToString().Contains(@"USB\Vid_") && deviceName.ToString().Contains(vendorid.ToString("x")))
                     {
-
                         if (deviceControlFlag == DeviceControlFlags.Disable)
-                            res = StateChange(UsbApi.DICS_DISABLE, (int)i, theDevInfo);
+                            StateChange(UsbApi.DicsDisable, (int)i, theDevInfo);
                         else
-                            res = StateChange(UsbApi.DICS_ENABLE, (int)i, theDevInfo);
+                            StateChange(UsbApi.DicsEnable, (int)i, theDevInfo);
 
                         UsbApi.SetupDiDestroyDeviceInfoList(theDevInfo);
                         break;
@@ -172,15 +157,15 @@ namespace NativeUsbLib
 
         #region methode GetDeviceInstanceId
 
-        private string GetDeviceInstanceId(IntPtr DeviceInfoSet, UsbApi.SP_DEVINFO_DATA DeviceInfoData)
+        private string GetDeviceInstanceId(IntPtr deviceInfoSet, UsbApi.SpDevinfoData deviceInfoData)
         {
             StringBuilder strId = new StringBuilder(0);
-            Int32 iRequiredSize = 0;
+            Int32 iRequiredSize;
             Int32 iSize = 0;
-            bool success = UsbApi.SetupDiGetDeviceInstanceId(DeviceInfoSet, ref DeviceInfoData, strId, iSize, out iRequiredSize);
+            bool success = UsbApi.SetupDiGetDeviceInstanceId(deviceInfoSet, ref deviceInfoData, strId, iSize, out iRequiredSize);
             strId = new StringBuilder(iRequiredSize);
             iSize = iRequiredSize;
-            success = UsbApi.SetupDiGetDeviceInstanceId(DeviceInfoSet, ref DeviceInfoData, strId, iSize, out iRequiredSize);
+            success = UsbApi.SetupDiGetDeviceInstanceId(deviceInfoSet, ref deviceInfoData, strId, iSize, out iRequiredSize);
 
             if (success)
                 return strId.ToString();
@@ -192,27 +177,25 @@ namespace NativeUsbLib
 
         #region methode StateChange
 
-        private bool StateChange(int NewState, int SelectedItem, IntPtr hDevInfo)
+        private bool StateChange(int newState, int selectedItem, IntPtr hDevInfo)
         {
-            UsbApi.SP_PROPCHANGE_PARAMS PropChangeParams;
-            UsbApi.SP_DEVINFO_DATA DeviceInfoData;
-            PropChangeParams = new UsbApi.SP_PROPCHANGE_PARAMS();
-            PropChangeParams.Init();
-            DeviceInfoData = new UsbApi.SP_DEVINFO_DATA();
-            PropChangeParams.ClassInstallHeader.cbSize = Marshal.SizeOf(PropChangeParams.ClassInstallHeader);
-            DeviceInfoData.cbSize = Marshal.SizeOf(DeviceInfoData);
+            var propChangeParams = new UsbApi.SpPropchangeParams();
+            propChangeParams.Init();
+            var deviceInfoData = new UsbApi.SpDevinfoData();
+            propChangeParams.ClassInstallHeader.CbSize = Marshal.SizeOf(propChangeParams.ClassInstallHeader);
+            deviceInfoData.CbSize = Marshal.SizeOf(deviceInfoData);
 
-            if (!UsbApi.SetupDiEnumDeviceInfo(hDevInfo, SelectedItem, ref DeviceInfoData))
+            if (!UsbApi.SetupDiEnumDeviceInfo(hDevInfo, selectedItem, ref deviceInfoData))
                 return false;
 
-            PropChangeParams.ClassInstallHeader.InstallFunction = UsbApi.DIF_PROPERTYCHANGE;
-            PropChangeParams.Scope = UsbApi.DICS_FLAG_GLOBAL;
-            PropChangeParams.StateChange = NewState;
+            propChangeParams.ClassInstallHeader.InstallFunction = UsbApi.DifPropertychange;
+            propChangeParams.Scope = UsbApi.DicsFlagGlobal;
+            propChangeParams.StateChange = newState;
 
-            if (!UsbApi.SetupDiSetClassInstallParams(hDevInfo, ref DeviceInfoData, ref PropChangeParams.ClassInstallHeader, Marshal.SizeOf(PropChangeParams)))
+            if (!UsbApi.SetupDiSetClassInstallParams(hDevInfo, ref deviceInfoData, ref propChangeParams.ClassInstallHeader, Marshal.SizeOf(propChangeParams)))
                 return false;
 
-            if (!UsbApi.SetupDiCallClassInstaller(UsbApi.DIF_PROPERTYCHANGE, hDevInfo, ref DeviceInfoData))
+            if (!UsbApi.SetupDiCallClassInstaller(UsbApi.DifPropertychange, hDevInfo, ref deviceInfoData))
                 return false;
 
             return true;

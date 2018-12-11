@@ -3,11 +3,11 @@ using System;
 
 namespace EnumerateUsb
 {
-    class Program
+    static class Program
     {
-        private static int nestLevel = 0;
+        private static int _nestLevel;
 
-        static void Main(string[] args)
+        static void Main()
         {
             try
             {
@@ -47,16 +47,11 @@ namespace EnumerateUsb
 
             if (hub != null)
             {
-                if (hub.IsRootHub)
-                {
-                    WriteLine($"[{hub.DeviceDescription}]");
-                }
-                else
-                {
-                    WriteLine($"Port[{hub.AdapterNumber}] DeviceConnected: {hub.DeviceDescription}");
-                }
+                WriteLine(hub.IsRootHub
+                    ? $"[{hub.DeviceDescription}]"
+                    : $"Port[{hub.AdapterNumber}] DeviceConnected: {hub.DeviceDescription}");
 
-                foreach (Device device in hub.Devices)
+                foreach (Device device in hub.ChildDevices)
                 {
                     ShowDevice(device);
                 }
@@ -73,9 +68,9 @@ namespace EnumerateUsb
         {
             if (device != null)
             {
-                if (device is UsbHub)
+                if (device is UsbHub hub)
                 {
-                    ShowHub((UsbHub)device);
+                    ShowHub(hub);
                 }
                 else
                 {
@@ -104,17 +99,17 @@ namespace EnumerateUsb
 
         private static void WriteLine(string value)
         {
-            Console.WriteLine($"{string.Empty.PadLeft(nestLevel, '.')}{value}");
+            Console.WriteLine($"{string.Empty.PadLeft(_nestLevel, '.')}{value}");
         }
 
         private static void IncrementNestLevel()
         {
-            nestLevel++;
+            _nestLevel++;
         }
 
         private static void DecrementNestLevel()
         {
-            nestLevel--;
+            _nestLevel--;
         }
     }
 }
