@@ -475,52 +475,63 @@ namespace NativeUsbLib
         /// </summary>
         /// <param name="driverKeyName">Name of the driver key.</param>
         /// <returns></returns>
-        protected string GetDescriptionByKeyName(string driverKeyName)
+        protected static string GetDescriptionByKeyName(string driverKeyName)
         {
             string descriptionkeyname = string.Empty;
             string devEnum = UsbApi.RegstrKeyUsb;
 
-            // Use the "enumerator form" of the SetupDiGetClassDevs API 
-            // to generate a list of all USB devices
-            IntPtr handel =
-                UsbApi.SetupDiGetClassDevs(0, devEnum, IntPtr.Zero, UsbApi.DigcfPresent | UsbApi.DigcfAllclasses);
-            if (handel.ToInt64() != UsbApi.InvalidHandleValue)
+            IntPtr handle = IntPtr.Zero;
+            IntPtr ptr = IntPtr.Zero;
+
+            try
             {
-                IntPtr ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
-                bool success = true;
-
-                for (int i = 0; success; i++)
+                // Use the "enumerator form" of the SetupDiGetClassDevs API 
+                // to generate a list of all USB devices
+                handle =
+                    UsbApi.SetupDiGetClassDevs(0, devEnum, IntPtr.Zero, UsbApi.DigcfPresent | UsbApi.DigcfAllclasses);
+                if (handle.ToInt64() != UsbApi.InvalidHandleValue)
                 {
-                    // Create a device interface data structure.
-                    UsbApi.SpDevinfoData deviceInterfaceData = new UsbApi.SpDevinfoData();
-                    deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
+                    ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
+                    bool success = true;
 
-                    // Start the enumeration.
-                    success = UsbApi.SetupDiEnumDeviceInfo(handel, i, ref deviceInterfaceData);
-                    if (success)
+                    for (int i = 0; success; i++)
                     {
-                        int requiredSize = -1;
-                        int regType = UsbApi.RegSz;
-                        var keyName = string.Empty;
+                        // Create a device interface data structure.
+                        UsbApi.SpDevinfoData deviceInterfaceData = new UsbApi.SpDevinfoData();
+                        deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
 
-                        if (UsbApi.SetupDiGetDeviceRegistryProperty(handel, ref deviceInterfaceData,
-                            UsbApi.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
-                            keyName = Marshal.PtrToStringAuto(ptr);
-
-                        // Is it a match?
-                        if (keyName == driverKeyName)
+                        // Start the enumeration.
+                        success = UsbApi.SetupDiEnumDeviceInfo(handle, i, ref deviceInterfaceData);
+                        if (success)
                         {
-                            if (UsbApi.SetupDiGetDeviceRegistryProperty(handel, ref deviceInterfaceData,
-                                UsbApi.SpdrpDevicedesc, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
-                                descriptionkeyname = Marshal.PtrToStringAuto(ptr);
+                            int requiredSize = -1;
+                            int regType = UsbApi.RegSz;
+                            var keyName = string.Empty;
 
-                            break;
+                            if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
+                                UsbApi.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
+                                keyName = Marshal.PtrToStringAuto(ptr);
+
+                            // Is it a match?
+                            if (keyName == driverKeyName)
+                            {
+                                if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
+                                    UsbApi.SpdrpDevicedesc, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
+                                    descriptionkeyname = Marshal.PtrToStringAuto(ptr);
+
+                                break;
+                            }
                         }
                     }
                 }
+            }
+            finally
+            {
+                if (handle != IntPtr.Zero)
+                    Marshal.FreeHGlobal(ptr);
 
-                Marshal.FreeHGlobal(ptr);
-                UsbApi.SetupDiDestroyDeviceInfoList(handel);
+                if(handle != IntPtr.Zero)
+                    UsbApi.SetupDiDestroyDeviceInfoList(handle);
             }
 
             return descriptionkeyname;
@@ -535,53 +546,63 @@ namespace NativeUsbLib
         /// </summary>
         /// <param name="driverKeyName">Name of the driver key.</param>
         /// <returns></returns>
-        private string GetInstanceIDByKeyName(string driverKeyName)
+        private static string GetInstanceIDByKeyName(string driverKeyName)
         {
             string descriptionkeyname = string.Empty;
             string devEnum = UsbApi.RegstrKeyUsb;
+            IntPtr handle = IntPtr.Zero;
+            IntPtr ptr = IntPtr.Zero;
 
-            // Use the "enumerator form" of the SetupDiGetClassDevs API 
-            // to generate a list of all USB devices
-            IntPtr handel =
-                UsbApi.SetupDiGetClassDevs(0, devEnum, IntPtr.Zero, UsbApi.DigcfPresent | UsbApi.DigcfAllclasses);
-            if (handel.ToInt64() != UsbApi.InvalidHandleValue)
+            try
             {
-                IntPtr ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
-                bool success = true;
-
-                for (int i = 0; success; i++)
+                // Use the "enumerator form" of the SetupDiGetClassDevs API 
+                // to generate a list of all USB devices
+                handle =
+                    UsbApi.SetupDiGetClassDevs(0, devEnum, IntPtr.Zero, UsbApi.DigcfPresent | UsbApi.DigcfAllclasses);
+                if (handle.ToInt64() != UsbApi.InvalidHandleValue)
                 {
-                    // Create a device interface data structure.
-                    UsbApi.SpDevinfoData deviceInterfaceData = new UsbApi.SpDevinfoData();
-                    deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
+                    ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
+                    bool success = true;
 
-                    // Start the enumeration.
-                    success = UsbApi.SetupDiEnumDeviceInfo(handel, i, ref deviceInterfaceData);
-                    if (success)
+                    for (int i = 0; success; i++)
                     {
-                        int requiredSize = -1;
-                        int regType = UsbApi.RegSz;
-                        var keyName = string.Empty;
+                        // Create a device interface data structure.
+                        UsbApi.SpDevinfoData deviceInterfaceData = new UsbApi.SpDevinfoData();
+                        deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
 
-                        if (UsbApi.SetupDiGetDeviceRegistryProperty(handel, ref deviceInterfaceData,
-                            UsbApi.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
-                            keyName = Marshal.PtrToStringAuto(ptr);
-
-                        // is it a match?
-                        if (keyName == driverKeyName)
+                        // Start the enumeration.
+                        success = UsbApi.SetupDiEnumDeviceInfo(handle, i, ref deviceInterfaceData);
+                        if (success)
                         {
-                            int nBytes = UsbApi.MaxBufferSize;
-                            StringBuilder sb = new StringBuilder(nBytes);
-                            UsbApi.SetupDiGetDeviceInstanceId(handel, ref deviceInterfaceData, sb, nBytes,
-                                out requiredSize);
-                            descriptionkeyname = sb.ToString();
-                            break;
+                            int requiredSize = -1;
+                            int regType = UsbApi.RegSz;
+                            var keyName = string.Empty;
+
+                            if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
+                                UsbApi.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
+                                keyName = Marshal.PtrToStringAuto(ptr);
+
+                            // is it a match?
+                            if (keyName == driverKeyName)
+                            {
+                                int nBytes = UsbApi.MaxBufferSize;
+                                StringBuilder sb = new StringBuilder(nBytes);
+                                UsbApi.SetupDiGetDeviceInstanceId(handle, ref deviceInterfaceData, sb, nBytes,
+                                    out requiredSize);
+                                descriptionkeyname = sb.ToString();
+                                break;
+                            }
                         }
                     }
                 }
+            }
+            finally
+            {
+                if(ptr != IntPtr.Zero)
+                    Marshal.FreeHGlobal(ptr);
 
-                Marshal.FreeHGlobal(ptr);
-                UsbApi.SetupDiDestroyDeviceInfoList(handel);
+                if (handle != IntPtr.Zero)
+                    UsbApi.SetupDiDestroyDeviceInfoList(handle);
             }
 
             return descriptionkeyname;
@@ -594,71 +615,81 @@ namespace NativeUsbLib
         /// </summary>
         /// <param name="driverKeyName">Name of the driver key.</param>
         /// <returns></returns>
-        private string GetDevicePathByKeyName(string driverKeyName)
+        private static string GetDevicePathByKeyName(string driverKeyName)
         {
             string devicePathName = string.Empty;
+            IntPtr handle = IntPtr.Zero;
+            IntPtr ptr = IntPtr.Zero;
 
-            // Generate a list of all USB devices
-            var guidDevInterfaceUsbDevice = new Guid("A5DCBF10-6530-11D2-901F-00C04FB951ED");
-            IntPtr handel = UsbApi.SetupDiGetClassDevs(ref guidDevInterfaceUsbDevice, 0, IntPtr.Zero,
-                UsbApi.DigcfPresent | UsbApi.DigcfDeviceinterface);
-            if (handel.ToInt64() != UsbApi.InvalidHandleValue)
+            try
             {
-                IntPtr ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
-                bool success = true;
-
-                for (int i = 0; success; i++)
+                // Generate a list of all USB devices
+                var guidDevInterfaceUsbDevice = new Guid("A5DCBF10-6530-11D2-901F-00C04FB951ED");
+                handle = UsbApi.SetupDiGetClassDevs(ref guidDevInterfaceUsbDevice, 0, IntPtr.Zero,
+                    UsbApi.DigcfPresent | UsbApi.DigcfDeviceinterface);
+                if (handle.ToInt64() != UsbApi.InvalidHandleValue)
                 {
-                    // Create a device info data structure.
-                    var deviceInfoData = new UsbApi.SpDevinfoData();
-                    deviceInfoData.CbSize = Marshal.SizeOf(deviceInfoData);
+                    ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
+                    bool success = true;
 
-                    // Start the enumeration.
-                    success = UsbApi.SetupDiEnumDeviceInfo(handel, i, ref deviceInfoData);
-                    if (success)
+                    for (int i = 0; success; i++)
                     {
-                        int requiredSize = -1;
-                        int regType = UsbApi.RegSz;
-                        string keyName = string.Empty;
+                        // Create a device info data structure.
+                        var deviceInfoData = new UsbApi.SpDevinfoData();
+                        deviceInfoData.CbSize = Marshal.SizeOf(deviceInfoData);
 
-                        if (UsbApi.SetupDiGetDeviceRegistryProperty(handel, ref deviceInfoData, UsbApi.SpdrpDriver,
-                            ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
-                            keyName = Marshal.PtrToStringAuto(ptr);
-
-                        // is it a match?
-                        if (keyName == driverKeyName)
+                        // Start the enumeration.
+                        success = UsbApi.SetupDiEnumDeviceInfo(handle, i, ref deviceInfoData);
+                        if (success)
                         {
-                            // create a Device Interface Data structure
-                            var deviceInterfaceData = new UsbApi.SpDeviceInterfaceData();
-                            deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
+                            int requiredSize = -1;
+                            int regType = UsbApi.RegSz;
+                            string keyName = string.Empty;
 
-                            if (UsbApi.SetupDiEnumDeviceInterfaces(handel, IntPtr.Zero, ref guidDevInterfaceUsbDevice,
-                                i, ref deviceInterfaceData))
+                            if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData, UsbApi.SpdrpDriver,
+                                ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
+                                keyName = Marshal.PtrToStringAuto(ptr);
+
+                            // is it a match?
+                            if (keyName == driverKeyName)
                             {
-                                // Build a device interface detail data structure.
-                                var deviceInterfaceDetailData =
-                                    new UsbApi.SpDeviceInterfaceDetailData
-                                    {
-                                        CbSize = 4 + Marshal.SystemDefaultCharSize
-                                    };
+                                // create a Device Interface Data structure
+                                var deviceInterfaceData = new UsbApi.SpDeviceInterfaceData();
+                                deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
 
-                                // Now we can get some more detailed informations.
-                                int nRequiredSize = 0;
-                                const int nBytes = UsbApi.MaxBufferSize;
-                                if (UsbApi.SetupDiGetDeviceInterfaceDetail(handel, ref deviceInterfaceData,
-                                    ref deviceInterfaceDetailData, nBytes, ref nRequiredSize, ref deviceInfoData))
+                                if (UsbApi.SetupDiEnumDeviceInterfaces(handle, IntPtr.Zero, ref guidDevInterfaceUsbDevice,
+                                    i, ref deviceInterfaceData))
                                 {
-                                    devicePathName = deviceInterfaceDetailData.DevicePath;
-                                }
+                                    // Build a device interface detail data structure.
+                                    var deviceInterfaceDetailData =
+                                        new UsbApi.SpDeviceInterfaceDetailData
+                                        {
+                                            CbSize = 4 + Marshal.SystemDefaultCharSize
+                                        };
 
-                                break;
+                                    // Now we can get some more detailed informations.
+                                    int nRequiredSize = 0;
+                                    const int nBytes = UsbApi.MaxBufferSize;
+                                    if (UsbApi.SetupDiGetDeviceInterfaceDetail(handle, ref deviceInterfaceData,
+                                        ref deviceInterfaceDetailData, nBytes, ref nRequiredSize, ref deviceInfoData))
+                                    {
+                                        devicePathName = deviceInterfaceDetailData.DevicePath;
+                                    }
+
+                                    break;
+                                }
                             }
                         }
                     }
                 }
+            }
+            finally
+            {
+                if(ptr == IntPtr.Zero)
+                    Marshal.FreeHGlobal(ptr);
 
-                Marshal.FreeHGlobal(ptr);
-                UsbApi.SetupDiDestroyDeviceInfoList(handel);
+                if (handle == IntPtr.Zero)
+                    UsbApi.SetupDiDestroyDeviceInfoList(handle);
             }
 
             return devicePathName;
@@ -673,71 +704,80 @@ namespace NativeUsbLib
         {
             string hidDevicePath = string.Empty;
 
-            // Generate a list of all HID devices
-            Guid guidHid;
-            HidApi.HidD_GetHidGuid(
-                out guidHid); // next, get the GUID from Windows that it uses to represent the HID USB interface
+            IntPtr handle = IntPtr.Zero;
+            IntPtr ptr = IntPtr.Zero;
 
-            IntPtr handel = UsbApi.SetupDiGetClassDevs(ref guidHid, 0, IntPtr.Zero,
-                UsbApi.DigcfPresent | UsbApi.DigcfDeviceinterface);
-            if (handel.ToInt64() != UsbApi.InvalidHandleValue)
+            try
             {
-                IntPtr ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
-                bool success = true;
-                for (int i = 0; success; i++)
-                {
-                    // Create a device info data structure.
-                    var deviceInfoData = new UsbApi.SpDevinfoData();
-                    deviceInfoData.CbSize = Marshal.SizeOf(deviceInfoData);
-                    // Start the enumeration.
-                    success = UsbApi.SetupDiEnumDeviceInfo(handel, i, ref deviceInfoData);
-                    if (success)
-                    {
-                        // Create a device interface data structure.
-                        var deviceInterfaceData = new UsbApi.SpDeviceInterfaceData();
-                        deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
+                // Generate a list of all HID devices
+                Guid guidHid;
+                HidApi.HidD_GetHidGuid(
+                    out guidHid); // next, get the GUID from Windows that it uses to represent the HID USB interface
 
+                handle = UsbApi.SetupDiGetClassDevs(ref guidHid, 0, IntPtr.Zero,
+                    UsbApi.DigcfPresent | UsbApi.DigcfDeviceinterface);
+                if (handle.ToInt64() != UsbApi.InvalidHandleValue)
+                {
+                    ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
+                    bool success = true;
+                    for (int i = 0; success; i++)
+                    {
+                        // Create a device info data structure.
+                        var deviceInfoData = new UsbApi.SpDevinfoData();
+                        deviceInfoData.CbSize = Marshal.SizeOf(deviceInfoData);
                         // Start the enumeration.
-                        success = UsbApi.SetupDiEnumDeviceInterfaces(handel, IntPtr.Zero, ref guidHid,
-                            i, ref deviceInterfaceData);
+                        success = UsbApi.SetupDiEnumDeviceInfo(handle, i, ref deviceInfoData);
                         if (success)
                         {
-                            // Build a device interface detail data structure.
-                            var deviceInterfaceDetailData =
-                                new UsbApi.SpDeviceInterfaceDetailData {CbSize = 4 + Marshal.SystemDefaultCharSize};
+                            // Create a device interface data structure.
+                            var deviceInterfaceData = new UsbApi.SpDeviceInterfaceData();
+                            deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
 
-                            // Now we can get some more detailed informations.
-                            int nRequiredSize = 0;
-                            const int nBytes = UsbApi.MaxBufferSize;
-                            if (UsbApi.SetupDiGetDeviceInterfaceDetail(handel, ref deviceInterfaceData,
-                                ref deviceInterfaceDetailData,
-                                nBytes, ref nRequiredSize,
-                                ref deviceInfoData))
+                            // Start the enumeration.
+                            success = UsbApi.SetupDiEnumDeviceInterfaces(handle, IntPtr.Zero, ref guidHid,
+                                i, ref deviceInterfaceData);
+                            if (success)
                             {
-                                string strSearch = string.Format("vid_{0:x4}&pid_{1:x4}",
-                                    deviceDescriptor.IdVendor,
-                                    deviceDescriptor.IdProduct);
-                                if (deviceInterfaceDetailData.DevicePath.Contains(strSearch) &&
-                                    HidSerialNumberMatches(deviceInterfaceDetailData.DevicePath))
+                                // Build a device interface detail data structure.
+                                var deviceInterfaceDetailData =
+                                    new UsbApi.SpDeviceInterfaceDetailData { CbSize = 4 + Marshal.SystemDefaultCharSize };
+
+                                // Now we can get some more detailed informations.
+                                int nRequiredSize = 0;
+                                const int nBytes = UsbApi.MaxBufferSize;
+                                if (UsbApi.SetupDiGetDeviceInterfaceDetail(handle, ref deviceInterfaceData,
+                                    ref deviceInterfaceDetailData,
+                                    nBytes, ref nRequiredSize,
+                                    ref deviceInfoData))
                                 {
-                                    Debug.WriteLine(string.Format("HidPath:{0}",
-                                        deviceInterfaceDetailData.DevicePath));
-                                    hidDevicePath = deviceInterfaceDetailData.DevicePath;
-                                    break;
+                                    string strSearch =
+                                        $"vid_{deviceDescriptor.IdVendor:x4}&pid_{deviceDescriptor.IdProduct:x4}";
+                                    if (deviceInterfaceDetailData.DevicePath.Contains(strSearch) &&
+                                        HidSerialNumberMatches(deviceInterfaceDetailData.DevicePath))
+                                    {
+                                        Debug.WriteLine($"HidPath:{deviceInterfaceDetailData.DevicePath}");
+                                        hidDevicePath = deviceInterfaceDetailData.DevicePath;
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            }
+            finally
+            {
+                if(ptr != IntPtr.Zero)
+                    Marshal.FreeHGlobal(ptr);
 
-                Marshal.FreeHGlobal(ptr);
-                UsbApi.SetupDiDestroyDeviceInfoList(handel);
+                if(handle != IntPtr.Zero)
+                    UsbApi.SetupDiDestroyDeviceInfoList(handle);
             }
 
             return hidDevicePath;
         }
 
-        bool HidSerialNumberMatches(string hidDevicePath)
+        private bool HidSerialNumberMatches(string hidDevicePath)
         {
             // kludge: (uint) cast used to select SafeHandle CreateFile() method
             SafeFileHandle hnd = KernelApi.CreateFile(hidDevicePath,
