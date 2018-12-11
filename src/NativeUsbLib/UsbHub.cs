@@ -19,7 +19,7 @@ namespace NativeUsbLib
         /// Gets the port count.
         /// </summary>
         /// <value>The port count.</value>
-        public int PortCount { get; private set; } = -1;
+        public int PortCount => NodeInformation.HubInformation.HubDescriptor.BNumberOfPorts;
 
         /// <summary>
         /// Gets a value indicating whether this instance is bus powered.
@@ -27,7 +27,7 @@ namespace NativeUsbLib
         /// <value>
         /// 	<c>true</c> if this instance is bus powered; otherwise, <c>false</c>.
         /// </value>
-        public bool IsBusPowered { get; private set; } = false;
+        public bool IsBusPowered => Convert.ToBoolean(NodeInformation.HubInformation.HubIsBusPowered);
 
         /// <summary>
         /// Gets a value indicating whether this instance is root hub.
@@ -37,22 +37,11 @@ namespace NativeUsbLib
         /// </value>
         public bool IsRootHub { get; } = false;
 
-        private UsbApi.UsbNodeInformation m_NodeInformation;
-        
         /// <summary>
         /// Gets or sets the node information.
         /// </summary>
         /// <value>The node information.</value>
-        public UsbApi.UsbNodeInformation NodeInformation
-        {
-            get { return m_NodeInformation; }
-            protected set
-            {
-                m_NodeInformation = value;
-                IsBusPowered = Convert.ToBoolean(m_NodeInformation.HubInformation.HubIsBusPowered);
-                PortCount = m_NodeInformation.HubInformation.HubDescriptor.BNumberOfPorts;
-            }
-        }
+        public UsbApi.UsbNodeInformation NodeInformation { get; protected set; }
 
         /// <summary>
         /// Gets or sets the usb hub information.
@@ -99,6 +88,10 @@ namespace NativeUsbLib
                         DeviceDescription = "RootHub";
                         DevicePath = @"\\?\" + rootHubName.RootHubName;
                     }
+                }
+                else
+                {
+                    Trace.TraceError($"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbApi.IoctlUsbGetRootHubName)}] Result: [{KernelApi.GetLastError():X}]");
                 }
 
                 Marshal.FreeHGlobal(ptrRootHubName);
