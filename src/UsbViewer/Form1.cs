@@ -339,13 +339,30 @@ namespace UsbViewer
 
             AppendHubCharacteristics(builder, hub.HubInformation.UsbHubDescriptor.HubCharacteristics);
 
-            builder.AppendLine($"High speed capable: ");
-            builder.AppendLine($"High speed: ");
-            builder.AppendLine($"Multiple transaction translations capable: ");
-            builder.AppendLine($"Performs multiple transaction translations simultaneously: ");
-            builder.AppendLine($"Hub wakes when device is connected: ");
-            builder.AppendLine($"Hub is bus powered: {DisplayBool(hub.IsBusPowered)}");
-            builder.AppendLine($"Hub is root: {DisplayBool(hub.IsRootHub)}");
+            AppendHubCapabilities(builder, hub.UsbHubCapabilitiesEx.CapabilityFlags);
+        }
+
+        private static void AppendHubCapabilities(StringBuilder builder, UsbApi.UsbHubCapFlags capabilityFlags)
+        {
+            //builder.AppendLine($"High speed capable:           {DisplayBool(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsHighSpeedCapable))}");
+            //builder.AppendLine("High speed:                   %s\r\n",
+            //    HubCapabilityEx->CapabilityFlags.HubIsHighSpeed
+            //        ? "Yes" : "No");
+            //builder.AppendLine("Multiple transaction translations capable:                 %s\r\n",
+            //    HubCapabilityEx->CapabilityFlags.HubIsMultiTtCapable
+            //        ? "Yes" : "No");
+            //builder.AppendLine("Performs multiple transaction translations simultaneously: %s\r\n",
+            //    HubCapabilityEx->CapabilityFlags.HubIsMultiTt
+            //        ? "Yes" : "No");
+            //builder.AppendLine("Hub wakes when device is connected:                        %s\r\n",
+            //    HubCapabilityEx->CapabilityFlags.HubIsArmedWakeOnConnect
+            //        ? "Yes" : "No");
+            //builder.AppendLine("Hub is bus powered:           %s\r\n",
+            //    HubCapabilityEx->CapabilityFlags.HubIbuilderusPowered
+            //        ? "Yes" : "No");
+            //builder.AppendLine("Hub is root:                  %s\r\n",
+            //    HubCapabilityEx->CapabilityFlags.HubIsRoot
+            //        ? "Yes" : "No");
         }
 
         private static void AppendHubCharacteristics(StringBuilder builder, short hubCharacteristics)
