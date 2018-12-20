@@ -122,6 +122,11 @@ namespace NativeUsbLib
             }
         }
 
+        public ulong VendorId { get; private set; }
+        public ulong DeviceId { get; private set; }
+        public ulong SubSysID { get; private set; }
+        public ulong Revision { get; private set; }
+
         #endregion
 
         #endregion
