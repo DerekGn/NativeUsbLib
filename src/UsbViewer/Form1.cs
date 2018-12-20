@@ -142,7 +142,7 @@ namespace UsbViewer
 
         private void m_UsbTreeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             if (e.Node is UsbTreeNode usbNode)
             {
@@ -154,10 +154,8 @@ namespace UsbViewer
                 }
 
                 if (usbNode.Type == DeviceTyp.Hub || usbNode.Type == DeviceTyp.RootHub)
-                {
-                    if(usbNode.Device is UsbHub hub)
+                    if (usbNode.Device is UsbHub hub)
                         AppendUsbHub(sb, hub);
-                }
 
                 if (usbNode.Type == DeviceTyp.Device || usbNode.Type == DeviceTyp.Hub)
                 {
@@ -166,10 +164,7 @@ namespace UsbViewer
                     {
                         var index = 1;
 
-                        if (device.DeviceDescription != null)
-                        {
-                            AppendDeviceDescriptor(sb, device);
-                        }
+                        if (device.DeviceDescription != null) AppendDeviceDescriptor(sb, device);
 
                         if (device.ConfigurationDescriptor != null)
                             foreach (var configurationDescriptor in device.ConfigurationDescriptor)
@@ -219,154 +214,189 @@ namespace UsbViewer
             m_RichTextBox.Text = sb.ToString();
         }
 
-        private static void AppendEndpointDescriptor(StringBuilder sb, int index, UsbApi.UsbEndpointDescriptor endpointDescriptor)
+        private static void AppendEndpointDescriptor(StringBuilder builder, int index,
+            UsbApi.UsbEndpointDescriptor endpointDescriptor)
         {
-            sb.AppendLine(
+            builder.AppendLine(
                 "-----------------------------------------------------------------");
-            sb.AppendLine($"ENDPOINT DESCRIPTOR {index}\n");
-            sb.AppendLine(
+            builder.AppendLine($"ENDPOINT DESCRIPTOR {index}\n");
+            builder.AppendLine(
                 "-----------------------------------------------------------------");
-            sb.AppendLine($"Endpoint Address\t\t\t: {endpointDescriptor.EndpointAddress:x}");
-            sb.AppendLine($"Transfer Type\t\t\t: {endpointDescriptor.Attributes}");
-            sb.AppendLine($"Max Packet Size\t\t\t: {endpointDescriptor.MaxPacketSize:x}");
-            sb.AppendLine($"Update Interval\t\t\t: {endpointDescriptor.Interval:x}");
-            sb.AppendLine($"Endpoint Descriptor Length\t\t: {endpointDescriptor.Length}");
+            builder.AppendLine($"Endpoint Address\t\t\t: {endpointDescriptor.EndpointAddress:x}");
+            builder.AppendLine($"Transfer Type\t\t\t: {endpointDescriptor.Attributes}");
+            builder.AppendLine($"Max Packet Size\t\t\t: {endpointDescriptor.MaxPacketSize:x}");
+            builder.AppendLine($"Update Interval\t\t\t: {endpointDescriptor.Interval:x}");
+            builder.AppendLine($"Endpoint Descriptor Length\t\t: {endpointDescriptor.Length}");
         }
 
-        private static void AppendHidDescriptor(StringBuilder sb, int index, HidApi.HidDescriptor hdiDescriptor)
+        private static void AppendHidDescriptor(StringBuilder builder, int index, HidApi.HidDescriptor hdiDescriptor)
         {
-            sb.AppendLine(
-                "-----------------------------------------------------------------\n");
-            sb.AppendLine("Human Device Interface DESCRIPTOR " + index + "\n");
-            sb.AppendLine(
-                "-----------------------------------------------------------------\n");
-            sb.AppendLine("HDI:" + hdiDescriptor.BcdHid.ToString("x") + "\n");
-            sb.AppendLine("Country Code: " + hdiDescriptor.Country.ToString("x") + "\n");
-            sb.AppendLine("Number of Descriptors: " +
-                          hdiDescriptor.NumDescriptors.ToString("x") + "\n");
-            sb.AppendLine(
-                "Descriptor Type: " + hdiDescriptor.DescriptorType.ToString("x") + "\n");
-            sb.AppendLine(
-                "Human Device Interface Descriptor Length: " + hdiDescriptor.Length + "\n");
-            sb.AppendLine(
-                "Report Type: " + hdiDescriptor.HidDesclist.ReportType.ToString("x") + "\n");
-            sb.AppendLine(
-                "Report Length: " + hdiDescriptor.HidDesclist.ReportLength.ToString("x") + "\n");
-            sb.AppendLine("\n");
+            builder.AppendLine(
+                "-----------------------------------------------------------------");
+            builder.AppendLine($"Human Device Interface DESCRIPTOR {index}");
+            builder.AppendLine(
+                "-----------------------------------------------------------------");
+            builder.AppendLine($"HDI:{hdiDescriptor.BcdHid:x}");
+            builder.AppendLine($"Country Code: {hdiDescriptor.Country:x}");
+            builder.AppendLine($"Number of Descriptors: {hdiDescriptor.NumDescriptors:x}");
+            builder.AppendLine(
+                $"Descriptor Type: {hdiDescriptor.DescriptorType:x}");
+            builder.AppendLine(
+                $"Human Device Interface Descriptor Length: {hdiDescriptor.Length}");
+            builder.AppendLine(
+                $"Report Type: {hdiDescriptor.HidDesclist.ReportType:x}");
+            builder.AppendLine(
+                $"Report Length: {hdiDescriptor.HidDesclist.ReportLength:x}");
+            builder.AppendLine("\n");
         }
 
-        private static void AppendInterfaceDescriptor(StringBuilder sb, int index, UsbApi.UsbInterfaceDescriptor interfaceDescriptor)
+        private static void AppendInterfaceDescriptor(StringBuilder builder, int index,
+            UsbApi.UsbInterfaceDescriptor interfaceDescriptor)
         {
-            sb.AppendLine(
-                $"-----------------------------------------------------------------\n");
-            sb.AppendLine("INTERFACE DESCRIPTOR " + index + "\n");
-            sb.AppendLine(
-                "-----------------------------------------------------------------\n");
-            sb.AppendLine(
-                "Interface Number\t\t\t: " + interfaceDescriptor.InterfaceNumber + "\n");
-            sb.AppendLine(
-                "Alternate Settings\t\t\t: " + interfaceDescriptor.AlternateSetting + "\n");
-            sb.AppendLine(
-                "Number of Endpoints\t\t: " + interfaceDescriptor.NumEndpoints + "\n");
-            sb.AppendLine("Interface Class\t\t\t: " +
-                          interfaceDescriptor.InterfaceClass.ToString("x") + "\n");
-            sb.AppendLine("Interface Sub Class\t\t\t: " +
-                          interfaceDescriptor.InterfaceSubClass.ToString("x") + "\n");
-            sb.AppendLine("Interface Protocol\t\t\t: " +
-                          interfaceDescriptor.InterfaceProtocol.ToString("x") + "\n");
-            sb.AppendLine("Index of the Interface\t\t: " +
-                          interfaceDescriptor.Interface.ToString("x") + "\n");
-            sb.AppendLine(
-                "Interface Descriptor Length\t\t: " + interfaceDescriptor.Length + "\n");
-            sb.AppendLine("\n");
+            builder.AppendLine(
+                $"-----------------------------------------------------------------");
+            builder.AppendLine($"INTERFACE DESCRIPTOR {index}");
+            builder.AppendLine(
+                "-----------------------------------------------------------------");
+            builder.AppendLine(
+                $"Interface Number\t\t\t: {interfaceDescriptor.InterfaceNumber}");
+            builder.AppendLine(
+                $"Alternate Settings\t\t\t: {interfaceDescriptor.AlternateSetting}");
+            builder.AppendLine(
+                $"Number of Endpoints\t\t: {interfaceDescriptor.NumEndpoints}");
+            builder.AppendLine($"Interface Class\t\t\t: {interfaceDescriptor.InterfaceClass:x}");
+            builder.AppendLine($"Interface Sub Class\t\t\t: {interfaceDescriptor.InterfaceSubClass:x}");
+            builder.AppendLine($"Interface Protocol\t\t\t: {interfaceDescriptor.InterfaceProtocol:x}");
+            builder.AppendLine($"Index of the Interface\t\t: {interfaceDescriptor.Interface:x}");
+            builder.AppendLine(
+                $"Interface Descriptor Length\t\t: {interfaceDescriptor.Length}");
+            builder.AppendLine("\n");
         }
 
-        private static void AppendConfigurationDescriptor(StringBuilder sb, int index,
+        private static void AppendConfigurationDescriptor(StringBuilder builder, int index,
             UsbApi.UsbConfigurationDescriptor configurationDescriptor)
         {
-            sb.AppendLine(
-                "-----------------------------------------------------------------\n");
-            sb.AppendLine("CONFIGURATION DESCRIPTOR " + index + "\n");
-            sb.AppendLine(
-                "-----------------------------------------------------------------\n");
-            sb.AppendLine("Configuration Descriptor Length\t: " +
-                          configurationDescriptor.Length + "\n");
-            sb.AppendLine("Number of Interface Descriptors\t: " +
-                          configurationDescriptor.NumInterface + "\n");
-            sb.AppendLine("Configuration Value\t\t\t: " +
-                          configurationDescriptor.ConfigurationsValue + "\n");
-            sb.AppendLine("Index of the Configuration\t\t: " +
-                          configurationDescriptor.IConfiguration + "\n");
-            sb.AppendLine(
-                "Attributes\t\t\t\t: " + configurationDescriptor.Attributes + "\n");
-            sb.AppendLine("MaxPower\t\t\t: " + configurationDescriptor.MaxPower + "\n");
-            sb.AppendLine("\n");
+            builder.AppendLine(
+                "-----------------------------------------------------------------");
+            builder.AppendLine($"CONFIGURATION DESCRIPTOR {index}");
+            builder.AppendLine(
+                "-----------------------------------------------------------------");
+            builder.AppendLine($"Configuration Descriptor Length\t: {configurationDescriptor.Length}");
+            builder.AppendLine($"Number of Interface Descriptors\t: {configurationDescriptor.NumInterface}");
+            builder.AppendLine($"Configuration Value\t\t\t: {configurationDescriptor.ConfigurationsValue}");
+            builder.AppendLine($"Index of the Configuration\t\t: {configurationDescriptor.IConfiguration}");
+            builder.AppendLine($"Attributes\t\t\t\t: {configurationDescriptor.Attributes}");
+            builder.AppendLine($"MaxPower\t\t\t: {configurationDescriptor.MaxPower}");
+            builder.AppendLine("\n");
         }
 
-        private static void AppendDeviceDescriptor(StringBuilder sb, Device device)
+        private static void AppendDeviceDescriptor(StringBuilder builder, Device device)
         {
-            sb.AppendLine("-----------------------------------------------------------------");
-            sb.AppendLine("DEVICE DESCRIPTOR");
-            sb.AppendLine("-----------------------------------------------------------------");
-            sb.AppendLine(
+            builder.AppendLine("-----------------------------------------------------------------");
+            builder.AppendLine("DEVICE DESCRIPTOR");
+            builder.AppendLine("-----------------------------------------------------------------");
+            builder.AppendLine(
                 $"USB Version\t\t\t: {device.DeviceDescriptor.bcdUSB.ToString("x").Replace("0", "")}");
-            sb.AppendLine($"DeviceClass\t\t\t: {device.DeviceDescriptor.bDeviceClass:x}");
-            sb.AppendLine($"DeviceSubClass\t\t\t: {device.DeviceDescriptor.DeviceSubClass:x}");
-            sb.AppendLine($"DeviceProtocol\t\t\t: {device.DeviceDescriptor.DeviceProtocol:x}");
-            sb.AppendLine($"MaxPacketSize\t\t\t: {device.DeviceDescriptor.MaxPacketSize0:x}");
-            sb.AppendLine($"Vendor ID\t\t\t: {device.DeviceDescriptor.IdVendor:x}");
-            sb.AppendLine($"Product ID\t\t\t: {device.DeviceDescriptor.IdProduct:x}");
-            sb.AppendLine(
-                $"bcdDevice\t\t\t: {device.DeviceDescriptor.bcdDevice:x}\n");
-            sb.AppendLine(
-                $"Device String Index of the Manufacturer\t: {device.DeviceDescriptor.IManufacturer:x}\n");
-            sb.AppendLine("Manufacturer\t\t\t: " + device.Manufacturer + "\n");
-            sb.AppendLine("Device String Index of the Product\t: " +
-                          device.DeviceDescriptor.IProduct.ToString("x") + "\n");
-            sb.AppendLine("Product\t\t\t\t: " + device.Product + "\n");
-            sb.AppendLine("Device String Index of the Serial Number: " +
-                          device.DeviceDescriptor.ISerialNumber.ToString("x") + "\n");
-            sb.AppendLine("Serial Number\t\t\t: " + device.SerialNumber + "\n");
-            sb.AppendLine("Number of available configurations\t: " +
-                          device.DeviceDescriptor.NumConfigurations.ToString("x") + "\n");
-            sb.AppendLine(
-                "Descriptor Type\t\t\t: " + device.DeviceDescriptor.DescriptorType + "\n");
-            sb.AppendLine(
-                "Device Descriptor Length\t\t: " + device.DeviceDescriptor.Length + "\n");
-            sb.AppendLine("\n");
-            sb.AppendLine("ConnectionStatus\t\t\t: " + device.Status + "\n");
-            sb.AppendLine("Curent Config Value\t\t\t: " + "\n");
-            sb.AppendLine("Device Bus Speed\t\t\t: " + device.Speed + "\n");
-            sb.AppendLine("Device Address\t\t\t: " + "\n");
-            sb.AppendLine("Open Pipes}\t\t\t: " + "\n");
-            sb.AppendLine("DriverKeyName\t\t\t: " + device.DriverKey + "\n");
-            sb.AppendLine("AdapterNumber\t\t\t: " + device.AdapterNumber + "\n");
-            sb.AppendLine("Instance ID\t\t\t: " + device.InstanceId + "\n");
+            builder.AppendLine($"DeviceClass\t\t\t: {device.DeviceDescriptor.bDeviceClass:x}");
+            builder.AppendLine($"DeviceSubClass\t\t\t: {device.DeviceDescriptor.DeviceSubClass:x}");
+            builder.AppendLine($"DeviceProtocol\t\t\t: {device.DeviceDescriptor.DeviceProtocol:x}");
+            builder.AppendLine($"MaxPacketSize\t\t\t: {device.DeviceDescriptor.MaxPacketSize0:x}");
+            builder.AppendLine($"Vendor ID\t\t\t: {device.DeviceDescriptor.IdVendor:x}");
+            builder.AppendLine($"Product ID\t\t\t: {device.DeviceDescriptor.IdProduct:x}");
+            builder.AppendLine(
+                $"bcdDevice\t\t\t: {device.DeviceDescriptor.bcdDevice:x}");
+            builder.AppendLine(
+                $"Device String Index of the Manufacturer\t: {device.DeviceDescriptor.IManufacturer:x}");
+            builder.AppendLine($"Manufacturer\t\t\t: {device.Manufacturer}");
+            builder.AppendLine($"Device String Index of the Product\t: {device.DeviceDescriptor.IProduct:x}");
+            builder.AppendLine($"Product\t\t\t\t: {device.Product}");
+            builder.AppendLine($"Device String Index of the Serial Number: {device.DeviceDescriptor.ISerialNumber:x}");
+            builder.AppendLine($"Serial Number\t\t\t: {device.SerialNumber}");
+            builder.AppendLine($"Number of available configurations\t: {device.DeviceDescriptor.NumConfigurations:x}");
+            builder.AppendLine(
+                $"Descriptor Type\t\t\t: {device.DeviceDescriptor.DescriptorType}");
+            builder.AppendLine(
+                $"Device Descriptor Length\t\t: {device.DeviceDescriptor.Length}");
+            builder.AppendLine("\n");
+            builder.AppendLine($"ConnectionStatus\t\t\t: {device.Status}");
+            builder.AppendLine("Curent Config Value\t\t\t:");
+            builder.AppendLine($"Device Bus Speed\t\t\t: {device.Speed}");
+            builder.AppendLine($"Device Address\t\t\t: ");
+            builder.AppendLine($"Open Pipes\t\t\t: ");
+            builder.AppendLine($"DriverKeyName\t\t\t: {device.DriverKey}");
+            builder.AppendLine($"AdapterNumber\t\t\t: {device.AdapterNumber}");
+            builder.AppendLine($"Instance ID\t\t\t: {device.InstanceId}");
             //sb.AppendLine("SerialNumber\t\t\t: " + port.Device.SerialNumber + "\n");
-            sb.AppendLine("\n");
+            builder.AppendLine("\n");
         }
 
-        private static void AppendUsbHub(StringBuilder sb, UsbHub hub)
+        private static void AppendUsbHub(StringBuilder builder, UsbHub hub)
         {
-            sb.AppendLine(hub.DeviceDescription);
+            builder.AppendLine(hub.DeviceDescription + "\r\n");
+            builder.AppendLine($"Root Hub: {hub.DevicePath}");
+            builder.AppendLine($"Hub Power:                    {(hub.IsBusPowered ? "Bus Power" : "Self Power")}");
+            builder.AppendLine($"Number of Ports:              {hub.PortCount}");
 
-            sb.AppendLine(
-                $"Descriptor Type\t\t\t: {hub.NodeInformation.HubInformation.HubDescriptor.DescriptorType}");
-            sb.AppendLine(
-                $"Descriptor length (Byte)\t\t: {hub.NodeInformation.HubInformation.HubDescriptor.DescriptorLength}");
-            sb.AppendLine($"HubName\t\t\t: {hub.DeviceDescription}");
-            sb.AppendLine($"HubDevicePath\t\t\t: {hub.DevicePath}");
+            AppendHubCharacteristics(builder, hub.HubInformation.UsbHubDescriptor.HubCharacteristics);
 
-            sb.AppendLine($"Hub Power:                    {(hub.IsBusPowered ? "Bus Power" : "Self Power")}");
+            builder.AppendLine($"High speed capable: ");
+            builder.AppendLine($"High speed: ");
+            builder.AppendLine($"Multiple transaction translations capable: ");
+            builder.AppendLine($"Performs multiple transaction translations simultaneously: ");
+            builder.AppendLine($"Hub wakes when device is connected: ");
+            builder.AppendLine($"Hub is bus powered: {DisplayBool(hub.IsBusPowered)}");
+            builder.AppendLine($"Hub is root: {DisplayBool(hub.IsRootHub)}");
+        }
 
-            sb.AppendLine($"Number of Downstream Ports\t\t: {hub.PortCount}");
-            sb.AppendLine(
-                $"Settling time of the power supply (ms)\t: {hub.NodeInformation.HubInformation.HubDescriptor.PowerOnToPowerGood * 2}");
-            sb.AppendLine(
-                $"Max power (mA)\t\t\t: {hub.NodeInformation.HubInformation.HubDescriptor.HubControlCurrent}");
-            sb.AppendLine(
-                $"HubCharacteristics\t\t\t: {Convert.ToString(hub.NodeInformation.HubInformation.HubDescriptor.HubCharacteristics, 2)}");
-            sb.AppendLine($"Is Root Hub\t\t\t:{hub.IsRootHub}");
+        private static void AppendHubCharacteristics(StringBuilder builder, short hubCharacteristics)
+        {
+            switch (hubCharacteristics & 0x0003)
+            {
+                case 0x0000:
+                    builder.AppendLine("Power switching:              Ganged");
+                    break;
+
+                case 0x0001:
+                    builder.AppendLine("Power switching:              Individual");
+                    break;
+
+                case 0x0002:
+                case 0x0003:
+                    builder.AppendLine("Power switching:              None");
+                    break;
+            }
+
+            switch (hubCharacteristics & 0x0004)
+            {
+                case 0x0000:
+                    builder.AppendLine("Compound device:              No");
+                    break;
+
+                case 0x0004:
+                    builder.AppendLine("Compound device:              Yes");
+                    break;
+            }
+
+            switch (hubCharacteristics & 0x0018)
+            {
+                case 0x0000:
+                    builder.AppendLine("Over-current Protection:      Global");
+                    break;
+
+                case 0x0008:
+                    builder.AppendLine("Over-current Protection:      Individual");
+                    break;
+
+                case 0x0010:
+                case 0x0018:
+                    builder.AppendLine("No Over-current Protection (Bus Power Only)");
+                    break;
+            }
+        }
+
+        private static string DisplayBool(bool value)
+        {
+            return value ? "Yes" : "No";
         }
 
         private static void AppendUsbController(StringBuilder sb, UsbController controller)
@@ -377,10 +407,6 @@ namespace UsbViewer
             sb.AppendLine($"DeviceID: {controller.DeviceId:X4}");
             sb.AppendLine($"SubSysID: {controller.SubSysID:X8}");
             sb.AppendLine($"Revision: {controller.Revision:X2}");
-
-            sb.AppendLine($"DevicePath\t\t\t: {controller.DevicePath}\n");
-            
-            sb.AppendLine($"Index\t\t\t\t: {controller.AdapterNumber}\n");
         }
 
         #region toolstrip events

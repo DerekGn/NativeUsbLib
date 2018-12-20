@@ -32,13 +32,6 @@ namespace NativeUsbLib.WinApis
         public const int UsbuserGetControllerDriverKey = 0x00000002;
 
         public const int IoctlGetHcdDriverkeyName = 0x220424;
-        public const int IoctlUsbGetRootHubName = 0x220408;
-        public const int IoctlUsbGetNodeInformation = 0x220408;
-        public const int IoctlUsbGetNodeInformationEx = 0x220454;
-        public const int IoctlUsbGetNodeConnectionInformationEx = 0x220448;
-        public const int IoctlUsbGetDescriptorFromNodeConnection = 0x220410;
-        public const int IoctlUsbGetNodeConnectionName = 0x220414;
-        public const int IoctlUsbGetNodeConnectionDriverkeyName = 0x220420;
         public const int IoctlStorageGetDeviceNumber = 0x2D1080;
 
         public const int UsbDeviceDescriptorType = 0x1;
@@ -517,6 +510,24 @@ namespace NativeUsbLib.WinApis
         {
             public UsbHubNode NodeType;
             public UsbHubInformation HubInformation;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct UsbHubCapabilitiesEx
+        {
+            public UsbHubCapFlags CapabilityFlags;
+        }
+
+        [Flags]
+        public enum UsbHubCapFlags
+        {
+            HubIsHighSpeedCapable = 0,
+            HubIsHighSpeed = 1 << 0,
+            HubIsMultiTtCapable = 1 << 1,
+            HubIsMultiTt = 1 << 2,
+            HubIsRoot = 1 << 3,
+            HubIsArmedWakeOnConnect = 1 << 4,
+            HubIsBusPowered = 1 << 5
         }
 
         public struct UsbHubInformationEx : IMarshallable

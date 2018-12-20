@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using NativeUsbLib.Exceptions;
 using NativeUsbLib.WinApis;
 
@@ -38,17 +36,22 @@ namespace NativeUsbLib
         public bool IsRootHub { get; } = false;
 
         /// <summary>
-        /// Gets or sets the node information.
+        /// Gets the node information.
         /// </summary>
         /// <value>The node information.</value>
         public UsbApi.UsbNodeInformation NodeInformation { get; protected set; }
 
         /// <summary>
-        /// Gets or sets the usb hub information.
+        /// Gets the usb hub information.
         /// </summary>
         /// <value>The usb hub information.</value>
         public UsbApi.UsbHubInformationEx HubInformation { get; protected set; }
-        
+
+        /// <summary>
+        /// Gets the hub capabilities
+        /// </summary>
+        public UsbApi.UsbHubCapabilitiesEx UsbHubCapabilitiesEx { get; protected set; }
+
         #endregion
 
         #region constructor/destructor
@@ -78,7 +81,7 @@ namespace NativeUsbLib
                 IntPtr ptrRootHubName = Marshal.AllocHGlobal(nBytes);
 
                 // Get the root hub name.
-                if (KernelApi.DeviceIoControl(hostControllerHandle, UsbApi.IoctlUsbGetRootHubName, ptrRootHubName, nBytes, ptrRootHubName, nBytes, out nBytesReturned, IntPtr.Zero))
+                if (KernelApi.DeviceIoControl(hostControllerHandle, UsbIoControl.IoctlUsbGetRootHubName, ptrRootHubName, nBytes, ptrRootHubName, nBytes, out nBytesReturned, IntPtr.Zero))
                 {
                     rootHubName = (UsbApi.UsbRootHubName)Marshal.PtrToStructure(ptrRootHubName, typeof(UsbApi.UsbRootHubName));
 
@@ -91,7 +94,7 @@ namespace NativeUsbLib
                 }
                 else
                 {
-                    Trace.TraceError($"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbApi.IoctlUsbGetRootHubName)}] Result: [{KernelApi.GetLastError():X}]");
+                    Trace.TraceError($"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetRootHubName)}] Result: [{KernelApi.GetLastError():X}]");
                 }
 
                 Marshal.FreeHGlobal(ptrRootHubName);
@@ -108,33 +111,48 @@ namespace NativeUsbLib
                     IntPtr ptrNodeInfo = Marshal.AllocHGlobal(nBytes);
                     Marshal.StructureToPtr(nodeInfo, ptrNodeInfo, true);
 
-                    if (KernelApi.DeviceIoControl(hubHandle, UsbApi.IoctlUsbGetNodeInformation, ptrNodeInfo, nBytes, ptrNodeInfo, nBytes, out nBytesReturned, IntPtr.Zero))
+                    if (KernelApi.DeviceIoControl(hubHandle, UsbIoControl.IoctlUsbGetNodeInformation, ptrNodeInfo, nBytes, ptrNodeInfo, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
                         NodeInformation = (UsbApi.UsbNodeInformation) Marshal.PtrToStructure(ptrNodeInfo, typeof(UsbApi.UsbNodeInformation));
                     }
                     else
                     {
-                        Trace.TraceError($"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbApi.IoctlUsbGetNodeInformation)}] Result: [{KernelApi.GetLastError():X}]");
+                        Trace.TraceError($"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetNodeInformation)}] Result: [{KernelApi.GetLastError():X}]");
                     }
 
                     Marshal.FreeHGlobal(ptrNodeInfo);
 
-                    UsbApi.UsbHubInformationEx hubInfo =
+                    UsbApi.UsbHubInformationEx hubInfoEx =
                         new UsbApi.UsbHubInformationEx();
-                    nBytes = hubInfo.SizeOf;
+                    nBytes = hubInfoEx.SizeOf;
                     IntPtr ptrHubInfo = Marshal.AllocHGlobal(nBytes);
                     
-                    if (KernelApi.DeviceIoControl(hubHandle, UsbApi.IoctlUsbGetNodeInformationEx, ptrHubInfo, nBytes, ptrHubInfo, nBytes, out nBytesReturned, IntPtr.Zero))
+                    if (KernelApi.DeviceIoControl(hubHandle, UsbIoControl.IoctlUsbGetHubInformationEx, ptrHubInfo, nBytes, ptrHubInfo, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
-                        hubInfo.MarshalFrom(ptrHubInfo);
-                        HubInformation = hubInfo;
+                        hubInfoEx.MarshalFrom(ptrHubInfo);
+                        HubInformation = hubInfoEx;
                     }
                     else
                     {
-                        Trace.TraceError($"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbApi.IoctlUsbGetNodeInformation)}] Result: [{KernelApi.GetLastError():X}]");
+                        Trace.TraceError($"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetNodeInformation)}] Result: [{KernelApi.GetLastError():X}]");
                     }
 
                     Marshal.FreeHGlobal(ptrHubInfo);
+
+                    UsbApi.UsbHubCapabilitiesEx usbHubCapabilitiesEx = new UsbApi.UsbHubCapabilitiesEx();
+                    nBytes = Marshal.SizeOf(usbHubCapabilitiesEx);
+                    IntPtr ptrUsbHubCapabilitiesEx = Marshal.AllocHGlobal(nBytes);
+
+                    if (KernelApi.DeviceIoControl(hubHandle, UsbIoControl.IoctlUsbGetHubCapabilitiesEx, ptrHubInfo, nBytes, ptrHubInfo, nBytes, out nBytesReturned, IntPtr.Zero))
+                    {
+                        UsbHubCapabilitiesEx = (UsbApi.UsbHubCapabilitiesEx)Marshal.PtrToStructure(ptrUsbHubCapabilitiesEx, typeof(UsbApi.UsbHubCapabilitiesEx));
+                    }
+                    else
+                    {
+                        Trace.TraceError($"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetHubCapabilitiesEx)}] Result: [{KernelApi.GetLastError():X}]");
+                    }
+
+                    Marshal.FreeHGlobal(ptrUsbHubCapabilitiesEx);
 
                     KernelApi.CloseHandle(hubHandle);
                 }

@@ -228,7 +228,7 @@ namespace NativeUsbLib
                     Marshal.StructureToPtr(request1, ptrRequest1, true);
 
                     // Use an IOCTL call to request the String Descriptor
-                    if (KernelApi.DeviceIoControl(handle, UsbApi.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest1,
+                    if (KernelApi.DeviceIoControl(handle, UsbIoControl.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest1,
                         nBytes, ptrRequest1, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
                         IntPtr ptr = new IntPtr(ptrRequest1.ToInt64() + Marshal.SizeOf(request1));
@@ -315,7 +315,7 @@ namespace NativeUsbLib
                     else
                     {
                         Trace.TraceError(
-                            $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbApi.IoctlUsbGetDescriptorFromNodeConnection)}] Result: [{KernelApi.GetLastError():X}]");
+                            $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetDescriptorFromNodeConnection)}] Result: [{KernelApi.GetLastError():X}]");
                     }
 
                     Marshal.FreeHGlobal(ptrRequest1);
@@ -346,7 +346,7 @@ namespace NativeUsbLib
                     Marshal.StructureToPtr(driverKey, ptrDriverKey, true);
 
                     // Use an IOCTL call to request the Driver Key Name
-                    if (KernelApi.DeviceIoControl(handle, UsbApi.IoctlUsbGetNodeConnectionDriverkeyName, ptrDriverKey,
+                    if (KernelApi.DeviceIoControl(handle, UsbIoControl.IoctlUsbGetNodeConnectionDriverkeyName, ptrDriverKey,
                         nBytes, ptrDriverKey, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
                         driverKey = (UsbApi.UsbNodeConnectionDriverkeyName)Marshal.PtrToStructure(ptrDriverKey,
@@ -418,7 +418,7 @@ namespace NativeUsbLib
                 Marshal.StructureToPtr(request, ptrRequest, true);
 
                 // Use an IOCTL call to request the string descriptor.
-                if (KernelApi.DeviceIoControl(handle, UsbApi.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest,
+                if (KernelApi.DeviceIoControl(handle, UsbIoControl.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest,
                     nBytes, ptrRequest, nBytes, out _, IntPtr.Zero))
                 {
                     // The location of the string descriptor is immediately after
@@ -435,7 +435,7 @@ namespace NativeUsbLib
                 else
                 {
                     Trace.TraceError(
-                        $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbApi.IoctlUsbGetDescriptorFromNodeConnection)}] Result: [{KernelApi.GetLastError():X}]");
+                        $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetDescriptorFromNodeConnection)}] Result: [{KernelApi.GetLastError():X}]");
                 }
             }
             finally 
@@ -843,7 +843,7 @@ namespace NativeUsbLib
                     new UsbApi.UsbNodeConnectionInformationEx {ConnectionIndex = portCount};
                 Marshal.StructureToPtr(nodeConnection, ptrNodeConnection, true);
 
-                if (KernelApi.DeviceIoControl(handel1, UsbApi.IoctlUsbGetNodeConnectionInformationEx,
+                if (KernelApi.DeviceIoControl(handel1, UsbIoControl.IoctlUsbGetNodeConnectionInformationEx,
                     ptrNodeConnection, nBytes, ptrNodeConnection, nBytes, out nBytesReturned, IntPtr.Zero))
                 {
                     nodeConnection =
@@ -860,7 +860,7 @@ namespace NativeUsbLib
                         ptrNodeConnection = Marshal.AllocHGlobal(nBytes);
                         Marshal.StructureToPtr(nodeConnection, ptrNodeConnection, true);
 
-                        if (KernelApi.DeviceIoControl(handel1, UsbApi.IoctlUsbGetNodeConnectionName,
+                        if (KernelApi.DeviceIoControl(handel1, UsbIoControl.IoctlUsbGetNodeConnectionName,
                             ptrNodeConnection, nBytes, ptrNodeConnection, nBytes, out nBytesReturned, IntPtr.Zero))
                         {
                             var nameConnection = (UsbApi.UsbNodeConnectionName) Marshal.PtrToStructure(
