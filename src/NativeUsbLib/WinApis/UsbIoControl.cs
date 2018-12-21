@@ -42,7 +42,7 @@
 
         public const int IoctlUsbGetHubCapabilitiesEx = (UsbIoDefinitions.FileDeviceUsb << 16) |
                                                         (DevIoControl.FileAnyAccess << 14) |
-                                                        (UsbIoDefinitions.UsbGetHubCapabilities << 2) |
+                                                        (UsbIoDefinitions.UsbGetHubCapabilitiesEx << 2) |
                                                         DevIoControl.MethodBuffered;
     }
 }

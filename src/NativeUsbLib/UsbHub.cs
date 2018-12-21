@@ -142,8 +142,9 @@ namespace NativeUsbLib
                     UsbApi.UsbHubCapabilitiesEx usbHubCapabilitiesEx = new UsbApi.UsbHubCapabilitiesEx();
                     nBytes = Marshal.SizeOf(usbHubCapabilitiesEx);
                     IntPtr ptrUsbHubCapabilitiesEx = Marshal.AllocHGlobal(nBytes);
+                    Marshal.StructureToPtr(usbHubCapabilitiesEx, ptrUsbHubCapabilitiesEx, true);
 
-                    if (KernelApi.DeviceIoControl(hubHandle, UsbIoControl.IoctlUsbGetHubCapabilitiesEx, ptrHubInfo, nBytes, ptrHubInfo, nBytes, out nBytesReturned, IntPtr.Zero))
+                    if (KernelApi.DeviceIoControl(hubHandle, UsbIoControl.IoctlUsbGetHubCapabilitiesEx, ptrUsbHubCapabilitiesEx, nBytes, ptrUsbHubCapabilitiesEx, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
                         UsbHubCapabilitiesEx = (UsbApi.UsbHubCapabilitiesEx)Marshal.PtrToStructure(ptrUsbHubCapabilitiesEx, typeof(UsbApi.UsbHubCapabilitiesEx));
                     }
