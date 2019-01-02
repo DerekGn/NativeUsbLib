@@ -85,7 +85,7 @@ namespace UsbViewer
                     };
                 node.Nodes.Add(usbNode);
 
-                foreach (var device in hub.Devices) ShowDevice(usbNode, device);
+                foreach (var device in hub.ChildDevices) ShowDevice(usbNode, device);
             }
             else
             {
@@ -293,57 +293,41 @@ namespace UsbViewer
 
         private static void AppendDeviceDescriptor(StringBuilder builder, Device device)
         {
-            builder.AppendLine(device.DeviceDescription + "\r\n");
+            builder.AppendLine($"{device.DeviceDescription}\r\n");
 
-            //AppendTextBuffer("Is Port User Connectable:         %s\r\n",
-            //    PortConnectorProps->UsbPortProperties.PortIsUserConnectable
-            //        ? "yes" : "no");
-
-            //AppendTextBuffer("Is Port Debug Capable:            %s\r\n",
-            //    PortConnectorProps->UsbPortProperties.PortIsDebugCapable
-            //        ? "yes" : "no");
-            //AppendTextBuffer("Companion Port Number:            %d\r\n",
-            //    PortConnectorProps->CompanionPortNumber);
-            //AppendTextBuffer("Companion Hub Symbolic Link Name: %ws\r\n",
-            //    PortConnectorProps->CompanionHubSymbolicLinkName);
-
-
-            //builder.AppendLine("-----------------------------------------------------------------");
-            //builder.AppendLine("DEVICE DESCRIPTOR");
-            //builder.AppendLine("-----------------------------------------------------------------");
-            //builder.AppendLine(
-            //    $"USB Version\t\t\t: {device.DeviceDescriptor.bcdUSB.ToString("x").Replace("0", "")}");
-            //builder.AppendLine($"DeviceClass\t\t\t: {device.DeviceDescriptor.bDeviceClass:x}");
-            //builder.AppendLine($"DeviceSubClass\t\t\t: {device.DeviceDescriptor.DeviceSubClass:x}");
-            //builder.AppendLine($"DeviceProtocol\t\t\t: {device.DeviceDescriptor.DeviceProtocol:x}");
-            //builder.AppendLine($"MaxPacketSize\t\t\t: {device.DeviceDescriptor.MaxPacketSize0:x}");
-            //builder.AppendLine($"Vendor ID\t\t\t: {device.DeviceDescriptor.IdVendor:x}");
-            //builder.AppendLine($"Product ID\t\t\t: {device.DeviceDescriptor.IdProduct:x}");
-            //builder.AppendLine(
-            //    $"bcdDevice\t\t\t: {device.DeviceDescriptor.bcdDevice:x}");
-            //builder.AppendLine(
-            //    $"Device String Index of the Manufacturer\t: {device.DeviceDescriptor.IManufacturer:x}");
-            //builder.AppendLine($"Manufacturer\t\t\t: {device.Manufacturer}");
-            //builder.AppendLine($"Device String Index of the Product\t: {device.DeviceDescriptor.IProduct:x}");
-            //builder.AppendLine($"Product\t\t\t\t: {device.Product}");
-            //builder.AppendLine($"Device String Index of the Serial Number: {device.DeviceDescriptor.ISerialNumber:x}");
-            //builder.AppendLine($"Serial Number\t\t\t: {device.SerialNumber}");
-            //builder.AppendLine($"Number of available configurations\t: {device.DeviceDescriptor.NumConfigurations:x}");
-            //builder.AppendLine(
-            //    $"Descriptor Type\t\t\t: {device.DeviceDescriptor.DescriptorType}");
-            //builder.AppendLine(
-            //    $"Device Descriptor Length\t\t: {device.DeviceDescriptor.Length}");
-            //builder.AppendLine("\n");
-            //builder.AppendLine($"ConnectionStatus\t\t\t: {device.Status}");
-            //builder.AppendLine("Curent Config Value\t\t\t:");
-            //builder.AppendLine($"Device Bus Speed\t\t\t: {device.Speed}");
-            //builder.AppendLine($"Device Address\t\t\t: ");
-            //builder.AppendLine($"Open Pipes\t\t\t: ");
-            //builder.AppendLine($"DriverKeyName\t\t\t: {device.DriverKey}");
-            //builder.AppendLine($"AdapterNumber\t\t\t: {device.AdapterNumber}");
-            //builder.AppendLine($"Instance ID\t\t\t: {device.InstanceId}");
-            ////sb.AppendLine("SerialNumber\t\t\t: " + port.Device.SerialNumber + "\n");
-            //builder.AppendLine("\n");
+            builder.AppendLine(
+                $"USB Version\t\t\t: {device.DeviceDescriptor.bcdUSB.ToString("x").Replace("0", "")}");
+            builder.AppendLine($"DeviceClass\t\t\t: {device.DeviceDescriptor.bDeviceClass:x}");
+            builder.AppendLine($"DeviceSubClass\t\t\t: {device.DeviceDescriptor.DeviceSubClass:x}");
+            builder.AppendLine($"DeviceProtocol\t\t\t: {device.DeviceDescriptor.DeviceProtocol:x}");
+            builder.AppendLine($"MaxPacketSize\t\t\t: {device.DeviceDescriptor.MaxPacketSize0:x}");
+            builder.AppendLine($"Vendor ID\t\t\t: {device.DeviceDescriptor.IdVendor:x}");
+            builder.AppendLine($"Product ID\t\t\t: {device.DeviceDescriptor.IdProduct:x}");
+            builder.AppendLine(
+                $"bcdDevice\t\t\t: {device.DeviceDescriptor.bcdDevice:x}");
+            builder.AppendLine(
+                $"Device String Index of the Manufacturer\t: {device.DeviceDescriptor.IManufacturer:x}");
+            builder.AppendLine($"Manufacturer\t\t\t: {device.Manufacturer}");
+            builder.AppendLine($"Device String Index of the Product\t: {device.DeviceDescriptor.IProduct:x}");
+            builder.AppendLine($"Product\t\t\t\t: {device.Product}");
+            builder.AppendLine($"Device String Index of the Serial Number: {device.DeviceDescriptor.ISerialNumber:x}");
+            builder.AppendLine($"Serial Number\t\t\t: {device.SerialNumber}");
+            builder.AppendLine($"Number of available configurations\t: {device.DeviceDescriptor.NumConfigurations:x}");
+            builder.AppendLine(
+                $"Descriptor Type\t\t\t: {device.DeviceDescriptor.DescriptorType}");
+            builder.AppendLine(
+                $"Device Descriptor Length\t\t: {device.DeviceDescriptor.Length}");
+            builder.AppendLine("\n");
+            builder.AppendLine($"ConnectionStatus\t\t\t: {device.Status}");
+            builder.AppendLine("Curent Config Value\t\t\t:");
+            builder.AppendLine($"Device Bus Speed\t\t\t: {device.Speed}");
+            builder.AppendLine($"Device Address\t\t\t: ");
+            builder.AppendLine($"Open Pipes\t\t\t: ");
+            builder.AppendLine($"DriverKeyName\t\t\t: {device.DriverKey}");
+            builder.AppendLine($"AdapterNumber\t\t\t: {device.AdapterNumber}");
+            builder.AppendLine($"Instance ID\t\t\t: {device.InstanceId}");
+            //sb.AppendLine("SerialNumber\t\t\t: " + port.Device.SerialNumber + "\n");
+            builder.AppendLine("\n");
         }
 
         private static void AppendUsbHub(StringBuilder builder, UsbHub hub)

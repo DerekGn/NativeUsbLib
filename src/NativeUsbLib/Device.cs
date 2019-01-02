@@ -14,6 +14,9 @@ namespace NativeUsbLib
     /// </summary>
     public abstract class Device
     {
+        private UsbApi.UsbNodeConnectionInformationEx _mNodeConnectionInfo;
+        protected List<Device> Devices;
+
         #region fields
 
         /// <summary>
@@ -23,17 +26,9 @@ namespace NativeUsbLib
         public Device Parent { get; protected set; }
 
         /// <summary>
-        /// The childs.
+        /// Gets the child devices
         /// </summary>
-        public List<Device> Devices = null;
-
-        /// <summary>
-        /// Gets the childs.
-        /// </summary>
-        /// <value>The childs.</value>
         public ReadOnlyCollection<Device> ChildDevices => new ReadOnlyCollection<Device>(Devices);
-
-        private UsbApi.UsbNodeConnectionInformationEx m_NodeConnectionInfo;
 
         /// <summary>
         /// Gets or sets the node connection info.
@@ -41,10 +36,10 @@ namespace NativeUsbLib
         /// <value>The node connection info.</value>
         public UsbApi.UsbNodeConnectionInformationEx NodeConnectionInfo
         {
-            get => m_NodeConnectionInfo;
+            get => _mNodeConnectionInfo;
             set
             {
-                m_NodeConnectionInfo = value;
+                _mNodeConnectionInfo = value;
                 AdapterNumber = NodeConnectionInfo.ConnectionIndex;
                 UsbApi.UsbConnectionStatus status = NodeConnectionInfo.ConnectionStatus;
                 Status = status.ToString();
@@ -201,11 +196,11 @@ namespace NativeUsbLib
             try
             {
                 handle = KernelApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero,
-                UsbApi.OpenExisting, 0, IntPtr.Zero);
+                    UsbApi.OpenExisting, 0, IntPtr.Zero);
                 if (handle.ToInt64() != UsbApi.InvalidHandleValue)
                 {
                     // We use this to zero fill a buffer
-                    string nullString = new string((char)0, UsbApi.MaxBufferSize / Marshal.SystemDefaultCharSize);
+                    string nullString = new string((char) 0, UsbApi.MaxBufferSize / Marshal.SystemDefaultCharSize);
 
                     int nBytesReturned;
                     int nBytes = UsbApi.MaxBufferSize;
@@ -216,44 +211,45 @@ namespace NativeUsbLib
                             ConnectionIndex = adapterNumber,
                             SetupPacket =
                             {
-                            Value = (short) UsbApi.UsbConfigurationDescriptorType << 8,
-                            Index = 0x409 // Language Code
-                        }
+                                Value = (short) UsbApi.UsbConfigurationDescriptorType << 8,
+                                Index = 0x409 // Language Code
+                            }
                         };
 
-                    request1.SetupPacket.Length = (short)(nBytes - Marshal.SizeOf(request1));
+                    request1.SetupPacket.Length = (short) (nBytes - Marshal.SizeOf(request1));
 
                     // Geez, I wish C# had a Marshal.MemSet() method
                     IntPtr ptrRequest1 = Marshal.StringToHGlobalAuto(nullString);
                     Marshal.StructureToPtr(request1, ptrRequest1, true);
 
                     // Use an IOCTL call to request the String Descriptor
-                    if (KernelApi.DeviceIoControl(handle, UsbIoControl.IoctlUsbGetDescriptorFromNodeConnection, ptrRequest1,
+                    if (KernelApi.DeviceIoControl(handle, UsbIoControl.IoctlUsbGetDescriptorFromNodeConnection,
+                        ptrRequest1,
                         nBytes, ptrRequest1, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
                         IntPtr ptr = new IntPtr(ptrRequest1.ToInt64() + Marshal.SizeOf(request1));
 
-                        var configurationDescriptor = (UsbApi.UsbConfigurationDescriptor)Marshal.PtrToStructure(ptr,
+                        var configurationDescriptor = (UsbApi.UsbConfigurationDescriptor) Marshal.PtrToStructure(ptr,
                             typeof(UsbApi.UsbConfigurationDescriptor));
 
                         if (ConfigurationDescriptor == null)
                         {
                             ConfigurationDescriptor = new List<UsbApi.UsbConfigurationDescriptor>
-                        {
-                            configurationDescriptor
-                        };
+                            {
+                                configurationDescriptor
+                            };
                         }
                         else
                             ConfigurationDescriptor.Add(configurationDescriptor);
 
-                        long p = (long)ptr;
+                        long p = (long) ptr;
                         p += Marshal.SizeOf(configurationDescriptor) - 1;
-                        ptr = (IntPtr)p;
+                        ptr = (IntPtr) p;
 
                         for (int i = 0; i < configurationDescriptor.NumInterface; i++)
                         {
                             UsbApi.UsbInterfaceDescriptor interfaceDescriptor =
-                                (UsbApi.UsbInterfaceDescriptor)Marshal.PtrToStructure(ptr,
+                                (UsbApi.UsbInterfaceDescriptor) Marshal.PtrToStructure(ptr,
                                     typeof(UsbApi.UsbInterfaceDescriptor));
 
                             if (InterfaceDescriptor == null)
@@ -263,52 +259,53 @@ namespace NativeUsbLib
                             else
                                 InterfaceDescriptor.Add(interfaceDescriptor);
 
-                            p = (long)ptr;
+                            p = (long) ptr;
                             p += Marshal.SizeOf(interfaceDescriptor);
 
                             if (interfaceDescriptor.InterfaceClass == 0x03)
                             {
-                                ptr = (IntPtr)p;
+                                ptr = (IntPtr) p;
                                 for (int k = 0; k < interfaceDescriptor.InterfaceSubClass; k++)
                                 {
                                     HidApi.HidDescriptor hdiDescriptor =
-                                        (HidApi.HidDescriptor)Marshal.PtrToStructure(ptr, typeof(HidApi.HidDescriptor));
+                                        (HidApi.HidDescriptor) Marshal.PtrToStructure(ptr,
+                                            typeof(HidApi.HidDescriptor));
 
                                     if (HdiDescriptor == null)
                                     {
                                         HdiDescriptor = new List<HidApi.HidDescriptor>
-                                    {
-                                        hdiDescriptor
-                                    };
+                                        {
+                                            hdiDescriptor
+                                        };
                                     }
                                     else
                                         HdiDescriptor.Add(hdiDescriptor);
 
-                                    p = (long)ptr;
+                                    p = (long) ptr;
                                     p += Marshal.SizeOf(hdiDescriptor);
                                     p--;
                                 }
                             }
 
-                            ptr = (IntPtr)p;
+                            ptr = (IntPtr) p;
                             for (int j = 0; j < interfaceDescriptor.NumEndpoints; j++)
                             {
                                 UsbApi.UsbEndpointDescriptor endpointDescriptor1 =
-                                    (UsbApi.UsbEndpointDescriptor)Marshal.PtrToStructure(ptr,
+                                    (UsbApi.UsbEndpointDescriptor) Marshal.PtrToStructure(ptr,
                                         typeof(UsbApi.UsbEndpointDescriptor));
                                 if (EndpointDescriptor == null)
                                 {
                                     EndpointDescriptor = new List<UsbApi.UsbEndpointDescriptor>
-                                {
-                                    endpointDescriptor1
-                                };
+                                    {
+                                        endpointDescriptor1
+                                    };
                                 }
                                 else
                                     EndpointDescriptor.Add(endpointDescriptor1);
 
-                                p = (long)ptr;
+                                p = (long) ptr;
                                 p += Marshal.SizeOf(endpointDescriptor1) - 1;
-                                ptr = (IntPtr)p;
+                                ptr = (IntPtr) p;
                             }
                         }
                     }
@@ -325,12 +322,14 @@ namespace NativeUsbLib
                     // request a string descriptor to get the values for those strings.
                     if (DeviceDescriptor != null && DeviceDescriptor.IManufacturer > 0)
                     {
-                        Manufacturer = UsbDescriptorRequestString(handle, adapterNumber, DeviceDescriptor.IManufacturer);
+                        Manufacturer =
+                            UsbDescriptorRequestString(handle, adapterNumber, DeviceDescriptor.IManufacturer);
                     }
 
                     if (DeviceDescriptor != null && DeviceDescriptor.ISerialNumber > 0)
                     {
-                        SerialNumber = UsbDescriptorRequestString(handle, adapterNumber, DeviceDescriptor.ISerialNumber);
+                        SerialNumber =
+                            UsbDescriptorRequestString(handle, adapterNumber, DeviceDescriptor.ISerialNumber);
                     }
 
                     if (DeviceDescriptor != null && DeviceDescriptor.IProduct > 0)
@@ -340,16 +339,17 @@ namespace NativeUsbLib
 
                     // Get the Driver Key Name (usefull in locating a device)
                     UsbApi.UsbNodeConnectionDriverkeyName driverKey =
-                        new UsbApi.UsbNodeConnectionDriverkeyName { ConnectionIndex = adapterNumber };
+                        new UsbApi.UsbNodeConnectionDriverkeyName {ConnectionIndex = adapterNumber};
                     nBytes = Marshal.SizeOf(driverKey);
                     IntPtr ptrDriverKey = Marshal.AllocHGlobal(nBytes);
                     Marshal.StructureToPtr(driverKey, ptrDriverKey, true);
 
                     // Use an IOCTL call to request the Driver Key Name
-                    if (KernelApi.DeviceIoControl(handle, UsbIoControl.IoctlUsbGetNodeConnectionDriverkeyName, ptrDriverKey,
+                    if (KernelApi.DeviceIoControl(handle, UsbIoControl.IoctlUsbGetNodeConnectionDriverkeyName,
+                        ptrDriverKey,
                         nBytes, ptrDriverKey, nBytes, out nBytesReturned, IntPtr.Zero))
                     {
-                        driverKey = (UsbApi.UsbNodeConnectionDriverkeyName)Marshal.PtrToStructure(ptrDriverKey,
+                        driverKey = (UsbApi.UsbNodeConnectionDriverkeyName) Marshal.PtrToStructure(ptrDriverKey,
                             typeof(UsbApi.UsbNodeConnectionDriverkeyName));
                         DriverKey = driverKey.DriverKeyName;
 
@@ -383,20 +383,20 @@ namespace NativeUsbLib
                     Marshal.FreeHGlobal(ptrDriverKey);
                 }
             }
-            finally 
+            finally
             {
-                if(handle != IntPtr.Zero)
+                if (handle != IntPtr.Zero)
                     KernelApi.CloseHandle(handle);
             }
         }
 
         private static string UsbDescriptorRequestString(IntPtr handle, int adapterNumber, byte descriptorIndex)
         {
-            string nullString = new string((char)0, UsbApi.MaxBufferSize / Marshal.SystemDefaultCharSize);
+            string nullString = new string((char) 0, UsbApi.MaxBufferSize / Marshal.SystemDefaultCharSize);
             int nBytes = UsbApi.MaxBufferSize;
             string result = string.Empty;
             IntPtr ptrRequest = IntPtr.Zero;
-            
+
             try
             {
                 // Build a request for string descriptor.
@@ -406,12 +406,12 @@ namespace NativeUsbLib
                         ConnectionIndex = adapterNumber,
                         SetupPacket =
                         {
-                        Value = (short) ((UsbApi.UsbStringDescriptorType << 8) +
-                                          descriptorIndex),
-                        Index = 0x409 // Language Code
-                    }
+                            Value = (short) ((UsbApi.UsbStringDescriptorType << 8) +
+                                             descriptorIndex),
+                            Index = 0x409 // Language Code
+                        }
                     };
-                request.SetupPacket.Length = (short)(nBytes - Marshal.SizeOf(request));
+                request.SetupPacket.Length = (short) (nBytes - Marshal.SizeOf(request));
 
                 // Geez, I wish C# had a Marshal.MemSet() method.
                 ptrRequest = Marshal.StringToHGlobalAuto(nullString);
@@ -427,7 +427,7 @@ namespace NativeUsbLib
                     // chunk of memory by using the StringToHGlobalAuto() hack above
                     IntPtr ptrStringDesc = new IntPtr(ptrRequest.ToInt64() + Marshal.SizeOf(request));
                     UsbApi.UsbStringDescriptor stringDesc =
-                        (UsbApi.UsbStringDescriptor)Marshal.PtrToStructure(ptrStringDesc,
+                        (UsbApi.UsbStringDescriptor) Marshal.PtrToStructure(ptrStringDesc,
                             typeof(UsbApi.UsbStringDescriptor));
 
                     result = stringDesc.String;
@@ -438,9 +438,9 @@ namespace NativeUsbLib
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetDescriptorFromNodeConnection)}] Result: [{KernelApi.GetLastError():X}]");
                 }
             }
-            finally 
+            finally
             {
-                if(ptrRequest != IntPtr.Zero)
+                if (ptrRequest != IntPtr.Zero)
                     Marshal.FreeHGlobal(ptrRequest);
             }
 
@@ -530,7 +530,7 @@ namespace NativeUsbLib
                 if (handle != IntPtr.Zero)
                     Marshal.FreeHGlobal(ptr);
 
-                if(handle != IntPtr.Zero)
+                if (handle != IntPtr.Zero)
                     UsbApi.SetupDiDestroyDeviceInfoList(handle);
             }
 
@@ -598,7 +598,7 @@ namespace NativeUsbLib
             }
             finally
             {
-                if(ptr != IntPtr.Zero)
+                if (ptr != IntPtr.Zero)
                     Marshal.FreeHGlobal(ptr);
 
                 if (handle != IntPtr.Zero)
@@ -657,7 +657,8 @@ namespace NativeUsbLib
                                 var deviceInterfaceData = new UsbApi.SpDeviceInterfaceData();
                                 deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
 
-                                if (UsbApi.SetupDiEnumDeviceInterfaces(handle, IntPtr.Zero, ref guidDevInterfaceUsbDevice,
+                                if (UsbApi.SetupDiEnumDeviceInterfaces(handle, IntPtr.Zero,
+                                    ref guidDevInterfaceUsbDevice,
                                     i, ref deviceInterfaceData))
                                 {
                                     // Build a device interface detail data structure.
@@ -685,7 +686,7 @@ namespace NativeUsbLib
             }
             finally
             {
-                if(ptr == IntPtr.Zero)
+                if (ptr == IntPtr.Zero)
                     Marshal.FreeHGlobal(ptr);
 
                 if (handle == IntPtr.Zero)
@@ -740,7 +741,7 @@ namespace NativeUsbLib
                             {
                                 // Build a device interface detail data structure.
                                 var deviceInterfaceDetailData =
-                                    new UsbApi.SpDeviceInterfaceDetailData { CbSize = 4 + Marshal.SystemDefaultCharSize };
+                                    new UsbApi.SpDeviceInterfaceDetailData {CbSize = 4 + Marshal.SystemDefaultCharSize};
 
                                 // Now we can get some more detailed informations.
                                 int nRequiredSize = 0;
@@ -767,10 +768,10 @@ namespace NativeUsbLib
             }
             finally
             {
-                if(ptr != IntPtr.Zero)
+                if (ptr != IntPtr.Zero)
                     Marshal.FreeHGlobal(ptr);
 
-                if(handle != IntPtr.Zero)
+                if (handle != IntPtr.Zero)
                     UsbApi.SetupDiDestroyDeviceInfoList(handle);
             }
 

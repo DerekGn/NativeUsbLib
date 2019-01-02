@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
 using NativeUsbLib.Exceptions;
@@ -14,15 +12,7 @@ namespace NativeUsbLib
     /// </summary>
     public class UsbController : Device
     {
-        #region fields
-
-        private readonly Guid m_Guid = new Guid(UsbApi.GuidDevinterfaceHubcontroller);
-
-        #endregion
-
-        #region constructor/destructor
-
-        #region constructor
+        private readonly Guid _guid = new Guid(UsbApi.GuidDevinterfaceHubcontroller);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UsbController"/> class.
@@ -38,14 +28,14 @@ namespace NativeUsbLib
             try
             {
                 ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
-                handle = UsbApi.SetupDiGetClassDevs(ref m_Guid, 0, IntPtr.Zero, UsbApi.DigcfPresent | UsbApi.DigcfDeviceinterface);
+                handle = UsbApi.SetupDiGetClassDevs(ref _guid, 0, IntPtr.Zero, UsbApi.DigcfPresent | UsbApi.DigcfDeviceinterface);
 
                 // Create a device interface data structure
                 UsbApi.SpDeviceInterfaceData deviceInterfaceData = new UsbApi.SpDeviceInterfaceData();
                 deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
 
                 // Start the enumeration.
-                Boolean success = UsbApi.SetupDiEnumDeviceInterfaces(handle, IntPtr.Zero, ref m_Guid, index, ref deviceInterfaceData);
+                Boolean success = UsbApi.SetupDiEnumDeviceInterfaces(handle, IntPtr.Zero, ref _guid, index, ref deviceInterfaceData);
                 if (success)
                 {
                     // Build a DevInfo data structure.
@@ -66,12 +56,15 @@ namespace NativeUsbLib
                     {
                         DevicePath = deviceInterfaceDetailData.DevicePath;
 
+                        ParseDevicePath(DevicePath);
+
                         // Get the device description and driver key name.
                         int requiredSize = 0;
                         int regType = UsbApi.RegSz;
 
                         if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData, UsbApi.SpdrpDevicedesc, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
                             DeviceDescription = Marshal.PtrToStringAuto(ptr);
+
                         if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData, UsbApi.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
                             DriverKey = Marshal.PtrToStringAuto(ptr);
                     }
@@ -82,7 +75,7 @@ namespace NativeUsbLib
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceError("Unhandled exception occurred: {0}", ex.ToString());
+                        Trace.TraceError("Unhandled exception occurred: {0}", ex);
 
                         throw new UsbControllerException("Unhandled exception occurred", ex);
                     }
@@ -100,14 +93,6 @@ namespace NativeUsbLib
             }
         }
 
-        #endregion
-
-        #endregion
-
-        #region proberties
-
-        #region Hubs
-
         /// <summary>
         /// Gets the hubs.
         /// </summary>
@@ -123,12 +108,25 @@ namespace NativeUsbLib
         }
 
         public ulong VendorId { get; private set; }
+
         public ulong DeviceId { get; private set; }
+
         public ulong SubSysID { get; private set; }
+
         public ulong Revision { get; private set; }
 
-        #endregion
+        private void ParseDevicePath(string devicePath)
+        {
+            var parts = devicePath.Split('#');
 
-        #endregion
+            if (parts.Length == 4)
+            {
+                var details = parts[1].Split('&');
+
+                if (details.Length == 4)
+                {
+                }
+            }
+        }
     }
 }
