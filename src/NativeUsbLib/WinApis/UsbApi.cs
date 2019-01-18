@@ -700,17 +700,38 @@ namespace NativeUsbLib.WinApis
             public string Str;
         }
 
-        // HID.DLL definitions
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        public struct UsbPortConnectorProperties
+        {
+            public uint ConnectionIndex;
+            public uint ActualLength;
+            public uint Properties;
+            public ushort CompanionIndex;
+            public ushort CompanionPortNumber;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255)]
+            public string CompanionHubSymbolicLinkName;
+        }
 
-        #endregion
+        [Flags]
+        public enum UsbPortProperties : ulong
+        {
+            PortIsUserConnectable = 0 << 0,
+            PortIsDebugCapable = 1 << 0,
+            PortHasMultipleCompanions = 1 << 1,
+            PortConnectorIsTypeC = 1 << 2
+        }
 
-        // *******************************************************************************************
-        // *************************************** methodes ******************************************
-        // *******************************************************************************************
+    // HID.DLL definitions
 
-        #region methodes
+    #endregion
 
-        [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
+    // *******************************************************************************************
+    // *************************************** methodes ******************************************
+    // *******************************************************************************************
+
+    #region methodes
+
+    [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
         internal static extern IntPtr SetupDiGetClassDevs(ref Guid classGuid, int enumerator, IntPtr hwndParent,
             int flags); // 1st form using a ClassGUID
 

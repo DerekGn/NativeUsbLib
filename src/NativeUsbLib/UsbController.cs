@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
 using NativeUsbLib.Exceptions;
 using System.Diagnostics;
+using System.Globalization;
 using NativeUsbLib.WinApis;
 
 namespace NativeUsbLib
@@ -125,6 +126,10 @@ namespace NativeUsbLib
 
                 if (details.Length == 4)
                 {
+                    VendorId = ulong.Parse(details[0].Substring(4), NumberStyles.AllowHexSpecifier);
+                    DeviceId = ulong.Parse(details[1].Substring(4), NumberStyles.AllowHexSpecifier);
+                    SubSysID = ulong.Parse(details[2].Substring(7), NumberStyles.AllowHexSpecifier);
+                    Revision = ulong.Parse(details[3].Substring(4), NumberStyles.AllowHexSpecifier);
                 }
             }
         }
