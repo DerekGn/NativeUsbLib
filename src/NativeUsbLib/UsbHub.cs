@@ -70,7 +70,7 @@ namespace NativeUsbLib
             DeviceDescription = "Standard-USB-Hub";
             DevicePath = devicePath;
 
-            int nBytesReturned;
+            int nBytesReturned = 0;
 
             // Open a handle to the host controller.
             IntPtr hostControllerHandle = KernelApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero, UsbApi.OpenExisting, 0, IntPtr.Zero);

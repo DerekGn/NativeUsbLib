@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 using System.Runtime.InteropServices;
-using Microsoft.Win32.SafeHandles;
 using NativeUsbLib.WinApis.Marshalling;
 
 namespace NativeUsbLib.WinApis

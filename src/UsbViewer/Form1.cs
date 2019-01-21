@@ -2,6 +2,7 @@
 
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using NativeUsbLib;
@@ -345,19 +346,19 @@ namespace UsbViewer
         private static void AppendHubCapabilities(StringBuilder builder, UsbApi.UsbHubCapFlags capabilityFlags)
         {
             builder.AppendLine(
-                $"High speed capable:           {DisplayBool(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsHighSpeedCapable))}");
+                $"High speed capable:           {capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsHighSpeedCapable).Display()}");
             builder.AppendLine(
-                $"High speed:                   {DisplayBool(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsHighSpeed))}");
+                $"High speed:                   {capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsHighSpeed).Display()}");
             builder.AppendLine(
-                $"Multiple transaction translations capable:                 {DisplayBool(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsMultiTtCapable))}");
+                $"Multiple transaction translations capable:                 {capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsMultiTtCapable).Display()}");
             builder.AppendLine(
-                $"Performs multiple transaction translations simultaneously: {DisplayBool(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsMultiTt))}");
+                $"Performs multiple transaction translations simultaneously: {(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsMultiTt)).Display()}");
             builder.AppendLine(
-                $"Hub wakes when device is connected:                        {DisplayBool(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsArmedWakeOnConnect))}");
+                $"Hub wakes when device is connected:                        {(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsArmedWakeOnConnect)).Display()}");
             builder.AppendLine(
-                $"Hub is bus powered:           {DisplayBool(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsBusPowered))}");
+                $"Hub is bus powered:           {(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsBusPowered)).Display()}");
             builder.AppendLine(
-                $"Hub is root:                  {DisplayBool(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsRoot))}");
+                $"Hub is root:                  {(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsRoot)).Display()}");
         }
 
         private static void AppendHubCharacteristics(StringBuilder builder, short hubCharacteristics)
@@ -406,19 +407,29 @@ namespace UsbViewer
             }
         }
 
-        private static string DisplayBool(bool value)
-        {
-            return value ? "Yes" : "No";
-        }
-
         private static void AppendUsbController(StringBuilder sb, UsbController controller)
         {
             sb.AppendLine($"{controller.DeviceDescription}\n\n");
             sb.AppendLine($"DriverKey: {controller.DriverKey}");
             sb.AppendLine($"VendorID: {controller.VendorId:X4}");
             sb.AppendLine($"DeviceID: {controller.DeviceId:X4}");
-            sb.AppendLine($"SubSysID: {controller.SubSysID:X8}");
+            sb.AppendLine($"SubSysID: {controller.SubSysId:X8}");
             sb.AppendLine($"Revision: {controller.Revision:X2}");
+
+            sb.AppendLine("\r\nHost Controller Power State Mappings");
+            sb.AppendLine($"{"System State", -25}{"Host Controller",-25}{"Root Hub",-25}{"USB wakeup",-25}{"Powered",-25}");
+
+            foreach (var usbPowerInfo in controller.PowerInfo)
+            {
+                sb.AppendLine(
+                    $"{usbPowerInfo.SystemState.Display(),-25}" +
+                    $"{usbPowerInfo.HcDevicePowerState.Display(),-25}" +
+                    $"{usbPowerInfo.RhDevicePowerState.Display(),-25}" +
+                    $"{(usbPowerInfo.CanWakeup == 1).Display(),-25}" +
+                    $"{(usbPowerInfo.IsPowered == 1).Display(),-25}");
+            }
+
+            sb.AppendLine($"Last Sleep State\t{controller.PowerInfo.Last().LastSystemSleepState.Display()}");
         }
 
         #region toolstrip events
