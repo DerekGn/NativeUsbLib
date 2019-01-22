@@ -216,7 +216,7 @@ namespace UsbViewer
         }
 
         private static void AppendEndpointDescriptor(StringBuilder builder, int index,
-            UsbApi.UsbEndpointDescriptor endpointDescriptor)
+            UsbSpec.UsbEndpointDescriptor endpointDescriptor)
         {
             builder.AppendLine(
                 "-----------------------------------------------------------------");

@@ -31,7 +31,7 @@ namespace NativeUsbLib
         /// <param name="parent">The parent.</param>
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="adapterNumber">The adapter number.</param>
-        public UsbDevice(Device parent, UsbApi.UsbDeviceDescriptor deviceDescriptor, int adapterNumber)
+        public UsbDevice(Device parent, UsbSpec.UsbDeviceDescriptor deviceDescriptor, int adapterNumber)
             : base(parent, deviceDescriptor, adapterNumber, null)
         {
         }
@@ -43,7 +43,7 @@ namespace NativeUsbLib
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="adapterNumber">The adapter number.</param>
         /// <param name="devicePath">The device path.</param>
-        public UsbDevice(Device parent, UsbApi.UsbDeviceDescriptor deviceDescriptor, int adapterNumber, string devicePath)
+        public UsbDevice(Device parent, UsbSpec.UsbDeviceDescriptor deviceDescriptor, int adapterNumber, string devicePath)
             : base(parent, deviceDescriptor, adapterNumber, devicePath)
         {
         }

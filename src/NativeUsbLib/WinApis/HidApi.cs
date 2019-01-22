@@ -53,7 +53,7 @@ namespace NativeUsbLib.WinApis
         public struct HidDescriptor
         {
             public byte Length;
-            public UsbApi.UsbDescriptorType DescriptorType;
+            public UsbSpec.UsbDescriptorType DescriptorType;
             public short BcdHid;
             public byte Country;
             public byte NumDescriptors;

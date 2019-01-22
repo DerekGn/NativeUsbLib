@@ -11,8 +11,6 @@ namespace NativeUsbLib
     /// </summary>
     public class UsbHub : Device
     {
-        #region fields
-
         /// <summary>
         /// Gets the port count.
         /// </summary>
@@ -45,15 +43,13 @@ namespace NativeUsbLib
         /// Gets the usb hub information.
         /// </summary>
         /// <value>The usb hub information.</value>
-        public UsbApi.UsbHubInformationEx HubInformation { get; protected set; }
+        public UsbIoControl.UsbHubInformationEx HubInformation { get; protected set; }
 
         /// <summary>
         /// Gets the hub capabilities
         /// </summary>
         public UsbApi.UsbHubCapabilitiesEx UsbHubCapabilitiesEx { get; protected set; }
-
-        #endregion
-
+        
         #region constructor/destructor
 
         #region constructor
@@ -64,7 +60,7 @@ namespace NativeUsbLib
         /// <param name="parent">The parent.</param>
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="devicePath">The device path.</param>
-        public UsbHub(Device parent, UsbApi.UsbDeviceDescriptor deviceDescriptor, string devicePath)
+        public UsbHub(Device parent, UsbSpec.UsbDeviceDescriptor deviceDescriptor, string devicePath)
             : base(parent, deviceDescriptor, -1, devicePath)
         {
             DeviceDescription = "Standard-USB-Hub";
@@ -122,8 +118,8 @@ namespace NativeUsbLib
 
                     Marshal.FreeHGlobal(ptrNodeInfo);
 
-                    UsbApi.UsbHubInformationEx hubInfoEx =
-                        new UsbApi.UsbHubInformationEx();
+                    UsbIoControl.UsbHubInformationEx hubInfoEx =
+                        new UsbIoControl.UsbHubInformationEx();
                     nBytes = hubInfoEx.SizeOf;
                     IntPtr ptrHubInfo = Marshal.AllocHGlobal(nBytes);
                     
