@@ -4,11 +4,6 @@ namespace NativeUsbLib.WinApis
 {
     public class UsbUser
     {
-        public const int IoctlUsbUserRequest = (UsbIoDefinitions.FileDeviceUsb << 16) |
-                                                        (DevIoControl.FileAnyAccess << 14) |
-                                                        (UsbIoDefinitions.HcdUserRequest << 2) |
-                                                        DevIoControl.MethodBuffered;
-
         public enum WdmusbPowerState
         {
             WdmUsbPowerNotMapped = 0,
@@ -28,6 +23,11 @@ namespace NativeUsbLib.WinApis
             WdmUsbPowerDeviceD3
         }
 
+        public const int IoctlUsbUserRequest = (UsbIoDefinitions.FileDeviceUsb << 16) |
+                                               (DevIoControl.FileAnyAccess << 14) |
+                                               (UsbIoDefinitions.HcdUserRequest << 2) |
+                                               DevIoControl.MethodBuffered;
+
         public const int UsbuserGetControllerInfo0 = 0x00000001;
         public const int UsbuserGetControllerDriverKey = 0x00000002;
         public const int UsbuserPassThru = 0x00000003;
@@ -38,7 +38,7 @@ namespace NativeUsbLib.WinApis
         public const int UsbuserGetUsbDriverVersion = 0x00000008;
         public const int UsbuserGetUsb2HwVersion = 0x00000009;
         public const int UsbuserUsbRefreshHctReg = 0x0000000a;
-
+        
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct UsbPowerInfo
         {
@@ -75,6 +75,43 @@ namespace NativeUsbLib.WinApis
             UsbUserNoDeviceConnected
         }
 
+        public enum UsbControllerFlavor
+        {
+            UsbHcGeneric = 0,
+
+            OhciGeneric = 100,
+            OhciHydra,
+            OhciNec,
+
+            UhciGeneric = 200,
+            UhciPiix4 = 201,
+            UhciPiix3 = 202,
+            UhciIch2 = 203,
+            UhciReserved204 = 204,
+            UhciIch1 = 205,
+            UhciIch3M = 206,
+            UhciIch4 = 207,
+            UhciIch5 = 208,
+            UhciIch6 = 209,
+
+            UhciIntel = 249,
+
+            UhciVia = 250,
+            UhciViaX01 = 251,
+            UhciViaX02 = 252,
+            UhciViaX03 = 253,
+            UhciViaX04 = 254,
+
+            UhciViaX0EFifo = 264,
+
+            EhciGeneric = 1000,
+            EhciNec = 2000,
+            EhciLucent = 3000,
+            EhciNvidiaTegra2 = 4000,
+            EhciNvidiaTegra3 = 4001,
+            EhciIntelMedfield = 5001
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         internal struct UsbuserRequestHeader
         {
@@ -106,6 +143,27 @@ namespace NativeUsbLib.WinApis
         {
             public UsbuserRequestHeader Header;
             public UsbPowerInfo PowerInformation;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        internal struct UsbuserControllerInfo0
+        {
+            public UsbuserRequestHeader Header;
+            public UsbControllerInfo0 Info0;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct UsbControllerInfo0
+        {
+            public int PciVendorId;
+            public int PciDeviceId;
+            public int PciRevision;
+
+            public int NumberOfRootPorts;
+
+            public UsbControllerFlavor ControllerFlavor;
+
+            public int HcFeatureFlags;
         }
     }
 }

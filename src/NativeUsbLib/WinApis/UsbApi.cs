@@ -53,9 +53,6 @@ namespace NativeUsbLib.WinApis
         public const int DigcfProfile = 0x00000008;
         public const int DigcfDeviceinterface = 0x00000010;
 
-        public const int SpdrpDriver = 0x9;
-        public const int SpdrpDevicedesc = 0x0;
-
         public const int DicsEnable = 0x00000001;
         public const int DicsDisable = 0x00000002;
 
@@ -520,13 +517,13 @@ namespace NativeUsbLib.WinApis
         [Flags]
         public enum UsbHubCapFlags
         {
-            HubIsHighSpeedCapable = 0,
-            HubIsHighSpeed = 1 << 0,
-            HubIsMultiTtCapable = 1 << 1,
-            HubIsMultiTt = 1 << 2,
-            HubIsRoot = 1 << 3,
-            HubIsArmedWakeOnConnect = 1 << 4,
-            HubIsBusPowered = 1 << 5
+            HubIsHighSpeedCapable = 1,
+            HubIsHighSpeed = 2,
+            HubIsMultiTtCapable = 4,
+            HubIsMultiTt = 8,
+            HubIsRoot = 16,
+            HubIsArmedWakeOnConnect = 32,
+            HubIsBusPowered = 64
         }
 
         public struct UsbHubInformationEx : IMarshallable

@@ -155,9 +155,8 @@ namespace UsbViewer
                     AppendUsbController(sb, controller);
                 }
 
-                if (usbNode.Type == DeviceTyp.Hub || usbNode.Type == DeviceTyp.RootHub)
-                    if (usbNode.Device is UsbHub hub)
-                        AppendUsbHub(sb, hub);
+                if ((usbNode.Type == DeviceTyp.Hub || usbNode.Type == DeviceTyp.RootHub) && usbNode.Device is UsbHub hub)
+                    AppendUsbHub(sb, hub);
 
                 if (usbNode.Type == DeviceTyp.Device || usbNode.Type == DeviceTyp.Hub)
                 {

@@ -509,14 +509,14 @@ namespace NativeUsbLib
                             var keyName = string.Empty;
 
                             if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
-                                UsbApi.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
+                                (int) UsbApi.Spdrp.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
                                 keyName = Marshal.PtrToStringAuto(ptr);
 
                             // Is it a match?
                             if (keyName == driverKeyName)
                             {
                                 if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
-                                    UsbApi.SpdrpDevicedesc, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
+                                    (int)UsbApi.Spdrp.SpdrpDevicedesc, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
                                     descriptionkeyname = Marshal.PtrToStringAuto(ptr);
 
                                 break;
@@ -579,7 +579,7 @@ namespace NativeUsbLib
                             var keyName = string.Empty;
 
                             if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
-                                UsbApi.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
+                                (int)UsbApi.Spdrp.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
                                 keyName = Marshal.PtrToStringAuto(ptr);
 
                             // is it a match?
@@ -646,7 +646,7 @@ namespace NativeUsbLib
                             int regType = UsbApi.RegSz;
                             string keyName = string.Empty;
 
-                            if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData, UsbApi.SpdrpDriver,
+                            if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData, (int)UsbApi.Spdrp.SpdrpDriver,
                                 ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
                                 keyName = Marshal.PtrToStringAuto(ptr);
 

@@ -54,17 +54,7 @@ namespace NativeUsbLib
 
         public IList<UsbUser.UsbPowerInfo> PowerInfo { get; private set; }
 
-        public bool BusDeviceFunctionValid { get; private set; }
-
-        public uint BusNumber { get; private set; }
-
-        public ushort BusDevice { get; private set; }
-
-        public ushort BusFunction { get; private set; }
-
-        //public PUSB_CONTROLLER_INFO_0 ControllerInfo { get; private set; }
-
-        //public USB_DEVICE_PNP_STRINGS UsbDeviceProperties { get; private set; }
+        public UsbUser.UsbControllerInfo0 ControllerInfo { get; private set; }
 
         private void ParseDevicePath(string devicePath)
         {
@@ -81,56 +71,6 @@ namespace NativeUsbLib
                     SubSysId = uint.Parse(details[2].Substring(7), NumberStyles.AllowHexSpecifier);
                     Revision = uint.Parse(details[3].Substring(4), NumberStyles.AllowHexSpecifier);
                 }
-            }
-        }
-
-        private void GetHostControllerPowerMap(IntPtr handle)
-        {
-            UsbUser.WdmusbPowerState powerState = UsbUser.WdmusbPowerState.WdmUsbPowerSystemWorking;
-
-            for (; powerState <= UsbUser.WdmusbPowerState.WdmUsbPowerSystemShutdown; powerState++)
-            {
-                UsbUser.UsbuserPowerInfoRequest powerInfoRequest = new UsbUser.UsbuserPowerInfoRequest
-                {
-                    Header =
-                    {
-                        UsbUserRequest = UsbUser.UsbuserGetPowerStateMap,
-                    },
-                    PowerInformation = {SystemState = powerState}
-                };
-
-                powerInfoRequest.Header.RequestBufferLength = (uint) Marshal.SizeOf(powerInfoRequest);
-
-                //
-                // Now query USBHUB for the USB_POWER_INFO structure for this hub.
-                // For Selective Suspend support
-                //
-                int nBytesReturned = 0;
-                int nBytes = Marshal.SizeOf(powerInfoRequest);
-                IntPtr ptrPowerInfoRequest = Marshal.AllocHGlobal(nBytes);
-                Marshal.StructureToPtr(powerInfoRequest, ptrPowerInfoRequest, true);
-
-                var success = KernelApi.DeviceIoControl(handle,
-                    UsbUser.IoctlUsbUserRequest,
-                    ptrPowerInfoRequest,
-                    nBytes,
-                    ptrPowerInfoRequest,
-                    nBytes,
-                    out nBytesReturned,
-                    IntPtr.Zero);
-
-                if (!success)
-                {
-                    Trace.WriteLine(
-                        $"[{nameof(KernelApi.DeviceIoControl)}] Returned Error Code: [{KernelApi.GetLastError():X}]");
-                }
-                else
-                {
-                    powerInfoRequest = (UsbUser.UsbuserPowerInfoRequest)Marshal.PtrToStructure(ptrPowerInfoRequest, typeof(UsbUser.UsbuserPowerInfoRequest));
-                    PowerInfo.Add(powerInfoRequest.PowerInformation);
-                }
-
-                Marshal.FreeHGlobal(ptrPowerInfoRequest);
             }
         }
 
@@ -182,8 +122,8 @@ namespace NativeUsbLib
                         int regType = UsbApi.RegSz;
 
                         if (UsbApi.SetupDiGetDeviceRegistryProperty(deviceInfoHandle, ref deviceInfoData,
-                            UsbApi.SpdrpDevicedesc,
-                            ref regType, 
+                            (int) UsbApi.Spdrp.SpdrpDevicedesc,
+                            ref regType,
                             ptr,
                             UsbApi.MaxBufferSize, ref requiredSize))
                             DeviceDescription = Marshal.PtrToStringAuto(ptr);
@@ -191,7 +131,7 @@ namespace NativeUsbLib
                         if (UsbApi.SetupDiGetDeviceRegistryProperty(
                             deviceInfoHandle,
                             ref deviceInfoData,
-                            UsbApi.SpdrpDriver,
+                            (int) UsbApi.Spdrp.SpdrpDriver,
                             ref regType,
                             ptr,
                             UsbApi.MaxBufferSize,
@@ -199,36 +139,6 @@ namespace NativeUsbLib
                         {
                             DriverKey = Marshal.PtrToStringAuto(ptr);
                         }
-
-                        if (UsbApi.SetupDiGetDeviceRegistryProperty(
-                            deviceInfoHandle,
-                            ref deviceInfoData,
-                            UsbApi.SpdrpDriver,
-                            ref regType,
-                            ptr,
-                            Marshal.SizeOf(BusNumber),
-                            ref requiredSize))
-                        {
-                            BusNumber = Marshal.ReadByte(ptr);
-                        }
-
-                        //if (success)
-                        //{
-                        //    success = SetupDiGetDeviceRegistryProperty(deviceInfo,
-                        //        deviceInfoData,
-                        //        SPDRP_ADDRESS,
-                        //        NULL,
-                        //        (PBYTE) & deviceAndFunction,
-                        //        sizeof(deviceAndFunction),
-                        //        NULL);
-                        //}
-
-                        //if (success)
-                        //{
-                        //    hcInfo->BusDevice = deviceAndFunction >> 16;
-                        //    hcInfo->BusFunction = deviceAndFunction & 0xffff;
-                        //    hcInfo->BusDeviceFunctionValid = TRUE;
-                        //}
                     }
 
                     IntPtr hostControllerHandle = IntPtr.Zero;
@@ -241,7 +151,11 @@ namespace NativeUsbLib
                             UsbApi.OpenExisting, 0, IntPtr.Zero);
 
                         if (deviceInfoHandle.ToInt64() != UsbApi.InvalidHandleValue)
+                        {
                             GetHostControllerPowerMap(hostControllerHandle);
+
+                            GetHostControllerInfo(hostControllerHandle);
+                        }
                     }
                     finally
                     {
@@ -271,6 +185,97 @@ namespace NativeUsbLib
 
                 if (deviceInfoHandle != IntPtr.Zero)
                     UsbApi.SetupDiDestroyDeviceInfoList(deviceInfoHandle);
+            }
+        }
+
+        private void GetHostControllerInfo(IntPtr handle)
+        {
+            // set the header and request sizes
+            UsbUser.UsbuserControllerInfo0 usbControllerInfo0 =
+                new UsbUser.UsbuserControllerInfo0 {Header = {UsbUserRequest = UsbUser.UsbuserGetControllerInfo0}};
+
+            usbControllerInfo0.Header.RequestBufferLength = (uint) Marshal.SizeOf(usbControllerInfo0);
+
+            //
+            // Query for the USB_CONTROLLER_INFO_0 structure
+            //
+            int nBytesReturned = 0;
+            int nBytes = Marshal.SizeOf(usbControllerInfo0);
+            IntPtr ptrUsbControllerInfo0 = Marshal.AllocHGlobal(nBytes);
+            Marshal.StructureToPtr(usbControllerInfo0, ptrUsbControllerInfo0, true);
+
+            var success = KernelApi.DeviceIoControl(handle,
+                UsbUser.IoctlUsbUserRequest,
+                ptrUsbControllerInfo0,
+                nBytes,
+                ptrUsbControllerInfo0,
+                nBytes,
+                out nBytesReturned,
+                IntPtr.Zero);
+
+            if (!success)
+            {
+                Trace.WriteLine(
+                    $"[{nameof(KernelApi.DeviceIoControl)}] Returned Error Code: [{KernelApi.GetLastError():X}]");
+            }
+            else
+            {
+                usbControllerInfo0 = (UsbUser.UsbuserControllerInfo0)Marshal.PtrToStructure(ptrUsbControllerInfo0,
+                    typeof(UsbUser.UsbuserControllerInfo0));
+                ControllerInfo = usbControllerInfo0.Info0;
+            }
+
+            Marshal.FreeHGlobal(ptrUsbControllerInfo0);
+        }
+
+        private void GetHostControllerPowerMap(IntPtr handle)
+        {
+            UsbUser.WdmusbPowerState powerState = UsbUser.WdmusbPowerState.WdmUsbPowerSystemWorking;
+
+            for (; powerState <= UsbUser.WdmusbPowerState.WdmUsbPowerSystemShutdown; powerState++)
+            {
+                UsbUser.UsbuserPowerInfoRequest powerInfoRequest = new UsbUser.UsbuserPowerInfoRequest
+                {
+                    Header =
+                    {
+                        UsbUserRequest = UsbUser.UsbuserGetPowerStateMap,
+                    },
+                    PowerInformation = {SystemState = powerState}
+                };
+
+                powerInfoRequest.Header.RequestBufferLength = (uint) Marshal.SizeOf(powerInfoRequest);
+
+                //
+                // Now query USBHUB for the USB_POWER_INFO structure for this hub.
+                // For Selective Suspend support
+                //
+                int nBytesReturned = 0;
+                int nBytes = Marshal.SizeOf(powerInfoRequest);
+                IntPtr ptrPowerInfoRequest = Marshal.AllocHGlobal(nBytes);
+                Marshal.StructureToPtr(powerInfoRequest, ptrPowerInfoRequest, true);
+
+                var success = KernelApi.DeviceIoControl(handle,
+                    UsbUser.IoctlUsbUserRequest,
+                    ptrPowerInfoRequest,
+                    nBytes,
+                    ptrPowerInfoRequest,
+                    nBytes,
+                    out nBytesReturned,
+                    IntPtr.Zero);
+
+                if (!success)
+                {
+                    Trace.WriteLine(
+                        $"[{nameof(KernelApi.DeviceIoControl)}] Returned Error Code: [{KernelApi.GetLastError():X}]");
+                }
+                else
+                {
+                    powerInfoRequest = (UsbUser.UsbuserPowerInfoRequest) Marshal.PtrToStructure(ptrPowerInfoRequest,
+                        typeof(UsbUser.UsbuserPowerInfoRequest));
+                    PowerInfo.Add(powerInfoRequest.PowerInformation);
+                }
+
+                Marshal.FreeHGlobal(ptrPowerInfoRequest);
             }
         }
     }
