@@ -40,7 +40,10 @@ namespace NativeUsbLib
             set
             {
                 _mNodeConnectionInfo = value;
-                AdapterNumber = NodeConnectionInfo.ConnectionIndex;
+
+                if (NodeConnectionInfo.ConnectionIndex != 0)
+                    AdapterNumber = NodeConnectionInfo.ConnectionIndex;
+
                 UsbIoControl.UsbConnectionStatus status = NodeConnectionInfo.ConnectionStatus;
                 Status = status.ToString();
                 UsbSpec.UsbDeviceSpeed speed = NodeConnectionInfo.Speed;
@@ -141,7 +144,7 @@ namespace NativeUsbLib
         /// Gets or sets the adapter number.
         /// </summary>
         /// <value>The adapter number.</value>
-        public int AdapterNumber { get; set; } = 0;
+        public uint AdapterNumber { get; set; } = 0;
 
         /// <summary>
         /// Gets the manufacturer.
@@ -167,6 +170,10 @@ namespace NativeUsbLib
         /// <value>The product.</value>
         public string Product { get; } = string.Empty;
 
+        public UsbIoControl.UsbPortConnectorProperties UsbPortConnectorProperties { get; internal set; }
+
+        public UsbIoControl.UsbNodeConnectionInformationExV2 NodeConnectionInfoV2 { get; internal set; }
+
         #endregion
 
         #region constructor/destructor
@@ -180,7 +187,7 @@ namespace NativeUsbLib
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="adapterNumber">The adapter number.</param>
         /// <param name="devicePath">The device path.</param>
-        protected Device(Device parent, UsbSpec.UsbDeviceDescriptor deviceDescriptor, int adapterNumber,
+        protected Device(Device parent, UsbSpec.UsbDeviceDescriptor deviceDescriptor, uint adapterNumber,
             string devicePath)
         {
             Parent = parent;
@@ -202,7 +209,6 @@ namespace NativeUsbLib
                     // We use this to zero fill a buffer
                     string nullString = new string((char) 0, UsbApi.MaxBufferSize / Marshal.SystemDefaultCharSize);
 
-                    int nBytesReturned;
                     int nBytes = UsbApi.MaxBufferSize;
                     // build a request for string descriptor
                     UsbApi.UsbDescriptorRequest request1 =
@@ -223,9 +229,10 @@ namespace NativeUsbLib
                     Marshal.StructureToPtr(request1, ptrRequest1, true);
 
                     // Use an IOCTL call to request the String Descriptor
-                    if (KernelApi.DeviceIoControl(handle, UsbIoControl.IoctlUsbGetDescriptorFromNodeConnection,
+                    if (KernelApi.DeviceIoControl(handle,
+                        UsbIoControl.IoctlUsbGetDescriptorFromNodeConnection,
                         ptrRequest1,
-                        nBytes, ptrRequest1, nBytes, out nBytesReturned, IntPtr.Zero))
+                        nBytes, ptrRequest1, nBytes, out _, IntPtr.Zero))
                     {
                         IntPtr ptr = new IntPtr(ptrRequest1.ToInt64() + Marshal.SizeOf(request1));
 
@@ -347,7 +354,7 @@ namespace NativeUsbLib
                     // Use an IOCTL call to request the Driver Key Name
                     if (KernelApi.DeviceIoControl(handle, UsbIoControl.IoctlUsbGetNodeConnectionDriverkeyName,
                         ptrDriverKey,
-                        nBytes, ptrDriverKey, nBytes, out nBytesReturned, IntPtr.Zero))
+                        nBytes, ptrDriverKey, nBytes, out _, IntPtr.Zero))
                     {
                         driverKey = (UsbApi.UsbNodeConnectionDriverkeyName) Marshal.PtrToStructure(ptrDriverKey,
                             typeof(UsbApi.UsbNodeConnectionDriverkeyName));
@@ -390,7 +397,7 @@ namespace NativeUsbLib
             }
         }
 
-        private static string UsbDescriptorRequestString(IntPtr handle, int adapterNumber, byte descriptorIndex)
+        private static string UsbDescriptorRequestString(IntPtr handle, uint adapterNumber, byte descriptorIndex)
         {
             string nullString = new string((char) 0, UsbApi.MaxBufferSize / Marshal.SystemDefaultCharSize);
             int nBytes = UsbApi.MaxBufferSize;
@@ -509,14 +516,16 @@ namespace NativeUsbLib
                             var keyName = string.Empty;
 
                             if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
-                                (int) UsbApi.Spdrp.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
+                                (int) UsbApi.Spdrp.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize,
+                                ref requiredSize))
                                 keyName = Marshal.PtrToStringAuto(ptr);
 
                             // Is it a match?
                             if (keyName == driverKeyName)
                             {
                                 if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
-                                    (int)UsbApi.Spdrp.SpdrpDevicedesc, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
+                                    (int) UsbApi.Spdrp.SpdrpDevicedesc, ref regType, ptr, UsbApi.MaxBufferSize,
+                                    ref requiredSize))
                                     descriptionkeyname = Marshal.PtrToStringAuto(ptr);
 
                                 break;
@@ -579,7 +588,8 @@ namespace NativeUsbLib
                             var keyName = string.Empty;
 
                             if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
-                                (int)UsbApi.Spdrp.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
+                                (int) UsbApi.Spdrp.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize,
+                                ref requiredSize))
                                 keyName = Marshal.PtrToStringAuto(ptr);
 
                             // is it a match?
@@ -646,7 +656,8 @@ namespace NativeUsbLib
                             int regType = UsbApi.RegSz;
                             string keyName = string.Empty;
 
-                            if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData, (int)UsbApi.Spdrp.SpdrpDriver,
+                            if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData,
+                                (int) UsbApi.Spdrp.SpdrpDriver,
                                 ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
                                 keyName = Marshal.PtrToStringAuto(ptr);
 
@@ -812,87 +823,5 @@ namespace NativeUsbLib
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// static class to factory class to build the connected devices
-    /// </summary>
-    public static class DeviceFactory
-    {
-        /// <summary>
-        /// Builds the device.
-        /// </summary>
-        /// <param name="parent">The parent.</param>
-        /// <param name="portCount">The port count.</param>
-        /// <param name="devicePath">The device path.</param>
-        /// <returns>The device.</returns>
-        public static Device BuildDevice(Device parent, int portCount, string devicePath)
-        {
-            Device device = null;
-
-            int nBytesReturned;
-            bool isConnected = false;
-
-            // Open a handle to the Hub device
-            IntPtr handel1 = KernelApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero,
-                UsbApi.OpenExisting, 0, IntPtr.Zero);
-            if (handel1.ToInt64() != UsbApi.InvalidHandleValue)
-            {
-                int nBytes = Marshal.SizeOf(typeof(UsbIoControl.UsbNodeConnectionInformationEx));
-                IntPtr ptrNodeConnection = Marshal.AllocHGlobal(nBytes);
-                UsbIoControl.UsbNodeConnectionInformationEx nodeConnection =
-                    new UsbIoControl.UsbNodeConnectionInformationEx {ConnectionIndex = portCount};
-                Marshal.StructureToPtr(nodeConnection, ptrNodeConnection, true);
-
-                if (KernelApi.DeviceIoControl(handel1, UsbIoControl.IoctlUsbGetNodeConnectionInformationEx,
-                    ptrNodeConnection, nBytes, ptrNodeConnection, nBytes, out nBytesReturned, IntPtr.Zero))
-                {
-                    nodeConnection =
-                        (UsbIoControl.UsbNodeConnectionInformationEx) Marshal.PtrToStructure(ptrNodeConnection,
-                            typeof(UsbIoControl.UsbNodeConnectionInformationEx));
-                    isConnected = (nodeConnection.ConnectionStatus == UsbIoControl.UsbConnectionStatus.DeviceConnected);
-                }
-
-                if (isConnected)
-                {
-                    if (nodeConnection.DeviceDescriptor.bDeviceClass == UsbSpec.UsbDeviceClass.Hub)
-                    {
-                        nBytes = Marshal.SizeOf(typeof(UsbApi.UsbNodeConnectionName));
-                        ptrNodeConnection = Marshal.AllocHGlobal(nBytes);
-                        Marshal.StructureToPtr(nodeConnection, ptrNodeConnection, true);
-
-                        if (KernelApi.DeviceIoControl(handel1, UsbIoControl.IoctlUsbGetNodeConnectionName,
-                            ptrNodeConnection, nBytes, ptrNodeConnection, nBytes, out nBytesReturned, IntPtr.Zero))
-                        {
-                            var nameConnection = (UsbApi.UsbNodeConnectionName) Marshal.PtrToStructure(
-                                ptrNodeConnection,
-                                typeof(UsbApi.UsbNodeConnectionName));
-                            string name = @"\\?\" + nameConnection.NodeName;
-
-                            device = new UsbHub(parent, nodeConnection.DeviceDescriptor, name)
-                            {
-                                NodeConnectionInfo = nodeConnection
-                            };
-                        }
-                    }
-                    else
-                    {
-                        device = new UsbDevice(parent, nodeConnection.DeviceDescriptor, portCount, devicePath)
-                        {
-                            NodeConnectionInfo = nodeConnection
-                        };
-                    }
-                }
-                else
-                {
-                    device = new UsbDevice(parent, null, portCount) {NodeConnectionInfo = nodeConnection};
-                }
-
-                Marshal.FreeHGlobal(ptrNodeConnection);
-                KernelApi.CloseHandle(handel1);
-            }
-
-            return device;
-        }
     }
 }

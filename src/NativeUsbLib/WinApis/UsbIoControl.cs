@@ -7,6 +7,37 @@ namespace NativeUsbLib.WinApis
 {
     public static class UsbIoControl
     {
+        public enum UsbProtocols : uint
+        {
+            Usb110 = 1,
+            Usb200 = 2,
+            Usb300 = 4
+        }
+
+        [Flags]
+        public enum UsbNodeConnectionInformationExV2Flags
+        {
+            DeviceIsOperatingAtSuperSpeedOrHigher = 1,
+            DeviceIsSuperSpeedCapableOrHigher = 2,
+            DeviceIsOperatingAtSuperSpeedPlusOrHigher = 4,
+            DeviceIsSuperSpeedPlusCapableOrHigher = 8
+        }
+
+        public enum UsbConnectionStatus
+        {
+            NoDeviceConnected,
+            DeviceConnected,
+            DeviceFailedEnumeration,
+            DeviceGeneralFailure,
+            DeviceCausedOvercurrent,
+            DeviceNotEnoughPower,
+            DeviceNotEnoughBandwidth,
+            DeviceHubNestedTooDeeply,
+            DeviceInLegacyHub,
+            DeviceEnumerating,
+            DeviceReset
+        }
+
         [Flags]
         public enum UsbPortProperties
         {
@@ -15,6 +46,8 @@ namespace NativeUsbLib.WinApis
             PortHasMultipleCompanions = 4,
             PortConnectorIsTypeC = 8
         }
+
+        private const int MaxBufferSize = 2048;
 
         public const int IoctlUsbGetRootHubName = (UsbIoDefinitions.FileDeviceUsb << 16) |
                                                   (DevIoControl.FileAnyAccess << 14) |
@@ -26,6 +59,8 @@ namespace NativeUsbLib.WinApis
                                                       (UsbIoDefinitions.UsbGetNodeInformation << 2) |
                                                       DevIoControl.MethodBuffered;
 
+
+
         public const int IoctlUsbGetHubInformationEx = (UsbIoDefinitions.FileDeviceUsb << 16) |
                                                        (DevIoControl.FileAnyAccess << 14) |
                                                        (UsbIoDefinitions.UsbGetHubInformationEx << 2) |
@@ -36,6 +71,13 @@ namespace NativeUsbLib.WinApis
                                                                   (UsbIoDefinitions.UsbGetNodeConnectionInformationEx <<
                                                                    2) |
                                                                   DevIoControl.MethodBuffered;
+
+        public const int IoctlUsbGetNodeConnectionInformationExV2 = (UsbIoDefinitions.FileDeviceUsb << 16) |
+                                                                  (DevIoControl.FileAnyAccess << 14) |
+                                                                  (UsbIoDefinitions.UsbGetNodeConnectionInformationExV2 <<
+                                                                   2) |
+                                                                  DevIoControl.MethodBuffered;
+
 
         public const int IoctlUsbGetDescriptorFromNodeConnection = (UsbIoDefinitions.FileDeviceUsb << 16) |
                                                                    (DevIoControl.FileAnyAccess << 14) |
@@ -59,27 +101,10 @@ namespace NativeUsbLib.WinApis
                                                         (UsbIoDefinitions.UsbGetHubCapabilitiesEx << 2) |
                                                         DevIoControl.MethodBuffered;
 
-        public struct UsbPortConnectorProperties
-        {
-            // one based port number
-            public int ConnectionIndex;
-
-            // The number of bytes required to hold the entire USB_PORT_CONNECTOR_PROPERTIES
-            // structure, including the full CompanionHubSymbolicLinkName string
-            public int ActualLength;
-
-            // bitmask of flags indicating properties and capabilities of the port
-            public UsbPortProperties UsbPortProperties;
-
-            // Zero based index number of the companion port being queried.
-            public ushort CompanionIndex;
-
-            // Port number of the companion port
-            public ushort CompanionPortNumber;
-
-            // Symbolic link name for the companion hub
-            public char CompanionHubSymbolicLinkName;
-        }
+        public const int IoctlUsbGetPortConnectorProperties = (UsbIoDefinitions.FileDeviceUsb << 16) |
+                                                              (DevIoControl.FileAnyAccess << 14) |
+                                                              (UsbIoDefinitions.UsbGetPortConnectorProperties << 2) |
+                                                              DevIoControl.MethodBuffered;
 
         public struct UsbHubInformationEx : IMarshallable
         {
@@ -108,10 +133,10 @@ namespace NativeUsbLib.WinApis
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct UsbNodeConnectionInformationEx
         {
-            public int ConnectionIndex;
-            public UsbSpec.UsbDeviceDescriptor DeviceDescriptor;
+            public uint ConnectionIndex;
+            public UsbDeviceDescriptor DeviceDescriptor;
             public byte CurrentConfigurationValue;
-            public UsbSpec.UsbDeviceSpeed Speed;
+            public UsbDeviceSpeed Speed;
             public byte DeviceIsHub;
             public short DeviceAddress;
             public int NumberOfOpenPipes;
@@ -132,19 +157,44 @@ namespace NativeUsbLib.WinApis
             public ushort DeviceRemovable;
         }
 
-        public enum UsbConnectionStatus
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        public struct UsbNodeConnectionName
         {
-            NoDeviceConnected,
-            DeviceConnected,
-            DeviceFailedEnumeration,
-            DeviceGeneralFailure,
-            DeviceCausedOvercurrent,
-            DeviceNotEnoughPower,
-            DeviceNotEnoughBandwidth,
-            DeviceHubNestedTooDeeply,
-            DeviceInLegacyHub,
-            DeviceEnumerating,
-            DeviceReset
+            public int ConnectionIndex;
+            public int ActualLength;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaxBufferSize)]
+            public string NodeName;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        public struct UsbPortConnectorProperties
+        {
+            public uint ConnectionIndex;
+            public uint ActualLength;
+            public UsbPortProperties Properties;
+            public ushort CompanionIndex;
+            public ushort CompanionPortNumber;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255)]
+            public string CompanionHubSymbolicLinkName;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct UsbNodeConnectionInformationExV2
+        {
+            // one based port number
+            public uint ConnectionIndex;
+
+            // length of the structure
+            public uint Length;
+
+            // On input a bitmask that indicates which USB protocols are understood by the caller
+            // On output a bitmask that indicates which USB signaling protocols are supported by the port
+            public UsbProtocols SupportedUsbProtocols;
+
+            // A bitmask indicating properties of the connected device or port
+            public UsbNodeConnectionInformationExV2Flags Flags;
         }
     }
 }

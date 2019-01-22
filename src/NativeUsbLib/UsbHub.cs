@@ -50,10 +50,6 @@ namespace NativeUsbLib
         /// </summary>
         public UsbApi.UsbHubCapabilitiesEx UsbHubCapabilitiesEx { get; protected set; }
         
-        #region constructor/destructor
-
-        #region constructor
-
         /// <summary>
         /// Initializes a new instance of the <see cref="UsbHub"/> class.
         /// </summary>
@@ -61,7 +57,7 @@ namespace NativeUsbLib
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="devicePath">The device path.</param>
         public UsbHub(Device parent, UsbSpec.UsbDeviceDescriptor deviceDescriptor, string devicePath)
-            : base(parent, deviceDescriptor, -1, devicePath)
+            : base(parent, deviceDescriptor, 0, devicePath)
         {
             DeviceDescription = "Standard-USB-Hub";
             DevicePath = devicePath;
@@ -156,7 +152,7 @@ namespace NativeUsbLib
 
                 KernelApi.CloseHandle(hostControllerHandle);
 
-                for (int index = 1; index <= PortCount; index++)
+                for (uint index = 1; index <= PortCount; index++)
                 {
 
                     // Initialize a new port and save the port.
@@ -166,16 +162,12 @@ namespace NativeUsbLib
                     }
                     catch (Exception e)
                     {
-                        Trace.TraceError("Unhandled exception occurred: {0}", e.ToString());
+                        Trace.TraceError("Unhandled exception occurred: {0}", e);
                     }
                 }
             }
             else
                 throw new UsbHubException("No port found!");
         }
-
-        #endregion
-
-        #endregion
     }
 }

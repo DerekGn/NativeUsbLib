@@ -39,7 +39,7 @@ namespace NativeUsbLib
         /// Initializes a new instance of the <see cref="UsbBus"/> class.
         /// </summary>
         /// <param name="parent">The parent.</param>
-        public UsbBus(Device parent):base(parent, null, -1, null)
+        public UsbBus(Device parent):base(parent, null, 0, null)
         {
             ScanBus();
         }
@@ -63,7 +63,7 @@ namespace NativeUsbLib
         private bool ScanBus()
         {
             bool success = true;
-            for (int index = 0; success; index++)
+            for (uint index = 0; success; index++)
             {
 
                 // Initialize a new controller and save the index of the controller.

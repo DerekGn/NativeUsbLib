@@ -165,7 +165,14 @@ namespace UsbViewer
                     {
                         var index = 1;
 
-                        if (device.DeviceDescription != null) AppendDeviceDescriptor(sb, device);
+                        sb.AppendLine($"[Port{device.AdapterNumber}]  :  {device.DeviceDescription}\r\n");
+
+                        AppendUsbPortConnectorProperties(sb, device.UsbPortConnectorProperties);
+
+                        AppendNodeConnectionInfoExV2(sb, device.NodeConnectionInfoV2);
+
+                        if (device.DeviceDescription != null)
+                            AppendDeviceDescriptor(sb, device);
 
                         if (device.ConfigurationDescriptor != null)
                             foreach (var configurationDescriptor in device.ConfigurationDescriptor)
@@ -213,6 +220,23 @@ namespace UsbViewer
 
             m_RichTextBox.Clear();
             m_RichTextBox.Text = sb.ToString();
+        }
+
+        private void AppendNodeConnectionInfoExV2(StringBuilder sb, UsbIoControl.UsbNodeConnectionInformationExV2 connectionInformationExV2)
+        {
+            sb.AppendLine("Protocols Supported:");
+            sb.AppendLine($" USB 1.1:                         {connectionInformationExV2.SupportedUsbProtocols.IsSet(UsbIoControl.UsbProtocols.Usb110).Display()}");
+            sb.AppendLine($" USB 2.0:                         {connectionInformationExV2.SupportedUsbProtocols.IsSet(UsbIoControl.UsbProtocols.Usb200).Display()}");
+            sb.AppendLine($" USB 3.0:                         {connectionInformationExV2.SupportedUsbProtocols.IsSet(UsbIoControl.UsbProtocols.Usb300).Display()}");
+        }
+
+        private void AppendUsbPortConnectorProperties(StringBuilder sb, UsbIoControl.UsbPortConnectorProperties usbPortConnectorProperties)
+        {
+            sb.AppendLine($"Is Port Connector Type C:         {usbPortConnectorProperties.Properties.IsSet(UsbIoControl.UsbPortProperties.PortConnectorIsTypeC).Display()}");
+            sb.AppendLine($"Is Port User Connectable:         {usbPortConnectorProperties.Properties.IsSet(UsbIoControl.UsbPortProperties.PortIsUserConnectable).Display()}");
+            sb.AppendLine($"Is Port Debug Capable:            {usbPortConnectorProperties.Properties.IsSet(UsbIoControl.UsbPortProperties.PortIsDebugCapable).Display()}");
+            sb.AppendLine($"Companion Port Number:            {usbPortConnectorProperties.CompanionPortNumber}");
+            sb.AppendLine($"Companion Hub Symbolic Link Name: {usbPortConnectorProperties.CompanionHubSymbolicLinkName}");
         }
 
         private static void AppendEndpointDescriptor(StringBuilder builder, int index,

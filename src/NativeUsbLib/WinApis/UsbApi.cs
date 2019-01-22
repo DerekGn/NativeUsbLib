@@ -445,24 +445,14 @@ namespace NativeUsbLib.WinApis
         [StructLayout(LayoutKind.Sequential)]
         public struct UsbDescriptorRequest
         {
-            public int ConnectionIndex;
+            public uint ConnectionIndex;
             public UsbSetupPacket SetupPacket;
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public struct UsbNodeConnectionName
-        {
-            public int ConnectionIndex;
-            public int ActualLength;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaxBufferSize)]
-            public string NodeName;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct UsbNodeConnectionDriverkeyName // Yes, this is the same as the structure above...
         {
-            public int ConnectionIndex;
+            public uint ConnectionIndex;
             public int ActualLength;
 
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaxBufferSize)]
@@ -525,27 +515,6 @@ namespace NativeUsbLib.WinApis
         {
             public ulong Length;
             public string Str;
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public struct UsbPortConnectorProperties
-        {
-            public uint ConnectionIndex;
-            public uint ActualLength;
-            public uint Properties;
-            public ushort CompanionIndex;
-            public ushort CompanionPortNumber;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255)]
-            public string CompanionHubSymbolicLinkName;
-        }
-
-        [Flags]
-        public enum UsbPortProperties : ulong
-        {
-            PortIsUserConnectable = 0 << 0,
-            PortIsDebugCapable = 1 << 0,
-            PortHasMultipleCompanions = 1 << 1,
-            PortConnectorIsTypeC = 1 << 2
         }
 
     // HID.DLL definitions

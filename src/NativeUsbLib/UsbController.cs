@@ -22,7 +22,7 @@ namespace NativeUsbLib
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <param name="index">The index.</param>
-        public UsbController(Device parent, int index)
+        public UsbController(Device parent, uint index)
             : base(parent, null, index, null)
         {
             PowerInfo = new List<UsbUser.UsbPowerInfo>();
@@ -74,7 +74,7 @@ namespace NativeUsbLib
             }
         }
 
-        private void Initalise(int index)
+        private void Initalise(uint index)
         {
             IntPtr ptr = IntPtr.Zero;
             IntPtr deviceInfoHandle = IntPtr.Zero;
@@ -91,7 +91,7 @@ namespace NativeUsbLib
 
                 // Start the enumeration.
                 Boolean success =
-                    UsbApi.SetupDiEnumDeviceInterfaces(deviceInfoHandle, IntPtr.Zero, ref _guid, index,
+                    UsbApi.SetupDiEnumDeviceInterfaces(deviceInfoHandle, IntPtr.Zero, ref _guid, (int) index,
                         ref deviceInterfaceData);
                 if (success)
                 {
@@ -190,42 +190,51 @@ namespace NativeUsbLib
 
         private void GetHostControllerInfo(IntPtr handle)
         {
-            // set the header and request sizes
-            UsbUser.UsbuserControllerInfo0 usbControllerInfo0 =
-                new UsbUser.UsbuserControllerInfo0 {Header = {UsbUserRequest = UsbUser.UsbuserGetControllerInfo0}};
+            IntPtr ptrUsbControllerInfo0 = IntPtr.Zero;
 
-            usbControllerInfo0.Header.RequestBufferLength = (uint) Marshal.SizeOf(usbControllerInfo0);
-
-            //
-            // Query for the USB_CONTROLLER_INFO_0 structure
-            //
-            int nBytesReturned = 0;
-            int nBytes = Marshal.SizeOf(usbControllerInfo0);
-            IntPtr ptrUsbControllerInfo0 = Marshal.AllocHGlobal(nBytes);
-            Marshal.StructureToPtr(usbControllerInfo0, ptrUsbControllerInfo0, true);
-
-            var success = KernelApi.DeviceIoControl(handle,
-                UsbUser.IoctlUsbUserRequest,
-                ptrUsbControllerInfo0,
-                nBytes,
-                ptrUsbControllerInfo0,
-                nBytes,
-                out nBytesReturned,
-                IntPtr.Zero);
-
-            if (!success)
+            try
             {
-                Trace.WriteLine(
-                    $"[{nameof(KernelApi.DeviceIoControl)}] Returned Error Code: [{KernelApi.GetLastError():X}]");
-            }
-            else
-            {
-                usbControllerInfo0 = (UsbUser.UsbuserControllerInfo0)Marshal.PtrToStructure(ptrUsbControllerInfo0,
-                    typeof(UsbUser.UsbuserControllerInfo0));
-                ControllerInfo = usbControllerInfo0.Info0;
-            }
+                // set the header and request sizes
+                UsbUser.UsbuserControllerInfo0 usbControllerInfo0 =
+                    new UsbUser.UsbuserControllerInfo0 {Header = {UsbUserRequest = UsbUser.UsbuserGetControllerInfo0}};
 
-            Marshal.FreeHGlobal(ptrUsbControllerInfo0);
+                usbControllerInfo0.Header.RequestBufferLength = (uint) Marshal.SizeOf(usbControllerInfo0);
+
+                //
+                // Query for the USB_CONTROLLER_INFO_0 structure
+                //
+                int bytesRequested = Marshal.SizeOf(usbControllerInfo0);
+                int bytesReturned = 0;
+
+                ptrUsbControllerInfo0 = Marshal.AllocHGlobal(bytesRequested);
+                Marshal.StructureToPtr(usbControllerInfo0, ptrUsbControllerInfo0, true);
+
+                if (KernelApi.DeviceIoControl(handle,
+                    UsbUser.IoctlUsbUserRequest,
+                    ptrUsbControllerInfo0,
+                    bytesRequested,
+                    ptrUsbControllerInfo0,
+                    bytesRequested,
+                    out bytesReturned,
+                    IntPtr.Zero))
+                {
+                    Trace.TraceError(
+                        $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbUser.IoctlUsbUserRequest)}] Result: [{KernelApi.GetLastError():X}]");
+                }
+                else
+                {
+                    usbControllerInfo0 = (UsbUser.UsbuserControllerInfo0) Marshal.PtrToStructure(ptrUsbControllerInfo0,
+                        typeof(UsbUser.UsbuserControllerInfo0));
+                    ControllerInfo = usbControllerInfo0.Info0;
+                }
+            }
+            finally
+            {
+                if (ptrUsbControllerInfo0 != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(ptrUsbControllerInfo0);
+                }
+            }
         }
 
         private void GetHostControllerPowerMap(IntPtr handle)
