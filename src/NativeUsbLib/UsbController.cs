@@ -204,8 +204,7 @@ namespace NativeUsbLib
                 // Query for the USB_CONTROLLER_INFO_0 structure
                 //
                 int bytesRequested = Marshal.SizeOf(usbControllerInfo0);
-                int bytesReturned = 0;
-
+                
                 ptrUsbControllerInfo0 = Marshal.AllocHGlobal(bytesRequested);
                 Marshal.StructureToPtr(usbControllerInfo0, ptrUsbControllerInfo0, true);
 
@@ -215,7 +214,7 @@ namespace NativeUsbLib
                     bytesRequested,
                     ptrUsbControllerInfo0,
                     bytesRequested,
-                    out bytesReturned,
+                    out _,
                     IntPtr.Zero))
                 {
                     Trace.TraceError(
@@ -258,7 +257,6 @@ namespace NativeUsbLib
                 // Now query USBHUB for the USB_POWER_INFO structure for this hub.
                 // For Selective Suspend support
                 //
-                int nBytesReturned = 0;
                 int nBytes = Marshal.SizeOf(powerInfoRequest);
                 IntPtr ptrPowerInfoRequest = Marshal.AllocHGlobal(nBytes);
                 Marshal.StructureToPtr(powerInfoRequest, ptrPowerInfoRequest, true);
@@ -269,7 +267,7 @@ namespace NativeUsbLib
                     nBytes,
                     ptrPowerInfoRequest,
                     nBytes,
-                    out nBytesReturned,
+                    out _,
                     IntPtr.Zero);
 
                 if (!success)

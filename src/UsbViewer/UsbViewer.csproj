@@ -71,6 +71,7 @@
     </Compile>
     <Compile Include="Extensions\BoolExtensions.cs" />
     <Compile Include="Extensions\UsbHubCapFlagsExtension.cs" />
+    <Compile Include="Extensions\UsbNodeConnectionInformationExV2FlagsExtensions.cs" />
     <Compile Include="Extensions\UsbPortPropertiesExtensions.cs" />
     <Compile Include="Extensions\UsbProtocolsExtensions.cs" />
     <Compile Include="Extensions\WdmusbPowerStateExtensions.cs" />

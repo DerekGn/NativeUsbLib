@@ -39,7 +39,7 @@ namespace NativeUsbLib
 
                             GetNodeConnectionInformationExV2(portCount, deviceHandle, out var nodeConnectionV2);
 
-                            if (nodeConnection.DeviceDescriptor.bDeviceClass == UsbSpec.UsbDeviceClass.Hub)
+                            if (nodeConnection.DeviceDescriptor.bDeviceClass == UsbDesc.DeviceClassType.UsbHubDevice)
                             {
                                 if (GetUsbNodeConnectionName(deviceHandle, out var connectionName))
                                 {

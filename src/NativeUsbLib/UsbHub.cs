@@ -62,8 +62,6 @@ namespace NativeUsbLib
             DeviceDescription = "Standard-USB-Hub";
             DevicePath = devicePath;
 
-            int nBytesReturned = 0;
-
             // Open a handle to the host controller.
             IntPtr hostControllerHandle = KernelApi.CreateFile(devicePath, UsbApi.GenericWrite, UsbApi.FileShareWrite, IntPtr.Zero, UsbApi.OpenExisting, 0, IntPtr.Zero);
             if (hostControllerHandle.ToInt64() != UsbApi.InvalidHandleValue)
@@ -73,7 +71,7 @@ namespace NativeUsbLib
                 IntPtr ptrRootHubName = Marshal.AllocHGlobal(nBytes);
 
                 // Get the root hub name.
-                if (KernelApi.DeviceIoControl(hostControllerHandle, UsbIoControl.IoctlUsbGetRootHubName, ptrRootHubName, nBytes, ptrRootHubName, nBytes, out nBytesReturned, IntPtr.Zero))
+                if (KernelApi.DeviceIoControl(hostControllerHandle, UsbIoControl.IoctlUsbGetRootHubName, ptrRootHubName, nBytes, ptrRootHubName, nBytes, out _, IntPtr.Zero))
                 {
                     rootHubName = (UsbApi.UsbRootHubName)Marshal.PtrToStructure(ptrRootHubName, typeof(UsbApi.UsbRootHubName));
 
@@ -103,7 +101,7 @@ namespace NativeUsbLib
                     IntPtr ptrNodeInfo = Marshal.AllocHGlobal(nBytes);
                     Marshal.StructureToPtr(nodeInfo, ptrNodeInfo, true);
 
-                    if (KernelApi.DeviceIoControl(hubHandle, UsbIoControl.IoctlUsbGetNodeInformation, ptrNodeInfo, nBytes, ptrNodeInfo, nBytes, out nBytesReturned, IntPtr.Zero))
+                    if (KernelApi.DeviceIoControl(hubHandle, UsbIoControl.IoctlUsbGetNodeInformation, ptrNodeInfo, nBytes, ptrNodeInfo, nBytes, out _, IntPtr.Zero))
                     {
                         NodeInformation = (UsbApi.UsbNodeInformation) Marshal.PtrToStructure(ptrNodeInfo, typeof(UsbApi.UsbNodeInformation));
                     }
@@ -119,7 +117,7 @@ namespace NativeUsbLib
                     nBytes = hubInfoEx.SizeOf;
                     IntPtr ptrHubInfo = Marshal.AllocHGlobal(nBytes);
                     
-                    if (KernelApi.DeviceIoControl(hubHandle, UsbIoControl.IoctlUsbGetHubInformationEx, ptrHubInfo, nBytes, ptrHubInfo, nBytes, out nBytesReturned, IntPtr.Zero))
+                    if (KernelApi.DeviceIoControl(hubHandle, UsbIoControl.IoctlUsbGetHubInformationEx, ptrHubInfo, nBytes, ptrHubInfo, nBytes, out _, IntPtr.Zero))
                     {
                         hubInfoEx.MarshalFrom(ptrHubInfo);
                         HubInformation = hubInfoEx;
@@ -136,7 +134,7 @@ namespace NativeUsbLib
                     IntPtr ptrUsbHubCapabilitiesEx = Marshal.AllocHGlobal(nBytes);
                     Marshal.StructureToPtr(usbHubCapabilitiesEx, ptrUsbHubCapabilitiesEx, true);
 
-                    if (KernelApi.DeviceIoControl(hubHandle, UsbIoControl.IoctlUsbGetHubCapabilitiesEx, ptrUsbHubCapabilitiesEx, nBytes, ptrUsbHubCapabilitiesEx, nBytes, out nBytesReturned, IntPtr.Zero))
+                    if (KernelApi.DeviceIoControl(hubHandle, UsbIoControl.IoctlUsbGetHubCapabilitiesEx, ptrUsbHubCapabilitiesEx, nBytes, ptrUsbHubCapabilitiesEx, nBytes, out _, IntPtr.Zero))
                     {
                         UsbHubCapabilitiesEx = (UsbApi.UsbHubCapabilitiesEx)Marshal.PtrToStructure(ptrUsbHubCapabilitiesEx, typeof(UsbApi.UsbHubCapabilitiesEx));
                     }

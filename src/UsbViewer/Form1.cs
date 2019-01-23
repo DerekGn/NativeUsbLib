@@ -1,5 +1,3 @@
-#region references
-
 using System;
 using System.Drawing;
 using System.Linq;
@@ -8,8 +6,6 @@ using System.Windows.Forms;
 using NativeUsbLib;
 using NativeUsbLib.WinApis;
 using UsbViewer.Extensions;
-
-#endregion
 
 namespace UsbViewer
 {
@@ -155,7 +151,8 @@ namespace UsbViewer
                     AppendUsbController(sb, controller);
                 }
 
-                if ((usbNode.Type == DeviceTyp.Hub || usbNode.Type == DeviceTyp.RootHub) && usbNode.Device is UsbHub hub)
+                if ((usbNode.Type == DeviceTyp.Hub || usbNode.Type == DeviceTyp.RootHub) &&
+                    usbNode.Device is UsbHub hub)
                     AppendUsbHub(sb, hub);
 
                 if (usbNode.Type == DeviceTyp.Device || usbNode.Type == DeviceTyp.Hub)
@@ -171,8 +168,9 @@ namespace UsbViewer
 
                         AppendNodeConnectionInfoExV2(sb, device.NodeConnectionInfoV2);
 
-                        if (device.DeviceDescription != null)
-                            AppendDeviceDescriptor(sb, device);
+                        AppendDeviceInformation(sb, device);
+
+                        AppendDeviceDescriptor(sb, device);
 
                         if (device.ConfigurationDescriptor != null)
                             foreach (var configurationDescriptor in device.ConfigurationDescriptor)
@@ -222,21 +220,314 @@ namespace UsbViewer
             m_RichTextBox.Text = sb.ToString();
         }
 
-        private void AppendNodeConnectionInfoExV2(StringBuilder sb, UsbIoControl.UsbNodeConnectionInformationExV2 connectionInformationExV2)
+        private void AppendDeviceDescriptor(StringBuilder builder, Device device)
         {
-            sb.AppendLine("Protocols Supported:");
-            sb.AppendLine($" USB 1.1:                         {connectionInformationExV2.SupportedUsbProtocols.IsSet(UsbIoControl.UsbProtocols.Usb110).Display()}");
-            sb.AppendLine($" USB 2.0:                         {connectionInformationExV2.SupportedUsbProtocols.IsSet(UsbIoControl.UsbProtocols.Usb200).Display()}");
-            sb.AppendLine($" USB 3.0:                         {connectionInformationExV2.SupportedUsbProtocols.IsSet(UsbIoControl.UsbProtocols.Usb300).Display()}");
+            UsbSpec.UsbDeviceDescriptor deviceDescriptor = device.DeviceDescriptor;
+            UsbIoControl.UsbNodeConnectionInformationEx connectInfo = device.NodeConnectionInfo;
+
+            bool tog = true;
+            uint iaDcount = 0;
+
+            builder.AppendLine("\r\n          ===>Device Descriptor<===");
+            builder.AppendLine($"bLength:                           0x{deviceDescriptor.bLength:X02}");
+            builder.AppendLine(
+                $"bDescriptorType:                   0x{(int) deviceDescriptor.bDescriptorType:X02} -> {deviceDescriptor.bDescriptorType}");
+            builder.AppendLine($"bcdUSB:                            0x{deviceDescriptor.bcdUSB:X04}");
+            builder.Append(
+                $"bDeviceClass:                      0x{(int) deviceDescriptor.bDeviceClass:X02} -> {deviceDescriptor.bDeviceClass}");
+
+            // Quit on these device failures
+            if (connectInfo.ConnectionStatus == UsbIoControl.UsbConnectionStatus.DeviceFailedEnumeration ||
+                connectInfo.ConnectionStatus == UsbIoControl.UsbConnectionStatus.DeviceGeneralFailure)
+                builder.AppendLine("\r\n*!*ERROR:  Device enumeration failure");
+
+            // Is this an IAD device?
+#warning TODO
+            //iaDcount = IsIADDevice((PUSBDEVICEINFO)info);
+
+            if (iaDcount > 0)
+            {
+                // this device configuration has 1 or more IAD descriptors
+                if (connectInfo.DeviceDescriptor.bDeviceClass == UsbDesc.DeviceClassType.UsbMiscellaneousDevice)
+                {
+                    tog = false;
+
+                    builder.AppendLine("  -> This is a Multi-interface Function Code Device");
+                }
+                else
+                {
+                    builder.AppendLine(
+                        $"\r\n*!*ERROR: device class should be Multi-interface Function 0x{UsbDesc.DeviceClassType.UsbMiscellaneousDevice:X02}\r\n" +
+                        "          When IAD descriptor is used");
+                }
+                // Is this a UVC device?
+#warning TODO
+                //g_chUVCversion = IsUVCDevice((PUSBDEVICEINFO)info);
+            }
+            else
+            {
+                // this is not an IAD device
+                switch (connectInfo.DeviceDescriptor.bDeviceClass)
+                {
+                    case UsbDesc.DeviceClassType.UsbInterfaceClassDevice:
+                        builder.AppendLine("  -> This is an Interface Class Defined Device");
+
+                        break;
+
+                    case UsbDesc.DeviceClassType.UsbCommunicationDevice:
+                        tog = false;
+                        builder.AppendLine("  -> This is a Communication Device");
+                        break;
+
+                    case UsbDesc.DeviceClassType.UsbHubDevice:
+                        tog = false;
+                        builder.AppendLine("  -> This is a HUB Device");
+                        break;
+
+                    case UsbDesc.DeviceClassType.UsbDiagnosticDevice:
+                        tog = false;
+                        builder.AppendLine("  -> This is a Diagnostic Device");
+                        break;
+
+                    case UsbDesc.DeviceClassType.UsbWirelessControllerDevice:
+                        tog = false;
+
+                        builder.AppendLine("  -> This is a Wireless Controller(Bluetooth) Device");
+                        break;
+
+                    case UsbDesc.DeviceClassType.UsbVendorSpecificDevice:
+                        tog = false;
+                        builder.AppendLine("  -> This is a Vendor Specific Device");
+                        break;
+
+                    case UsbDesc.DeviceClassType.UsbDeviceClassBillboard:
+                        tog = false;
+
+                        builder.AppendLine("  -> This is a billboard class device");
+                        break;
+
+                    case UsbDesc.DeviceClassType.UsbMiscellaneousDevice:
+                        tog = false;
+                        //@@TestCase A1.3
+                        //@@ERROR
+                        //@@Descriptor Field - bDeviceClass
+                        //@@Multi-interface Function code used for non-IAD device
+                        builder.AppendLine(
+                            $"\r\n*!*ERROR:  Multi-interface Function code {connectInfo.DeviceDescriptor.bDeviceClass:D} used for device with no IAD descriptors");
+                        break;
+
+                    default:
+                        //@@TestCase A1.4
+                        //@@ERROR
+                        //@@Descriptor Field - bDeviceClass
+                        //@@An unknown device class has been defined
+                        builder.AppendLine(
+                            $"\r\n*!*ERROR:  unknown bDeviceClass {connectInfo.DeviceDescriptor.bDeviceClass:D}");
+                        break;
+                }
+            }
+
+            builder.Append($"bDeviceSubClass:                   0x{connectInfo.DeviceDescriptor.bDeviceSubClass}");
+
+            // check the subclass
+            if (iaDcount > 0)
+            {
+                // this device configuration has 1 or more IAD descriptors
+                if (connectInfo.DeviceDescriptor.bDeviceSubClass == UsbDesc.UsbCommonSubClass)
+                {
+                    builder.AppendLine("  -> This is the Common Class Sub Class");
+                }
+                else
+                {
+                    //@@TestCase A1.5
+                    //@@ERROR
+                    //@@Descriptor Field - bDeviceSubClass
+                    //@@An invalid device sub class used for Multi-interface Function (IAD) device
+                    builder.AppendLine(
+                        $"\r\n*!*ERROR: device SubClass should be USB Common Sub Class {UsbDesc.UsbCommonSubClass}\r\n" +
+                        "          When IAD descriptor is used");
+                }
+            }
+            else
+            {
+                // Not an IAD device, so all subclass values are invalid
+                if (connectInfo.DeviceDescriptor.bDeviceSubClass > 0x00 &&
+                    connectInfo.DeviceDescriptor.bDeviceSubClass < 0xFF)
+                {
+                    //@@TestCase A1.6
+                    //@@ERROR
+                    //@@Descriptor Field - bDeviceSubClass
+                    //@@An invalid device sub class has been defined
+                    builder.AppendLine(
+                        $"\r\n*!*ERROR:  bDeviceSubClass of {connectInfo.DeviceDescriptor.bDeviceSubClass:D} is invalid");
+                }
+                else
+                {
+                    builder.AppendLine();
+                }
+            }
+
+            builder.AppendLine(
+                $"bDeviceProtocol:                   0x{connectInfo.DeviceDescriptor.bDeviceProtocol:X02}");
+
+            // check the protocol
+            if (iaDcount > 0)
+            {
+                // this device configuration has 1 or more IAD descriptors
+                if (connectInfo.DeviceDescriptor.bDeviceProtocol == UsbDesc.UsbIadProtocol)
+                {
+                    builder.AppendLine("  -> This is the Interface Association Descriptor protocol");
+                }
+                else
+                {
+                    //@@TestCase A1.7
+                    //@@ERROR
+                    //@@Descriptor Field - bDeviceSubClass
+                    //@@An invalid device sub class used for Multi-interface Function (IAD) device
+                    builder.AppendLine(
+                        $"\r\n*!*ERROR: device Protocol should be USB IAD Protocol {UsbDesc.UsbIadProtocol}\r\n" +
+                        "          When IAD descriptor is used");
+                }
+            }
+            else
+            {
+                // Not an IAD device, so all subclass values are invalid
+                if (connectInfo.DeviceDescriptor.bDeviceProtocol > 0x00 &&
+                    connectInfo.DeviceDescriptor.bDeviceProtocol < 0xFF && tog)
+                {
+                    //@@TestCase A1.8
+                    //@@ERROR
+                    //@@Descriptor Field - bDeviceProtocol
+                    //@@An invalid device protocol has been defined
+                    builder.AppendLine(
+                        $"\r\n*!*ERROR:  bDeviceProtocol of {connectInfo.DeviceDescriptor.bDeviceProtocol} is invalid");
+                }
+                else
+                {
+                    builder.AppendLine("\r\n");
+                }
+            }
+
+            builder.AppendLine(
+                $"bMaxPacketSize0:                   0x{connectInfo.DeviceDescriptor.bMaxPacketSize0:X02}= ({connectInfo.DeviceDescriptor.bMaxPacketSize0}) Bytes");
+
+            switch (connectInfo.Speed)
+            {
+                case UsbSpec.UsbDeviceSpeed.UsbLowSpeed:
+                    if (connectInfo.DeviceDescriptor.bMaxPacketSize0 != 8)
+                    {
+                        //@@TestCase A1.9
+                        //@@ERROR
+                        //@@Descriptor Field - bMaxPacketSize0
+                        //@@An invalid bMaxPacketSize0 has been defined for a low speed device
+                        builder.AppendLine("*!*ERROR:  Low Speed Devices require bMaxPacketSize0 = 8\r\n");
+                    }
+
+                    break;
+                case UsbSpec.UsbDeviceSpeed.UsbFullSpeed:
+                    if (!(connectInfo.DeviceDescriptor.bMaxPacketSize0 == 8 ||
+                          connectInfo.DeviceDescriptor.bMaxPacketSize0 == 16 ||
+                          connectInfo.DeviceDescriptor.bMaxPacketSize0 == 32 ||
+                          connectInfo.DeviceDescriptor.bMaxPacketSize0 == 64))
+                    {
+                        //@@TestCase A1.10
+                        //@@ERROR
+                        //@@Descriptor Field - bMaxPacketSize0
+                        //@@An invalid bMaxPacketSize0 has been defined for a full speed device
+                        builder.AppendLine(
+                            "*!*ERROR:  Full Speed Devices require bMaxPacketSize0 = 8, 16, 32, or 64\r\n");
+                    }
+
+                    break;
+                case UsbSpec.UsbDeviceSpeed.UsbHighSpeed:
+                    if (connectInfo.DeviceDescriptor.bMaxPacketSize0 != 64)
+                    {
+                        //@@TestCase A1.11
+                        //@@ERROR
+                        //@@Descriptor Field - bMaxPacketSize0
+                        //@@An invalid bMaxPacketSize0 has been defined for a high speed device
+                        builder.AppendLine("*!*ERROR:  High Speed Devices require bMaxPacketSize0 = 64\r\n");
+                    }
+
+                    break;
+                case UsbSpec.UsbDeviceSpeed.UsbSuperSpeed:
+                    if (connectInfo.DeviceDescriptor.bMaxPacketSize0 != 9)
+                    {
+                        builder.AppendLine("*!*ERROR:  SuperSpeed Devices require bMaxPacketSize0 = 9 (512)\r\n");
+                    }
+
+                    break;
+            }
+
+            builder.AppendLine($"idVendor:                        0x{connectInfo.DeviceDescriptor.idVendor:X04}  = ");
+#warning TODO
+            //VendorString = GetVendorString(connectInfo.DeviceDescriptor.IdVendor);
+            //if (VendorString != NULL)
+            //{
+            //    builder.AppendLine(" = %s\r\n",
+            //        VendorString);
+            //}
+
+            builder.AppendLine($"idProduct:                       0x{connectInfo.DeviceDescriptor.idProduct:X04}");
+
+            builder.AppendLine($"bcdDevice:                       0x{connectInfo.DeviceDescriptor.bcdDevice:X04}");
+
+            builder.AppendLine(
+                $"iManufacturer:                     0x{connectInfo.DeviceDescriptor.iManufacturer:X02}");
+            builder.AppendLine($"                                     {device.Manufacturer}");
+
+            builder.AppendLine($"iProduct:                          0x{connectInfo.DeviceDescriptor.iProduct:X02}");
+            builder.AppendLine($"                                     {device.Product}");
+            builder.AppendLine(
+                $"iSerialNumber:                     0x{connectInfo.DeviceDescriptor.iSerialNumber:X02}");
+            builder.AppendLine($"                                     {device.SerialNumber}");
+            builder.AppendLine(
+                $"bNumConfigurations:                0x{connectInfo.DeviceDescriptor.bNumConfigurations:X02}");
+
+            if (connectInfo.DeviceDescriptor.bNumConfigurations != 1)
+            {
+                //@@TestCase A1.12
+                //@@CAUTION
+                //@@Descriptor Field - bNumConfigurations
+                //@@Most host controllers do not handle more than one configuration
+                builder.AppendLine("*!*CAUTION:    Most host controllers will only work with " +
+                                   "one configuration per speed\r\n");
+            }
+
+#warning TODO
+            if (connectInfo.NumberOfOpenPipes > 0)
+            {
+                builder.AppendLine("\r\n          ---===>Open Pipes<===---");
+                //DisplayPipeInfo(connectInfo.NumberOfOpenPipes,
+                //                connectInfo.PipeList);
+            }
         }
 
-        private void AppendUsbPortConnectorProperties(StringBuilder sb, UsbIoControl.UsbPortConnectorProperties usbPortConnectorProperties)
+        private void AppendNodeConnectionInfoExV2(StringBuilder builder,
+            UsbIoControl.UsbNodeConnectionInformationExV2 connectionInformationExV2)
         {
-            sb.AppendLine($"Is Port Connector Type C:         {usbPortConnectorProperties.Properties.IsSet(UsbIoControl.UsbPortProperties.PortConnectorIsTypeC).Display()}");
-            sb.AppendLine($"Is Port User Connectable:         {usbPortConnectorProperties.Properties.IsSet(UsbIoControl.UsbPortProperties.PortIsUserConnectable).Display()}");
-            sb.AppendLine($"Is Port Debug Capable:            {usbPortConnectorProperties.Properties.IsSet(UsbIoControl.UsbPortProperties.PortIsDebugCapable).Display()}");
-            sb.AppendLine($"Companion Port Number:            {usbPortConnectorProperties.CompanionPortNumber}");
-            sb.AppendLine($"Companion Hub Symbolic Link Name: {usbPortConnectorProperties.CompanionHubSymbolicLinkName}");
+            builder.AppendLine("Protocols Supported:");
+            builder.AppendLine(
+                $" USB 1.1:                         {connectionInformationExV2.SupportedUsbProtocols.IsSet(UsbIoControl.UsbProtocols.Usb110).Display()}");
+            builder.AppendLine(
+                $" USB 2.0:                         {connectionInformationExV2.SupportedUsbProtocols.IsSet(UsbIoControl.UsbProtocols.Usb200).Display()}");
+            builder.AppendLine(
+                $" USB 3.0:                         {connectionInformationExV2.SupportedUsbProtocols.IsSet(UsbIoControl.UsbProtocols.Usb300).Display()}");
+            builder.AppendLine();
+        }
+
+        private void AppendUsbPortConnectorProperties(StringBuilder builder,
+            UsbIoControl.UsbPortConnectorProperties usbPortConnectorProperties)
+        {
+            builder.AppendLine(
+                $"Is Port Connector Type C:         {usbPortConnectorProperties.Properties.IsSet(UsbIoControl.UsbPortProperties.PortConnectorIsTypeC).Display()}");
+            builder.AppendLine(
+                $"Is Port User Connectable:         {usbPortConnectorProperties.Properties.IsSet(UsbIoControl.UsbPortProperties.PortIsUserConnectable).Display()}");
+            builder.AppendLine(
+                $"Is Port Debug Capable:            {usbPortConnectorProperties.Properties.IsSet(UsbIoControl.UsbPortProperties.PortIsDebugCapable).Display()}");
+            builder.AppendLine($"Companion Port Number:            {usbPortConnectorProperties.CompanionPortNumber}");
+            builder.AppendLine(
+                $"Companion Hub Symbolic Link Name: {usbPortConnectorProperties.CompanionHubSymbolicLinkName}");
         }
 
         private static void AppendEndpointDescriptor(StringBuilder builder, int index,
@@ -279,7 +570,7 @@ namespace UsbViewer
             UsbApi.UsbInterfaceDescriptor interfaceDescriptor)
         {
             builder.AppendLine(
-                $"-----------------------------------------------------------------");
+                "-----------------------------------------------------------------");
             builder.AppendLine($"INTERFACE DESCRIPTOR {index}");
             builder.AppendLine(
                 "-----------------------------------------------------------------");
@@ -315,43 +606,69 @@ namespace UsbViewer
             builder.AppendLine("\n");
         }
 
-        private static void AppendDeviceDescriptor(StringBuilder builder, Device device)
+        private static void AppendDeviceInformation(StringBuilder builder, Device device)
         {
-            builder.AppendLine($"{device.DeviceDescription}\r\n");
+            builder.AppendLine("       ---===>Device Information<===---");
+            builder.AppendLine("English product name: \"TODO\"");
+            builder.AppendLine($"\r\nConnectionStatus:                  {device.NodeConnectionInfo.ConnectionStatus}");
+            builder.Append(
+                $"Current Config Value:              0x{device.NodeConnectionInfo.CurrentConfigurationValue:X}");
+            AppendDeviceSpeed(builder, device.NodeConnectionInfo.Speed, device.NodeConnectionInfoV2);
+            builder.AppendLine($"Device Address:                    0x{device.NodeConnectionInfo.DeviceAddress:X}");
+            builder.AppendLine($"Open Pipes:                          {device.NodeConnectionInfo.NumberOfOpenPipes}");
+        }
 
-            builder.AppendLine(
-                $"USB Version\t\t\t: {device.DeviceDescriptor.bcdUSB.ToString("x").Replace("0", "")}");
-            builder.AppendLine($"DeviceClass\t\t\t: {device.DeviceDescriptor.bDeviceClass:x}");
-            builder.AppendLine($"DeviceSubClass\t\t\t: {device.DeviceDescriptor.DeviceSubClass:x}");
-            builder.AppendLine($"DeviceProtocol\t\t\t: {device.DeviceDescriptor.DeviceProtocol:x}");
-            builder.AppendLine($"MaxPacketSize\t\t\t: {device.DeviceDescriptor.MaxPacketSize0:x}");
-            builder.AppendLine($"Vendor ID\t\t\t: {device.DeviceDescriptor.IdVendor:x}");
-            builder.AppendLine($"Product ID\t\t\t: {device.DeviceDescriptor.IdProduct:x}");
-            builder.AppendLine(
-                $"bcdDevice\t\t\t: {device.DeviceDescriptor.bcdDevice:x}");
-            builder.AppendLine(
-                $"Device String Index of the Manufacturer\t: {device.DeviceDescriptor.IManufacturer:x}");
-            builder.AppendLine($"Manufacturer\t\t\t: {device.Manufacturer}");
-            builder.AppendLine($"Device String Index of the Product\t: {device.DeviceDescriptor.IProduct:x}");
-            builder.AppendLine($"Product\t\t\t\t: {device.Product}");
-            builder.AppendLine($"Device String Index of the Serial Number: {device.DeviceDescriptor.ISerialNumber:x}");
-            builder.AppendLine($"Serial Number\t\t\t: {device.SerialNumber}");
-            builder.AppendLine($"Number of available configurations\t: {device.DeviceDescriptor.NumConfigurations:x}");
-            builder.AppendLine(
-                $"Descriptor Type\t\t\t: {device.DeviceDescriptor.DescriptorType}");
-            builder.AppendLine(
-                $"Device Descriptor Length\t\t: {device.DeviceDescriptor.Length}");
-            builder.AppendLine("\n");
-            builder.AppendLine($"ConnectionStatus\t\t\t: {device.Status}");
-            builder.AppendLine("Curent Config Value\t\t\t:");
-            builder.AppendLine($"Device Bus Speed\t\t\t: {device.Speed}");
-            builder.AppendLine($"Device Address\t\t\t: ");
-            builder.AppendLine($"Open Pipes\t\t\t: ");
-            builder.AppendLine($"DriverKeyName\t\t\t: {device.DriverKey}");
-            builder.AppendLine($"AdapterNumber\t\t\t: {device.AdapterNumber}");
-            builder.AppendLine($"Instance ID\t\t\t: {device.InstanceId}");
-            //sb.AppendLine("SerialNumber\t\t\t: " + port.Device.SerialNumber + "\n");
-            builder.AppendLine("\n");
+        private static void AppendDeviceSpeed(StringBuilder builder, UsbSpec.UsbDeviceSpeed speed,
+            UsbIoControl.UsbNodeConnectionInformationExV2 connectionInfoV2)
+        {
+            switch (speed)
+            {
+                case UsbSpec.UsbDeviceSpeed.UsbLowSpeed:
+                    builder.AppendLine("  -> Device Bus Speed: Low");
+                    break;
+                case UsbSpec.UsbDeviceSpeed.UsbFullSpeed:
+
+                    builder.Append("  -> Device Bus Speed: Full");
+
+                    if (connectionInfoV2.Flags.IsSet(UsbIoControl.UsbNodeConnectionInformationExV2Flags
+                        .DeviceIsOperatingAtSuperSpeedPlusOrHigher))
+                        builder.AppendLine(" (is SuperSpeedPlus or higher capable)\r\n");
+                    else if (connectionInfoV2.Flags.IsSet(UsbIoControl.UsbNodeConnectionInformationExV2Flags
+                        .DeviceIsSuperSpeedCapableOrHigher))
+                        builder.AppendLine(" (is SuperSpeed or higher capable)\r\n");
+                    else
+                        builder.AppendLine(" (is not SuperSpeed or higher capable)\r\n");
+
+                    break;
+                case UsbSpec.UsbDeviceSpeed.UsbHighSpeed:
+
+                    builder.AppendLine("  -> Device Bus Speed: High");
+
+                    if (connectionInfoV2.Flags.IsSet(UsbIoControl.UsbNodeConnectionInformationExV2Flags
+                        .DeviceIsSuperSpeedPlusCapableOrHigher))
+                        builder.AppendLine(" (is SuperSpeedPlus or higher capable)\r\n");
+                    else if (connectionInfoV2.Flags.IsSet(UsbIoControl.UsbNodeConnectionInformationExV2Flags
+                        .DeviceIsSuperSpeedCapableOrHigher))
+                        builder.AppendLine(" (is SuperSpeed or higher capable)\r\n");
+                    else
+                        builder.AppendLine(" (is not SuperSpeed or higher capable)\r\n");
+
+                    break;
+
+                case UsbSpec.UsbDeviceSpeed.UsbSuperSpeed:
+
+                    builder.AppendLine("  -> Device Bus Speed: Super");
+                    builder.AppendLine(connectionInfoV2.Flags.IsSet(UsbIoControl.UsbNodeConnectionInformationExV2Flags
+                        .DeviceIsOperatingAtSuperSpeedPlusOrHigher)
+                        ? "SpeedPlus"
+                        : "Speed");
+
+                    break;
+
+                default:
+                    builder.AppendLine("  -> Device Bus Speed: Unknown\r\n");
+                    break;
+            }
         }
 
         private static void AppendUsbHub(StringBuilder builder, UsbHub hub)
@@ -375,13 +692,13 @@ namespace UsbViewer
             builder.AppendLine(
                 $"Multiple transaction translations capable:                 {capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsMultiTtCapable).Display()}");
             builder.AppendLine(
-                $"Performs multiple transaction translations simultaneously: {(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsMultiTt)).Display()}");
+                $"Performs multiple transaction translations simultaneously: {capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsMultiTt).Display()}");
             builder.AppendLine(
-                $"Hub wakes when device is connected:                        {(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsArmedWakeOnConnect)).Display()}");
+                $"Hub wakes when device is connected:                        {capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsArmedWakeOnConnect).Display()}");
             builder.AppendLine(
-                $"Hub is bus powered:           {(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsBusPowered)).Display()}");
+                $"Hub is bus powered:           {capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsBusPowered).Display()}");
             builder.AppendLine(
-                $"Hub is root:                  {(capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsRoot)).Display()}");
+                $"Hub is root:                  {capabilityFlags.IsSet(UsbApi.UsbHubCapFlags.HubIsRoot).Display()}");
         }
 
         private static void AppendHubCharacteristics(StringBuilder builder, short hubCharacteristics)
@@ -440,17 +757,16 @@ namespace UsbViewer
             sb.AppendLine($"Revision: {controller.Revision:X2}");
 
             sb.AppendLine("\r\nHost Controller Power State Mappings");
-            sb.AppendLine($"{"System State", -25}{"Host Controller",-25}{"Root Hub",-25}{"USB wakeup",-25}{"Powered",-25}");
+            sb.AppendLine(
+                $"{"System State",-25}{"Host Controller",-25}{"Root Hub",-25}{"USB wakeup",-25}{"Powered",-25}");
 
             foreach (var usbPowerInfo in controller.PowerInfo)
-            {
                 sb.AppendLine(
                     $"{usbPowerInfo.SystemState.Display(),-25}" +
                     $"{usbPowerInfo.HcDevicePowerState.Display(),-25}" +
                     $"{usbPowerInfo.RhDevicePowerState.Display(),-25}" +
                     $"{(usbPowerInfo.CanWakeup == 1).Display(),-25}" +
                     $"{(usbPowerInfo.IsPowered == 1).Display(),-25}");
-            }
 
             sb.AppendLine($"Last Sleep State\t{controller.PowerInfo.Last().LastSystemSleepState.Display()}");
         }
@@ -469,7 +785,7 @@ namespace UsbViewer
             if (m_UsbTreeView.SelectedNode is UsbTreeNode usbNode)
             {
                 var port = usbNode.Device as UsbDevice;
-                port?.Enable(port.DeviceDescriptor.IdVendor, port.DeviceDescriptor.IdProduct);
+                port?.Enable(port.DeviceDescriptor.idVendor, port.DeviceDescriptor.idProduct);
             }
         }
 
@@ -477,7 +793,7 @@ namespace UsbViewer
         {
             var usbNode = m_UsbTreeView.SelectedNode as UsbTreeNode;
             if (usbNode?.Device is UsbDevice port)
-                port.Disable(port.DeviceDescriptor.IdVendor, port.DeviceDescriptor.IdProduct);
+                port.Disable(port.DeviceDescriptor.idVendor, port.DeviceDescriptor.idProduct);
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)

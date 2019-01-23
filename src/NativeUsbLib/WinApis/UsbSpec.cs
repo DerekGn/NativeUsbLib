@@ -84,20 +84,20 @@ namespace NativeUsbLib.WinApis
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public class UsbDeviceDescriptor
         {
-            public short bcdDevice;
-            public short bcdUSB;
-            public UsbDeviceClass bDeviceClass;
-            public UsbDescriptorType DescriptorType;
-            public byte DeviceProtocol;
-            public byte DeviceSubClass;
-            public ushort IdProduct;
-            public ushort IdVendor;
-            public byte IManufacturer;
-            public byte IProduct;
-            public byte ISerialNumber;
-            public byte Length;
-            public byte MaxPacketSize0;
-            public byte NumConfigurations;
+            public byte bLength;
+            public UsbDescriptorType bDescriptorType;
+            public ushort bcdUSB;
+            public UsbDesc.DeviceClassType bDeviceClass;
+            public byte bDeviceSubClass;
+            public byte bDeviceProtocol;
+            public byte bMaxPacketSize0;
+            public ushort idVendor;
+            public ushort idProduct;
+            public ushort bcdDevice;
+            public byte iManufacturer;
+            public byte iProduct;
+            public byte iSerialNumber;
+            public byte bNumConfigurations;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]

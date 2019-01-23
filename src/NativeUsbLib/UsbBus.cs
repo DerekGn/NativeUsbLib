@@ -107,11 +107,11 @@ namespace NativeUsbLib
                     ScanHubs(vendorid, productid, serial, device as UsbHub, ref devices);
 
                 if (device.DeviceDescriptor != null && serial != null)
-                    if (device.DeviceDescriptor.IdVendor == vendorid && device.DeviceDescriptor.IdProduct == productid && device.SerialNumber.Equals(serial))
+                    if (device.DeviceDescriptor.idVendor == vendorid && device.DeviceDescriptor.idProduct == productid && device.SerialNumber.Equals(serial))
                         devices.Add(device as UsbDevice);
 
                 if (device.DeviceDescriptor != null && serial == null)
-                    if (device.DeviceDescriptor.IdVendor == vendorid && device.DeviceDescriptor.IdProduct == productid)
+                    if (device.DeviceDescriptor.idVendor == vendorid && device.DeviceDescriptor.idProduct == productid)
                         devices.Add(device as UsbDevice);
             }
         }

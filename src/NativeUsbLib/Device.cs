@@ -327,21 +327,21 @@ namespace NativeUsbLib
                     // The iManufacturer, iProduct and iSerialNumber entries in the
                     // device descriptor are really just indexes.  So, we have to 
                     // request a string descriptor to get the values for those strings.
-                    if (DeviceDescriptor != null && DeviceDescriptor.IManufacturer > 0)
+                    if (DeviceDescriptor != null && DeviceDescriptor.iManufacturer > 0)
                     {
                         Manufacturer =
-                            UsbDescriptorRequestString(handle, adapterNumber, DeviceDescriptor.IManufacturer);
+                            UsbDescriptorRequestString(handle, adapterNumber, DeviceDescriptor.iManufacturer);
                     }
 
-                    if (DeviceDescriptor != null && DeviceDescriptor.ISerialNumber > 0)
+                    if (DeviceDescriptor != null && DeviceDescriptor.iSerialNumber > 0)
                     {
                         SerialNumber =
-                            UsbDescriptorRequestString(handle, adapterNumber, DeviceDescriptor.ISerialNumber);
+                            UsbDescriptorRequestString(handle, adapterNumber, DeviceDescriptor.iSerialNumber);
                     }
 
-                    if (DeviceDescriptor != null && DeviceDescriptor.IProduct > 0)
+                    if (DeviceDescriptor != null && DeviceDescriptor.iProduct > 0)
                     {
-                        Product = UsbDescriptorRequestString(handle, adapterNumber, DeviceDescriptor.IProduct);
+                        Product = UsbDescriptorRequestString(handle, adapterNumber, DeviceDescriptor.iProduct);
                     }
 
                     // Get the Driver Key Name (usefull in locating a device)
@@ -763,7 +763,7 @@ namespace NativeUsbLib
                                     ref deviceInfoData))
                                 {
                                     string strSearch =
-                                        $"vid_{deviceDescriptor.IdVendor:x4}&pid_{deviceDescriptor.IdProduct:x4}";
+                                        $"vid_{deviceDescriptor.idVendor:x4}&pid_{deviceDescriptor.idProduct:x4}";
                                     if (deviceInterfaceDetailData.DevicePath.Contains(strSearch) &&
                                         HidSerialNumberMatches(deviceInterfaceDetailData.DevicePath))
                                     {
