@@ -70,6 +70,7 @@
       <DependentUpon>About.cs</DependentUpon>
     </Compile>
     <Compile Include="Extensions\BoolExtensions.cs" />
+    <Compile Include="Extensions\UsbConfigurationExtensions.cs" />
     <Compile Include="Extensions\UsbHubCapFlagsExtension.cs" />
     <Compile Include="Extensions\UsbNodeConnectionInformationExV2FlagsExtensions.cs" />
     <Compile Include="Extensions\UsbPortPropertiesExtensions.cs" />

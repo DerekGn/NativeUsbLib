@@ -83,15 +83,6 @@ namespace NativeUsbLib.WinApis
             Usb30Hub = 3
         }
 
-        public enum UsbConfiguration : byte
-        {
-            RemoteWakeUp = 32,
-            SelfPowered = 64,
-            BusPowered = 128,
-            RemoteWakeUpBusPowered = 160,
-            RemoteWakeUpSelfPowered = 96
-        }
-
         public enum DeviceInterfaceDataFlags : uint
         {
             Unknown = 0x00000000,
@@ -468,33 +459,6 @@ namespace NativeUsbLib.WinApis
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct UsbInterfaceDescriptor
-        {
-            public byte Length;
-            public UsbSpec.UsbDescriptorType DescriptorType;
-            public byte InterfaceNumber;
-            public byte AlternateSetting;
-            public byte NumEndpoints;
-            public byte InterfaceClass;
-            public byte InterfaceSubClass;
-            public byte InterfaceProtocol;
-            public byte Interface;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct UsbConfigurationDescriptor
-        {
-            public byte Length;
-            public UsbSpec.UsbDescriptorType DescriptorType;
-            public short TotalLength;
-            public byte NumInterface;
-            public byte ConfigurationsValue;
-            public byte IConfiguration;
-            public UsbConfiguration Attributes;
-            public byte MaxPower;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
         public class SpDevinfoData1
         {
             public int CbSize;
@@ -517,17 +481,17 @@ namespace NativeUsbLib.WinApis
             public string Str;
         }
 
-    // HID.DLL definitions
+        // HID.DLL definitions
 
-    #endregion
+        #endregion
 
-    // *******************************************************************************************
-    // *************************************** methodes ******************************************
-    // *******************************************************************************************
+        // *******************************************************************************************
+        // *************************************** methodes ******************************************
+        // *******************************************************************************************
 
-    #region methodes
+        #region methodes
 
-    [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
         internal static extern IntPtr SetupDiGetClassDevs(ref Guid classGuid, int enumerator, IntPtr hwndParent,
             int flags); // 1st form using a ClassGUID
 

@@ -64,25 +64,28 @@ namespace NativeUsbLib
         /// Gets the configuration descriptor.
         /// </summary>
         /// <value>The configuration descriptor.</value>
-        public List<UsbApi.UsbConfigurationDescriptor> ConfigurationDescriptor { get; } = null;
+        public List<UsbSpec.UsbConfigurationDescriptor> ConfigurationDescriptors { get; } =
+            new List<UsbSpec.UsbConfigurationDescriptor>();
 
         /// <summary>
         /// Gets the interface descriptor.
         /// </summary>
         /// <value>The interface descriptor.</value>
-        public List<UsbApi.UsbInterfaceDescriptor> InterfaceDescriptor { get; } = null;
+        public List<UsbSpec.UsbInterfaceDescriptor> InterfaceDescriptors { get; } =
+            new List<UsbSpec.UsbInterfaceDescriptor>();
 
         /// <summary>
         /// Gets the endpoint descriptor.
         /// </summary>
         /// <value>The endpoint descriptor.</value>
-        public List<UsbSpec.UsbEndpointDescriptor> EndpointDescriptor { get; } = null;
+        public List<UsbSpec.UsbEndpointDescriptor> EndpointDescriptors { get; } =
+            new List<UsbSpec.UsbEndpointDescriptor>();
 
         /// <summary>
         /// Gets the hdi descriptor.
         /// </summary>
         /// <value>The hdi descriptor.</value>
-        public List<HidApi.HidDescriptor> HdiDescriptor { get; } = null;
+        public List<UsbDesc.HidDescriptor> HidDescriptors { get; } = new List<UsbDesc.HidDescriptor>();
 
         /// <summary>
         /// Gets the device path.
@@ -236,57 +239,36 @@ namespace NativeUsbLib
                     {
                         IntPtr ptr = new IntPtr(ptrRequest1.ToInt64() + Marshal.SizeOf(request1));
 
-                        var configurationDescriptor = (UsbApi.UsbConfigurationDescriptor) Marshal.PtrToStructure(ptr,
-                            typeof(UsbApi.UsbConfigurationDescriptor));
+                        var configurationDescriptor = (UsbSpec.UsbConfigurationDescriptor) Marshal.PtrToStructure(ptr,
+                            typeof(UsbSpec.UsbConfigurationDescriptor));
 
-                        if (ConfigurationDescriptor == null)
-                        {
-                            ConfigurationDescriptor = new List<UsbApi.UsbConfigurationDescriptor>
-                            {
-                                configurationDescriptor
-                            };
-                        }
-                        else
-                            ConfigurationDescriptor.Add(configurationDescriptor);
+                        ConfigurationDescriptors.Add(configurationDescriptor);
 
                         long p = (long) ptr;
                         p += Marshal.SizeOf(configurationDescriptor) - 1;
                         ptr = (IntPtr) p;
 
-                        for (int i = 0; i < configurationDescriptor.NumInterface; i++)
+                        for (int i = 0; i < configurationDescriptor.bNumInterfaces; i++)
                         {
-                            UsbApi.UsbInterfaceDescriptor interfaceDescriptor =
-                                (UsbApi.UsbInterfaceDescriptor) Marshal.PtrToStructure(ptr,
-                                    typeof(UsbApi.UsbInterfaceDescriptor));
+                            UsbSpec.UsbInterfaceDescriptor interfaceDescriptor =
+                                (UsbSpec.UsbInterfaceDescriptor) Marshal.PtrToStructure(ptr,
+                                    typeof(UsbSpec.UsbInterfaceDescriptor));
 
-                            if (InterfaceDescriptor == null)
-                            {
-                                InterfaceDescriptor = new List<UsbApi.UsbInterfaceDescriptor> {interfaceDescriptor};
-                            }
-                            else
-                                InterfaceDescriptor.Add(interfaceDescriptor);
+                            InterfaceDescriptors.Add(interfaceDescriptor);
 
                             p = (long) ptr;
                             p += Marshal.SizeOf(interfaceDescriptor);
 
-                            if (interfaceDescriptor.InterfaceClass == 0x03)
+                            if (interfaceDescriptor.bInterfaceClass == UsbSpec.UsbDeviceClass.UsbDeviceClassHumanInterface)
                             {
                                 ptr = (IntPtr) p;
-                                for (int k = 0; k < interfaceDescriptor.InterfaceSubClass; k++)
+                                for (int k = 0; k < interfaceDescriptor.bInterfaceSubClass; k++)
                                 {
-                                    HidApi.HidDescriptor hdiDescriptor =
-                                        (HidApi.HidDescriptor) Marshal.PtrToStructure(ptr,
-                                            typeof(HidApi.HidDescriptor));
+                                    UsbDesc.HidDescriptor hdiDescriptor =
+                                        (UsbDesc.HidDescriptor) Marshal.PtrToStructure(ptr,
+                                            typeof(UsbDesc.HidDescriptor));
 
-                                    if (HdiDescriptor == null)
-                                    {
-                                        HdiDescriptor = new List<HidApi.HidDescriptor>
-                                        {
-                                            hdiDescriptor
-                                        };
-                                    }
-                                    else
-                                        HdiDescriptor.Add(hdiDescriptor);
+                                    HidDescriptors.Add(hdiDescriptor);
 
                                     p = (long) ptr;
                                     p += Marshal.SizeOf(hdiDescriptor);
@@ -295,20 +277,13 @@ namespace NativeUsbLib
                             }
 
                             ptr = (IntPtr) p;
-                            for (int j = 0; j < interfaceDescriptor.NumEndpoints; j++)
+                            for (int j = 0; j < interfaceDescriptor.bNumEndpoints; j++)
                             {
                                 UsbSpec.UsbEndpointDescriptor endpointDescriptor1 =
                                     (UsbSpec.UsbEndpointDescriptor) Marshal.PtrToStructure(ptr,
                                         typeof(UsbSpec.UsbEndpointDescriptor));
-                                if (EndpointDescriptor == null)
-                                {
-                                    EndpointDescriptor = new List<UsbSpec.UsbEndpointDescriptor>
-                                    {
-                                        endpointDescriptor1
-                                    };
-                                }
-                                else
-                                    EndpointDescriptor.Add(endpointDescriptor1);
+
+                                EndpointDescriptors.Add(endpointDescriptor1);
 
                                 p = (long) ptr;
                                 p += Marshal.SizeOf(endpointDescriptor1) - 1;

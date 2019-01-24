@@ -7,6 +7,7 @@ namespace NativeUsbLib.WinApis
 {
     public static class UsbIoControl
     {
+        [Flags]
         public enum UsbProtocols : uint
         {
             Usb110 = 1,

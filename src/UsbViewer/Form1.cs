@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using NativeUsbLib;
@@ -12,6 +14,7 @@ namespace UsbViewer
     public partial class Form1 : Form
     {
         private readonly UsbBus _usbBus = new UsbBus();
+        private const int PcProtocolUndefined = 0;
 
         public Form1()
         {
@@ -160,8 +163,6 @@ namespace UsbViewer
                     var device = usbNode.Device;
                     if (device.IsConnected)
                     {
-                        var index = 1;
-
                         sb.AppendLine($"[Port{device.AdapterNumber}]  :  {device.DeviceDescription}\r\n");
 
                         AppendUsbPortConnectorProperties(sb, device.UsbPortConnectorProperties);
@@ -172,42 +173,15 @@ namespace UsbViewer
 
                         AppendDeviceDescriptor(sb, device);
 
-                        if (device.ConfigurationDescriptor != null)
-                            foreach (var configurationDescriptor in device.ConfigurationDescriptor)
-                            {
-                                AppendConfigurationDescriptor(sb, index, configurationDescriptor);
-                                index++;
-                            }
+                        sb.AppendLine("       ---===>Full Configuration Descriptor<===---");
 
-                        if (device.InterfaceDescriptor != null)
-                        {
-                            index = 1;
-                            foreach (var interfaceDescriptor in device.InterfaceDescriptor)
-                            {
-                                AppendInterfaceDescriptor(sb, index, interfaceDescriptor);
-                                index++;
-                            }
-                        }
+                        AppendConfigurationDescriptors(sb, device);
 
-                        if (device.HdiDescriptor != null)
-                        {
-                            index = 1;
-                            foreach (var hdiDescriptor in device.HdiDescriptor)
-                            {
-                                AppendHidDescriptor(sb, index, hdiDescriptor);
-                                index++;
-                            }
-                        }
+                        AppendInterfaceDescriptors(sb, device);
 
-                        if (device.EndpointDescriptor != null)
-                        {
-                            index = 1;
-                            foreach (var endpointDescriptor in device.EndpointDescriptor)
-                            {
-                                AppendEndpointDescriptor(sb, index, endpointDescriptor);
-                                index++;
-                            }
-                        }
+                        AppendHidDescriptors(sb, device);
+
+                        AppendEndpointDescriptors(sb, device);
                     }
                     else
                     {
@@ -220,7 +194,841 @@ namespace UsbViewer
             m_RichTextBox.Text = sb.ToString();
         }
 
-        private void AppendDeviceDescriptor(StringBuilder builder, Device device)
+        private void AppendEndpointDescriptors(StringBuilder builder, Device device)
+        {
+            foreach (var endpointDescriptor in device.EndpointDescriptors)
+            {
+                //PUSB_HIGH_SPEED_MAXPACKET hsMaxPacket;
+
+                builder.AppendLine("\r\n          ===>Endpoint Descriptor<===");
+                //@@DisplayEndpointDescriptor - Endpoint Descriptor
+                //length checked in DisplayConfigDesc()
+
+                builder.AppendLine($"bLength:                           0x{endpointDescriptor.bLength:X02}");
+                builder.AppendLine($"bDescriptorType:                   0x{(int)endpointDescriptor.bDescriptorType:X02}");
+                builder.Append($"bEndpointAddress:                  0x{endpointDescriptor.bEndpointAddress:X02}");
+
+                //if (endpointDescriptor.IsEndpointOut())
+                //{
+                //    builder.AppendLine($"  -> Direction: OUT - EndpointID: {endpointDescriptor.GetEndpointId():D}");
+                //}
+                //else if (endpointDescriptor.IsEndpointIn())
+                //{
+                //    builder.AppendLine($"  -> Direction: IN - EndpointID: {endpointDescriptor.GetEndpointId():D}");
+                //}
+                //else
+                //{
+                //    //@@TestCase A6.1
+                //    //@@ERROR
+                //    //@@Descriptor Field - bEndpointAddress
+                //    //@@An invalid endpoint addressl has been defined
+                //    builder.AppendLine("\r\n*!*ERROR:  This appears to be an invalid bEndpointAddress");
+                //}
+
+                builder.Append($"bmAttributes:                      0x{endpointDescriptor.bmAttributes:X02}");
+                builder.Append("  -> ");
+
+                //switch (endpointDescriptor.GetEndpointType())
+                //{
+                //    case UsbSpec.UsbEndpointType.Control:
+                //        builder.AppendLine("Control Transfer Type\r\n");
+                //        if ((endpointDescriptor.bmAttributes & UsbSpec.UsbEndpointTypeControlReservedMask) > 0)
+                //        {
+                //            builder.AppendLine("\r\n*!*ERROR:     Bits 7..2 are reserved and must be set to 0\r\n");
+                //        }
+                //        break;
+
+                //    case UsbSpec.UsbEndpointType.Isochronous:
+                //        builder.AppendLine("Isochronous Transfer Type, Synchronization Type = ");
+
+                //        switch (endpointDescriptor.GetSynchronization())
+                //        {
+                //            case UsbSpec.EndpointSynchronization.IsochronousSynchronizationNoSynchronization:
+                //                builder.AppendLine("No Synchronization");
+                //                break;
+
+                //            case UsbSpec.EndpointSynchronization.IsochronousSynchronizationAsynchronous:
+                //                builder.AppendLine("Asynchronous");
+                //                break;
+
+                //            case UsbSpec.EndpointSynchronization.IsochronousSynchronizationAdaptive:
+                //                builder.AppendLine("Adaptive");
+                //                break;
+
+                //            case UsbSpec.EndpointSynchronization.IsochronousSynchronizationSynchronous:
+                //                builder.AppendLine("Synchronous");
+                //                break;
+                //        }
+                //        builder.AppendLine(", Usage Type = ");
+
+                //        switch (endpointDescriptor.GetIsochronousUsage())
+                //        {
+                //            case UsbSpec.EndpointIsochronousUsage.IsochronousUsageDataEndoint:
+                //                builder.AppendLine("Data Endpoint");
+                //                break;
+
+                //            case UsbSpec.EndpointIsochronousUsage.IsochronousUsageFeedbackEndpoint:
+                //                builder.AppendLine("Feedback Endpoint");
+                //                break;
+
+                //            case UsbSpec.EndpointIsochronousUsage.IsochronousUsageImplicitFeedbackDataEndpoint:
+                //                builder.AppendLine("Implicit Feedback Data Endpoint");
+                //                break;
+
+                //            case UsbSpec.EndpointIsochronousUsage.IsochronousUsageReserved:
+                //                //@@TestCase A6.2
+                //                //@@ERROR
+                //                //@@Descriptor Field - bmAttributes
+                //                //@@A reserved bit has a value
+                //                builder.AppendLine("\r\n*!*ERROR:     This value is Reserved");
+                                
+                //                break;
+                //        }
+                //        if ((endpointDescriptor.bmAttributes & UsbSpec.UsbEndpointTypeIsochronousReservedMask) > 0)
+                //        {
+                //            builder.AppendLine("\r\n*!*ERROR:     Bits 7..6 are reserved and must be set to 0");
+                //        }
+                //        break;
+
+                //    case UsbSpec.UsbEndpointType.Bulk:
+                //        builder.AppendLine("Bulk Transfer Type");
+                //        if ((endpointDescriptor.bmAttributes & UsbSpec.UsbEndpointTypeBulkReservedMask) > 0)
+                //        {
+                //            builder.AppendLine("\r\n*!*ERROR:     Bits 7..2 are reserved and must be set to 0");
+                            
+                //        }
+                //        break;
+
+                //    case UsbSpec.UsbEndpointType.Interrupt:
+
+                //        //if (gDeviceSpeed != UsbSuperSpeed)
+                //        //{
+                //        //    builder.AppendLine("Interrupt Transfer Type\r\n");
+                //        //    if (endpointDescriptor.bmAttributes & USB_20_ENDPOINT_TYPE_INTERRUPT_RESERVED_MASK)
+                //        //    {
+                //        //        builder.AppendLine("\r\n*!*ERROR:     Bits 7..2 are reserved and must be set to 0\r\n");
+                //        //    }
+                //        //}
+                //        //else
+                //        //{
+                //        //    builder.AppendLine("Interrupt Transfer Type, Usage Type = ");
+
+                //        //    switch (USB_30_ENDPOINT_TYPE_INTERRUPT_USAGE(endpointDescriptor.bmAttributes))
+                //        //    {
+                //        //        case USB_30_ENDPOINT_TYPE_INTERRUPT_USAGE_PERIODIC:
+                //        //            builder.AppendLine("Periodic\r\n");
+                //        //            break;
+
+                //        //        case USB_30_ENDPOINT_TYPE_INTERRUPT_USAGE_NOTIFICATION:
+                //        //            builder.AppendLine("Notification\r\n");
+                //        //            break;
+
+                //        //        case USB_30_ENDPOINT_TYPE_INTERRUPT_USAGE_RESERVED10:
+                //        //        case USB_30_ENDPOINT_TYPE_INTERRUPT_USAGE_RESERVED11:
+                //        //            builder.AppendLine("\r\n*!*ERROR:     This value is Reserved\r\n");
+                //        //            break;
+                //        //    }
+
+                //        //    if (endpointDescriptor.bmAttributes & USB_30_ENDPOINT_TYPE_INTERRUPT_RESERVED_MASK)
+                //        //    {
+                //        //        builder.AppendLine("\r\n*!*ERROR:     Bits 7..6 and 3..2 are reserved and must be set to 0\r\n");
+                //        //    }
+
+                //        //    if (EpCompDescAvail)
+                //        //    {
+                //        //        if (EpCompDesc == NULL)
+                //        //        {
+                //        //            builder.AppendLine("\r\n*!*ERROR:     Endpoint Companion Descriptor missing\r\n");
+                //        //        }
+                //        //        else if (EpCompDesc->bmAttributes.Isochronous.SspCompanion == 1 &&
+                //        //            SspIsochEpCompDesc == NULL)
+                //        //        {
+                //        //            builder.AppendLine("\r\n*!*ERROR:     SuperSpeedPlus Isoch Endpoint Companion Descriptor missing\r\n");
+                //        //        }
+                //        //    }
+                //        //}
+                //        break;
+                //}
+
+
+                //@@TestCase A6.3
+                //@@Priority 1
+                //@@Descriptor Field - bInterfaceNumber
+                //@@Question - Should we test to verify bInterfaceNumber is valid?
+                builder.AppendLine($"wMaxPacketSize:                  0x{endpointDescriptor.wMaxPacketSize:X04}");
+
+                //switch (gDeviceSpeed)
+                //{
+                //    case UsbSuperSpeed:
+                //        switch (epType)
+                //        {
+                //            case USB_ENDPOINT_TYPE_BULK:
+                //                if (endpointDescriptor.wMaxPacketSize != USB_ENDPOINT_SUPERSPEED_BULK_MAX_PACKET_SIZE)
+                //                {
+                //                    builder.AppendLine("\r\n*!*ERROR:     SuperSpeed Bulk endpoints must be %d bytes\r\n",
+                //                        USB_ENDPOINT_SUPERSPEED_BULK_MAX_PACKET_SIZE);
+                //                }
+                //                else
+                //                {
+                //                    builder.AppendLine("\r\n");
+                //                }
+                //                break;
+
+                //            case USB_ENDPOINT_TYPE_CONTROL:
+                //                if (endpointDescriptor.wMaxPacketSize != USB_ENDPOINT_SUPERSPEED_CONTROL_MAX_PACKET_SIZE)
+                //                {
+                //                    builder.AppendLine("\r\n*!*ERROR:     SuperSpeed Control endpoints must be %d bytes\r\n",
+                //                        USB_ENDPOINT_SUPERSPEED_CONTROL_MAX_PACKET_SIZE);
+                //                }
+                //                else
+                //                {
+                //                    builder.AppendLine("\r\n");
+                //                }
+                //                break;
+
+                //            case USB_ENDPOINT_TYPE_ISOCHRONOUS:
+
+                //                if (EpCompDesc != NULL)
+                //                {
+                //                    if (EpCompDesc->bMaxBurst > 0)
+                //                    {
+                //                        if (endpointDescriptor.wMaxPacketSize != USB_ENDPOINT_SUPERSPEED_ISO_MAX_PACKET_SIZE)
+                //                        {
+                //                            builder.AppendLine("\r\n*!*ERROR:     SuperSpeed isochronous endpoints must have wMaxPacketSize value of %d bytes\r\n",
+                //                                USB_ENDPOINT_SUPERSPEED_ISO_MAX_PACKET_SIZE);
+                //                            builder.AppendLine("                  when the SuperSpeed endpoint companion descriptor bMaxBurst value is greater than 0\r\n");
+                //                        }
+                //                        else
+                //                        {
+                //                            builder.AppendLine("\r\n");
+                //                        }
+                //                    }
+                //                    else if (endpointDescriptor.wMaxPacketSize > USB_ENDPOINT_SUPERSPEED_ISO_MAX_PACKET_SIZE)
+                //                    {
+                //                        builder.AppendLine("\r\n*!*ERROR:     Invalid SuperSpeed isochronous maximum packet size\r\n");
+                //                    }
+                //                    else
+                //                    {
+                //                        builder.AppendLine("\r\n");
+                //                    }
+                //                }
+                //                else
+                //                {
+                //                    builder.AppendLine("\r\n");
+                //                }
+                //                break;
+
+                //            case USB_ENDPOINT_TYPE_INTERRUPT:
+
+                //                if (EpCompDesc != NULL)
+                //                {
+                //                    if (EpCompDesc->bMaxBurst > 0)
+                //                    {
+                //                        if (endpointDescriptor.wMaxPacketSize != USB_ENDPOINT_SUPERSPEED_INTERRUPT_MAX_PACKET_SIZE)
+                //                        {
+                //                            builder.AppendLine("\r\n*!*ERROR:     SuperSpeed interrupt endpoints must have wMaxPacketSize value of %d bytes\r\n",
+                //                                USB_ENDPOINT_SUPERSPEED_INTERRUPT_MAX_PACKET_SIZE);
+                //                            builder.AppendLine("                  when the SuperSpeed endpoint companion descriptor bMaxBurst value is greater than 0\r\n");
+                //                        }
+                //                        else
+                //                        {
+                //                            builder.AppendLine("\r\n");
+                //                        }
+                //                    }
+                //                    else if (endpointDescriptor.wMaxPacketSize > USB_ENDPOINT_SUPERSPEED_INTERRUPT_MAX_PACKET_SIZE)
+                //                    {
+                //                        builder.AppendLine("\r\n*!*ERROR:     Invalid SuperSpeed interrupt maximum packet size\r\n");
+                //                    }
+                //                    else
+                //                    {
+                //                        builder.AppendLine("\r\n");
+                //                    }
+                //                }
+                //                else
+                //                {
+                //                    builder.AppendLine("\r\n");
+                //                }
+                //                break;
+                //        }
+                //        break;
+
+                //    case UsbHighSpeed:
+                //        hsMaxPacket = (PUSB_HIGH_SPEED_MAXPACKET) & endpointDescriptor.wMaxPacketSize;
+
+                //        switch (epType)
+                //        {
+                //            case USB_ENDPOINT_TYPE_ISOCHRONOUS:
+                //            case USB_ENDPOINT_TYPE_INTERRUPT:
+                //                switch (hsMaxPacket->HSmux)
+                //                {
+                //                    case 0:
+                //                        if ((hsMaxPacket->MaxPacket < 1) || (hsMaxPacket->MaxPacket > 1024))
+                //                        {
+                //                            builder.AppendLine("*!*ERROR:  Invalid maximum packet size, should be between 1 and 1024\r\n");
+                //                        }
+                //                        break;
+
+                //                    case 1:
+                //                        if ((hsMaxPacket->MaxPacket < 513) || (hsMaxPacket->MaxPacket > 1024))
+                //                        {
+                //                            builder.AppendLine("*!*ERROR:  Invalid maximum packet size, should be between 513 and 1024\r\n");
+                //                        }
+                //                        break;
+
+                //                    case 2:
+                //                        if ((hsMaxPacket->MaxPacket < 683) || (hsMaxPacket->MaxPacket > 1024))
+                //                        {
+                //                            builder.AppendLine("*!*ERROR:  Invalid maximum packet size, should be between 683 and 1024\r\n");
+                //                        }
+                //                        break;
+
+                //                    case 3:
+                //                        builder.AppendLine("*!*ERROR:  Bits 12-11 set to Reserved value in wMaxPacketSize\r\n");
+                //                        break;
+                //                }
+
+                //                builder.AppendLine(" = %d transactions per microframe, 0x%02X max bytes\r\n", hsMaxPacket->HSmux + 1, hsMaxPacket->MaxPacket);
+                //                break;
+
+                //            case USB_ENDPOINT_TYPE_BULK:
+                //            case USB_ENDPOINT_TYPE_CONTROL:
+                //                builder.AppendLine(" = 0x%02X max bytes\r\n", hsMaxPacket->MaxPacket);
+                //                break;
+                //        }
+                //        break;
+
+                //    case UsbFullSpeed:
+                //        // full speed
+                //        builder.AppendLine(" = 0x%02X bytes\r\n",
+                //            endpointDescriptor.wMaxPacketSize & 0x7FF);
+                //        break;
+                //    default:
+                //        // low or invalid speed
+                //        if (InterfaceClass == USB_DEVICE_CLASS_VIDEO)
+                //        {
+                //            builder.AppendLine(" = Invalid bus speed for USB Video Class\r\n");
+                //        }
+                //        else
+                //        {
+                //            builder.AppendLine("\r\n");
+                //        }
+                //        break;
+                //}
+
+
+                if ((endpointDescriptor.wMaxPacketSize & 0xE000) > 0)
+                {
+                    //@@TestCase A6.4
+                    //@@Priority 1
+                    //@@OTG Descriptor Field - wMaxPacketSize
+                    //@@Attribute bits D7-2 reserved (reset to 0)
+                    builder.AppendLine("*!*ERROR:  wMaxPacketSize bits 15-13 should be 0");
+                }
+
+                if (endpointDescriptor.bLength == Marshal.SizeOf<UsbSpec.UsbEndpointDescriptor>())
+                {
+                    //@@TestCase A6.5
+                    //@@Priority 1
+                    //@@Descriptor Field - bInterfaceNumber
+                    //@@Question - Should we test to verify bInterfaceNumber is valid?
+                    builder.AppendLine($"bInterval:                         0x{endpointDescriptor.bInterval:X02}");
+                }
+                else
+                {
+                    //PUSB_ENDPOINT_DESCRIPTOR2 endpointDesc2;
+
+                    //endpointDesc2 = (PUSB_ENDPOINT_DESCRIPTOR2)EndpointDesc;
+
+                    //builder.AppendLine("wInterval:                       0x%04X\r\n",
+                    //    endpointDesc2->wInterval);
+
+                    //builder.AppendLine("bSyncAddress:                      0x%02X\r\n",
+                    //    endpointDesc2->bSyncAddress);
+                }
+
+                //if (EpCompDesc != NULL)
+                //{
+                //    DisplayEndointCompanionDescriptor(EpCompDesc, SspIsochEpCompDesc, epType);
+                //}
+                //if (SspIsochEpCompDesc != NULL)
+                //{
+                //    DisplaySuperSpeedPlusIsochEndpointCompanionDescriptor(SspIsochEpCompDesc);
+                //}
+            }
+        }
+
+        private void AppendHidDescriptors(StringBuilder builder, Device device)
+        {
+            foreach (var hidDescriptor in device.HidDescriptors)
+            {
+                builder.AppendLine("\r\n          ===>HID Descriptor<===");
+                builder.AppendLine($"bLength:                           0x{hidDescriptor.bLength:X02}");
+                builder.AppendLine($"bDescriptorType:                   0x{(int)hidDescriptor.bDescriptorType:X02} -> {hidDescriptor.bDescriptorType}");
+                builder.AppendLine($"bcdHID:                            0x{(int)hidDescriptor.BcdHid:X04}");
+                builder.AppendLine($"bCountryCode:                      0x{(int)hidDescriptor.bCountryCode:X02}");
+                builder.AppendLine($"bNumDescriptors:                   0x{(int)hidDescriptor.bNumDescriptors:X02}");
+
+#warning TODO
+                //foreach (var optionalDescriptor in hidDescriptor.OptionalDescriptors)
+                //{
+                //    if (optionalDescriptor.bDescriptorType == 0x22)
+                //    {
+                //        builder.AppendLine($"bDescriptorType:                   0x{optionalDescriptor.bDescriptorType:X02} (Report Descriptor)");
+                //    }
+                //    else
+                //    {
+                //        builder.AppendLine($"bDescriptorType:                   0x{optionalDescriptor.bDescriptorType:X02}");
+                //    }
+
+                //    builder.AppendLine($"wDescriptorLength:               0x{optionalDescriptor.wDescriptorLength:X04}");
+                //}
+            }
+        }
+
+        private void AppendInterfaceDescriptors(StringBuilder builder, Device device)
+        {
+            foreach (var interfaceDescriptor in device.InterfaceDescriptors)
+            {
+                //@@DisplayInterfaceDescriptor - Interface Descriptor
+                builder.AppendLine("\r\n          ===>Interface Descriptor<===");
+
+                //length checked in DisplayConfigDesc()
+                builder.AppendLine($"bLength:                           0x{interfaceDescriptor.bLength:X02}");
+                builder.AppendLine($"bDescriptorType:                   0x{interfaceDescriptor.bLength:X02}");
+
+                //@@TestCase A5.1
+                //@@Priority 1
+                //@@Descriptor Field - bInterfaceNumber
+                //@@Question - Should we test to verify bInterfaceNumber is valid?
+                builder.AppendLine($"bInterfaceNumber:                  0x{interfaceDescriptor.bInterfaceNumber:X02}");
+
+                //@@TestCase A5.2
+                //@@Priority 1
+                //@@Descriptor Field - bAlternateSetting
+                //@@Question - Should we test to verify bAlternateSetting is valid?
+                builder.AppendLine($"bAlternateSetting:                 0x{interfaceDescriptor.bAlternateSetting:X02}");
+
+                //@@TestCase A5.3
+                //@@Priority 1
+                //@@Descriptor Field - bNumEndpoints
+                //@@Question - Should we test to verify bNumEndpoints is valid?
+                builder.AppendLine($"bNumEndpoints:                     0x{interfaceDescriptor.bNumEndpoints:X02}");
+
+                builder.AppendLine($"bInterfaceClass:                   0x{(int)interfaceDescriptor.bInterfaceClass:X02} -> {interfaceDescriptor.bInterfaceClass}");
+
+                switch (interfaceDescriptor.bInterfaceClass)
+                {
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassAudio:
+                        builder.AppendLine("  -> Audio Interface Class\r\n");
+
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+
+
+                        switch (interfaceDescriptor.bInterfaceSubClass)
+                        {
+                            case UsbDesc.UsbAudioSubclassAudiocontrol:
+                                builder.AppendLine("  -> Audio Control Interface SubClass\r\n");
+                                break;
+
+                            case UsbDesc.UsbAudioSubclassAudiostreaming:
+                                builder.AppendLine("  -> Audio Streaming Interface SubClass\r\n");
+                                break;
+
+                            case UsbDesc.UsbAudioSubclassMidistreaming:
+                                builder.AppendLine("  -> MIDI Streaming Interface SubClass\r\n");
+                                break;
+
+                            default:
+                                //@@TestCase A5.4
+                                //@@CAUTION
+                                //@@Descriptor Field - bInterfaceSubClass
+                                //@@Invalid bInterfaceSubClass
+                                builder.AppendLine(
+                                    "\r\n*!*CAUTION:    This appears to be an invalid bInterfaceSubClass\r\n");
+                                break;
+                        }
+
+
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassVideo:
+
+                        builder.AppendLine("  -> Video Interface Class\r\n");
+
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+
+                        switch (interfaceDescriptor.bInterfaceSubClass)
+                        {
+                            case Uvcdesc.VideoSubclassControl:
+
+                                builder.AppendLine("  -> Video Control Interface SubClass");
+
+                                break;
+
+                            case Uvcdesc.VideoSubclassStreaming:
+
+                                builder.AppendLine("  -> Video Streaming Interface SubClass");
+
+                                break;
+
+                            default:
+                                //@@TestCase A5.5
+                                //@@CAUTION
+                                //@@Descriptor Field - bInterfaceSubClass
+                                //@@Invalid bInterfaceSubClass
+                                builder.AppendLine(
+                                    "\r\n*!*CAUTION:    This appears to be an invalid bInterfaceSubClass");
+                                break;
+                        }
+
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassHumanInterface:
+
+                        builder.AppendLine("  -> HID Interface Class");
+
+
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassHub:
+
+                        builder.AppendLine("  -> HUB Interface Class");
+
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassReserved:
+                        //@@TestCase A5.6
+                        //@@CAUTION
+                        //@@Descriptor Field - bInterfaceClass
+                        //@@A reserved USB Device Interface Class has been defined
+                        builder.AppendLine(
+                            $"\r\n*!*CAUTION:  {UsbSpec.UsbDeviceClass.UsbDeviceClassReserved} is a Reserved USB Device Interface Class");
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassCommunications:
+                        builder.AppendLine("  -> This is Communications (CDC Control) USB Device Interface Class");
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassMonitor:
+                        builder.AppendLine(
+                            "  -> This is a Monitor USB Device Interface Class*** (This may be obsolete)");
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassPhysicalInterface:
+                        builder.AppendLine("  -> This is a Physical Interface USB Device Interface Class");
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassPower:
+                        if (interfaceDescriptor.bInterfaceSubClass == 1 && interfaceDescriptor.bInterfaceProtocol == 1)
+                        {
+                            builder.AppendLine("  -> This is an Image USB Device Interface Class");
+                        }
+                        else
+                        {
+                            builder.AppendLine(
+                                "  -> This is a Power USB Device Interface Class (This may be obsolete)");
+                        }
+
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassPrinter:
+                        builder.AppendLine("  -> This is a Printer USB Device Interface Class\r\n");
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassStorage:
+                        builder.AppendLine("  -> This is a Mass Storage USB Device Interface Class\r\n");
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassCdcData:
+                        builder.AppendLine("  -> This is a CDC Data USB Device Interface Class\r\n");
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassSmartCard:
+                        builder.AppendLine("  -> This is a Chip/Smart Card USB Device Interface Class\r\n");
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassContentSecurity:
+                        builder.AppendLine("  -> This is a Content Security USB Device Interface Class\r\n");
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassDiagnosticDevice:
+                        if (interfaceDescriptor.bInterfaceSubClass == 1 && interfaceDescriptor.bInterfaceProtocol == 1)
+                        {
+                            builder.AppendLine(
+                                "  -> This is a Reprogrammable USB2 Compliance Diagnostic Device USB Device\r\n");
+                        }
+                        else
+                        {
+                            //@@TestCase A5.7
+                            //@@CAUTION
+                            //@@Descriptor Field - bInterfaceClass
+                            //@@Invalid Interface Class
+                            builder.AppendLine("\r\n*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
+                        }
+
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassWirelessController:
+                        if (interfaceDescriptor.bInterfaceSubClass == 1 && interfaceDescriptor.bInterfaceProtocol == 1)
+                        {
+                            builder.AppendLine(
+                                "  -> This is a Wireless RF Controller USB Device Interface Class with Bluetooth Programming Interface\r\n");
+                        }
+                        else
+                        {
+                            //@@TestCase A5.8
+                            //@@CAUTION
+                            //@@Descriptor Field - bInterfaceClass
+                            //@@Invalid Interface Class
+                            builder.AppendLine("\r\n*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
+                        }
+
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassApplicationSpecific:
+                        builder.AppendLine("  -> This is an Application Specific USB Device Interface Class\r\n");
+
+                        switch (interfaceDescriptor.bInterfaceSubClass)
+                        {
+                            case 1:
+                                builder.AppendLine(
+                                    "  -> This is a Device Firmware Application Specific USB Device Interface Class\r\n");
+                                break;
+                            case 2:
+                                builder.AppendLine(
+                                    "  -> This is an IrDA Bridge Application Specific USB Device Interface Class\r\n");
+                                break;
+                            case 3:
+                                builder.AppendLine(
+                                    "  -> This is a Test & Measurement Class (USBTMC) Application Specific USB Device Interface Class\r\n");
+                                break;
+                            default:
+                                //@@TestCase A5.9
+                                //@@CAUTION
+                                //@@Descriptor Field - bInterfaceClass
+                                //@@Invalid Interface Class
+                                builder.AppendLine(
+                                    "\r\n*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
+                                break;
+                        }
+
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+                    case UsbSpec.UsbDeviceClass.UsbDeviceClassBillboard:
+                        builder.AppendLine("  -> Billboard Class\r\n");
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        switch (interfaceDescriptor.bInterfaceSubClass)
+                        {
+                            case 0:
+                                builder.AppendLine("  -> Billboard Subclass");
+                                break;
+                            default:
+                                builder.AppendLine(
+                                    "\r\n*!*CAUTION:    This appears to be an invalid bInterfaceSubClass");
+                                break;
+                        }
+
+                        break;
+
+                    default:
+
+                        builder.AppendLine("  -> Interface Class Unknown to USBView");
+
+                        builder.AppendLine(
+                            $"bInterfaceSubClass:                0x{interfaceDescriptor.bInterfaceSubClass:X02}");
+                        break;
+                }
+
+                builder.AppendLine(
+                    $"bInterfaceProtocol:                0x{interfaceDescriptor.bInterfaceProtocol:X02}");
+
+                //This is basically the check for PC_PROTOCOL_UNDEFINED
+                if ((interfaceDescriptor.bInterfaceClass == UsbSpec.UsbDeviceClass.UsbDeviceClassVideo) ||
+                    (interfaceDescriptor.bInterfaceClass == UsbSpec.UsbDeviceClass.UsbDeviceClassAudioVideo))
+                {
+                    if (interfaceDescriptor.bInterfaceProtocol != PcProtocolUndefined)
+                    {
+                        //@@TestCase A5.10
+                        //@@WARNING
+                        //@@Descriptor Field - iInterface
+                        //@@bInterfaceProtocol must be set to PC_PROTOCOL_UNDEFINED
+                        builder.AppendLine(
+                            $"*!*WARNING:  must be set to PC_PROTOCOL_UNDEFINED {PcProtocolUndefined} for this class\r\n");
+                    }
+                }
+
+                builder.AppendLine($"iInterface:                        0x{interfaceDescriptor.iInterface:X02}");
+
+#warning TODO
+                //if (interfaceDescriptor.iInterface> 0)
+                //{
+                //    DisplayStringDescriptor(interfaceDescriptor.iInterface,
+                //        StringDescs,
+                //        LatestDevicePowerState);
+                //}
+
+#warning TODO
+                //if (interfaceDescriptor.bLength == sizeof(USB_INTERFACE_DESCRIPTOR2))
+                //{
+                //    PUSB_INTERFACE_DESCRIPTOR2 interfaceDesc2;
+
+                //    interfaceDesc2 = (PUSB_INTERFACE_DESCRIPTOR2) InterfaceDesc;
+
+                //    builder.AppendLine("wNumClasses:                     0x%04X\r\n",
+                //        interfaceDesc2->wNumClasses);
+                //}
+            }
+        }
+
+        private static void AppendConfigurationDescriptors(StringBuilder builder, Device device)
+        {
+            uint count = 0;
+
+
+            var isSuperSpeed = device.NodeConnectionInfoV2.Flags == UsbIoControl.UsbNodeConnectionInformationExV2Flags
+                                   .DeviceIsOperatingAtSuperSpeedOrHigher ||
+                               device.NodeConnectionInfoV2.Flags == UsbIoControl.UsbNodeConnectionInformationExV2Flags
+                                   .DeviceIsOperatingAtSuperSpeedPlusOrHigher;
+
+            foreach (var configurationDescriptor in device.ConfigurationDescriptors)
+            {
+                builder.AppendLine("\r\n          ===>Configuration Descriptor<===");
+                //@@DisplayConfigurationDescriptor - Configuration Descriptor
+
+                //length checked in DisplayConfigDesc()
+
+                builder.AppendLine($"bLength:                           0x{configurationDescriptor.bLength:X02}");
+                builder.AppendLine(
+                    $"bDescriptorType:                   0x{(int) configurationDescriptor.bDescriptorType:X02} => {configurationDescriptor.bDescriptorType}");
+
+                //@@TestCase A4.1
+                //@@Priority 1
+                //@@Descriptor Field - wTotalLength
+                //@@Verify Configuration length is valid
+                builder.AppendLine($"wTotalLength:                    0x{configurationDescriptor.wTotalLength:X04}");
+
+                //count = GetConfigurationSize(device);
+                //if (count != configurationDescriptor.wTotalLength)
+                //{
+                //    builder.AppendLine($"*!*ERROR: Invalid total configuration size 0x{configurationDescriptor.wTotalLength:X02}, should be 0x{count:X02}");
+                //}
+                //else
+                //{
+                //    builder.AppendLine("  -> Validated\r\n");
+                //}
+
+                //@@TestCase A4.2
+                //@@Priority 1
+                //@@Descriptor Field - bNumInterfaces
+                //@@Verify the number of interfaces is valid
+                builder.AppendLine(
+                    $"bNumInterfaces:                    0x{configurationDescriptor.bNumInterfaces:X02}");
+                builder.AppendLine(
+                    $"bConfigurationValue:               0x{configurationDescriptor.bConfigurationValue:X02}");
+
+                if (configurationDescriptor.bConfigurationValue != 1)
+                {
+                    //@@TestCase A4.3
+                    //@@CAUTION
+                    //@@Descriptor Field - bConfigurationValue
+                    //@@Most host controllers do not handle more than one configuration
+                    builder.AppendLine(
+                        "*!*CAUTION:    Most host controllers will only work with one configuration per speed");
+                }
+
+                builder.AppendLine(
+                    $"bConfigurationValue:               0x{configurationDescriptor.bConfigurationValue:X02}");
+
+#warning TODO
+                //if (configurationDescriptor.iConfiguration)
+                //{
+                //    DisplayStringDescriptor(configurationDescriptor.iConfiguration,
+                //        StringDescs,
+                //        info->DeviceInfoNode != NULL ? info->DeviceInfoNode->LatestDevicePowerState : PowerDeviceUnspecified);
+                //}
+                builder.AppendLine(
+                    $"bmAttributes:                      0x{(int) configurationDescriptor.bmAttributes:X02} -> {configurationDescriptor.bmAttributes}");
+
+                if (device.NodeConnectionInfo.DeviceDescriptor.bcdUSB == 0x0100)
+                {
+                    if (configurationDescriptor.bmAttributes.IsSet(UsbSpec.UsbConfiguration.UsbConfigSelfPowered))
+                    {
+                        builder.AppendLine("  -> Self Powered");
+                    }
+
+                    if (configurationDescriptor.bmAttributes.IsSet(UsbSpec.UsbConfiguration.UsbConfigBusPowered))
+                    {
+                        builder.AppendLine("  -> Bus Powered");
+                    }
+                }
+                else
+                {
+                    builder.AppendLine(
+                        configurationDescriptor.bmAttributes.IsSet(UsbSpec.UsbConfiguration.UsbConfigSelfPowered)
+                            ? "  -> Self Powered"
+                            : "  -> Bus Powered");
+
+                    if ((configurationDescriptor.bmAttributes & UsbSpec.UsbConfiguration.UsbConfigBusPowered) == 0)
+                    {
+                        builder.AppendLine("\r\n*!*ERROR:    Bit 7 is reserved and must be set");
+                    }
+                }
+
+                if (configurationDescriptor.bmAttributes.IsSet(UsbSpec.UsbConfiguration.UsbConfigRemoteWakeup))
+                {
+                    builder.AppendLine("  -> Remote Wakeup");
+                }
+
+                if ((configurationDescriptor.bmAttributes & UsbSpec.UsbConfiguration.UsbConfigReserved) != 0)
+                {
+                    //@@TestCase A4.4
+                    //@@WARNING
+                    //@@Descriptor Field - bmAttributes
+                    //@@A bit has been set in reserved space
+                    builder.AppendLine("*!*ERROR:    Bits 4...0 are reserved");
+                }
+
+                builder.Append($"MaxPower:                          0x{configurationDescriptor.MaxPower:X02}");
+
+                var power = isSuperSpeed ? configurationDescriptor.MaxPower * 8 : configurationDescriptor.MaxPower * 2;
+                builder.AppendLine($" = %{power:d3} mA\r\n");
+            }
+        }
+
+
+        private static void AppendDeviceDescriptor(StringBuilder builder, Device device)
         {
             UsbSpec.UsbDeviceDescriptor deviceDescriptor = device.DeviceDescriptor;
             UsbIoControl.UsbNodeConnectionInformationEx connectInfo = device.NodeConnectionInfo;
@@ -232,7 +1040,7 @@ namespace UsbViewer
             builder.AppendLine($"bLength:                           0x{deviceDescriptor.bLength:X02}");
             builder.AppendLine(
                 $"bDescriptorType:                   0x{(int) deviceDescriptor.bDescriptorType:X02} -> {deviceDescriptor.bDescriptorType}");
-            builder.AppendLine($"bcdUSB:                            0x{deviceDescriptor.bcdUSB:X04}");
+            builder.AppendLine($"bcdUSB:                          0x{deviceDescriptor.bcdUSB:X04}");
             builder.Append(
                 $"bDeviceClass:                      0x{(int) deviceDescriptor.bDeviceClass:X02} -> {deviceDescriptor.bDeviceClass}");
 
@@ -327,7 +1135,7 @@ namespace UsbViewer
                 }
             }
 
-            builder.Append($"bDeviceSubClass:                   0x{connectInfo.DeviceDescriptor.bDeviceSubClass}");
+            builder.Append($"bDeviceSubClass:                   0x{connectInfo.DeviceDescriptor.bDeviceSubClass:X02}");
 
             // check the subclass
             if (iaDcount > 0)
@@ -402,14 +1210,10 @@ namespace UsbViewer
                     builder.AppendLine(
                         $"\r\n*!*ERROR:  bDeviceProtocol of {connectInfo.DeviceDescriptor.bDeviceProtocol} is invalid");
                 }
-                else
-                {
-                    builder.AppendLine("\r\n");
-                }
             }
 
             builder.AppendLine(
-                $"bMaxPacketSize0:                   0x{connectInfo.DeviceDescriptor.bMaxPacketSize0:X02}= ({connectInfo.DeviceDescriptor.bMaxPacketSize0}) Bytes");
+                $"bMaxPacketSize0:                   0x{connectInfo.DeviceDescriptor.bMaxPacketSize0:X02} = ({connectInfo.DeviceDescriptor.bMaxPacketSize0}) Bytes");
 
             switch (connectInfo.Speed)
             {
@@ -503,7 +1307,7 @@ namespace UsbViewer
             }
         }
 
-        private void AppendNodeConnectionInfoExV2(StringBuilder builder,
+        private static void AppendNodeConnectionInfoExV2(StringBuilder builder,
             UsbIoControl.UsbNodeConnectionInformationExV2 connectionInformationExV2)
         {
             builder.AppendLine("Protocols Supported:");
@@ -516,7 +1320,7 @@ namespace UsbViewer
             builder.AppendLine();
         }
 
-        private void AppendUsbPortConnectorProperties(StringBuilder builder,
+        private static void AppendUsbPortConnectorProperties(StringBuilder builder,
             UsbIoControl.UsbPortConnectorProperties usbPortConnectorProperties)
         {
             builder.AppendLine(
@@ -529,83 +1333,7 @@ namespace UsbViewer
             builder.AppendLine(
                 $"Companion Hub Symbolic Link Name: {usbPortConnectorProperties.CompanionHubSymbolicLinkName}");
         }
-
-        private static void AppendEndpointDescriptor(StringBuilder builder, int index,
-            UsbSpec.UsbEndpointDescriptor endpointDescriptor)
-        {
-            builder.AppendLine(
-                "-----------------------------------------------------------------");
-            builder.AppendLine($"ENDPOINT DESCRIPTOR {index}\n");
-            builder.AppendLine(
-                "-----------------------------------------------------------------");
-            builder.AppendLine($"Endpoint Address\t\t\t: {endpointDescriptor.EndpointAddress:x}");
-            builder.AppendLine($"Transfer Type\t\t\t: {endpointDescriptor.Attributes}");
-            builder.AppendLine($"Max Packet Size\t\t\t: {endpointDescriptor.MaxPacketSize:x}");
-            builder.AppendLine($"Update Interval\t\t\t: {endpointDescriptor.Interval:x}");
-            builder.AppendLine($"Endpoint Descriptor Length\t\t: {endpointDescriptor.Length}");
-        }
-
-        private static void AppendHidDescriptor(StringBuilder builder, int index, HidApi.HidDescriptor hdiDescriptor)
-        {
-            builder.AppendLine(
-                "-----------------------------------------------------------------");
-            builder.AppendLine($"Human Device Interface DESCRIPTOR {index}");
-            builder.AppendLine(
-                "-----------------------------------------------------------------");
-            builder.AppendLine($"HDI:{hdiDescriptor.BcdHid:x}");
-            builder.AppendLine($"Country Code: {hdiDescriptor.Country:x}");
-            builder.AppendLine($"Number of Descriptors: {hdiDescriptor.NumDescriptors:x}");
-            builder.AppendLine(
-                $"Descriptor Type: {hdiDescriptor.DescriptorType:x}");
-            builder.AppendLine(
-                $"Human Device Interface Descriptor Length: {hdiDescriptor.Length}");
-            builder.AppendLine(
-                $"Report Type: {hdiDescriptor.HidDesclist.ReportType:x}");
-            builder.AppendLine(
-                $"Report Length: {hdiDescriptor.HidDesclist.ReportLength:x}");
-            builder.AppendLine("\n");
-        }
-
-        private static void AppendInterfaceDescriptor(StringBuilder builder, int index,
-            UsbApi.UsbInterfaceDescriptor interfaceDescriptor)
-        {
-            builder.AppendLine(
-                "-----------------------------------------------------------------");
-            builder.AppendLine($"INTERFACE DESCRIPTOR {index}");
-            builder.AppendLine(
-                "-----------------------------------------------------------------");
-            builder.AppendLine(
-                $"Interface Number\t\t\t: {interfaceDescriptor.InterfaceNumber}");
-            builder.AppendLine(
-                $"Alternate Settings\t\t\t: {interfaceDescriptor.AlternateSetting}");
-            builder.AppendLine(
-                $"Number of Endpoints\t\t: {interfaceDescriptor.NumEndpoints}");
-            builder.AppendLine($"Interface Class\t\t\t: {interfaceDescriptor.InterfaceClass:x}");
-            builder.AppendLine($"Interface Sub Class\t\t\t: {interfaceDescriptor.InterfaceSubClass:x}");
-            builder.AppendLine($"Interface Protocol\t\t\t: {interfaceDescriptor.InterfaceProtocol:x}");
-            builder.AppendLine($"Index of the Interface\t\t: {interfaceDescriptor.Interface:x}");
-            builder.AppendLine(
-                $"Interface Descriptor Length\t\t: {interfaceDescriptor.Length}");
-            builder.AppendLine("\n");
-        }
-
-        private static void AppendConfigurationDescriptor(StringBuilder builder, int index,
-            UsbApi.UsbConfigurationDescriptor configurationDescriptor)
-        {
-            builder.AppendLine(
-                "-----------------------------------------------------------------");
-            builder.AppendLine($"CONFIGURATION DESCRIPTOR {index}");
-            builder.AppendLine(
-                "-----------------------------------------------------------------");
-            builder.AppendLine($"Configuration Descriptor Length\t: {configurationDescriptor.Length}");
-            builder.AppendLine($"Number of Interface Descriptors\t: {configurationDescriptor.NumInterface}");
-            builder.AppendLine($"Configuration Value\t\t\t: {configurationDescriptor.ConfigurationsValue}");
-            builder.AppendLine($"Index of the Configuration\t\t: {configurationDescriptor.IConfiguration}");
-            builder.AppendLine($"Attributes\t\t\t\t: {configurationDescriptor.Attributes}");
-            builder.AppendLine($"MaxPower\t\t\t: {configurationDescriptor.MaxPower}");
-            builder.AppendLine("\n");
-        }
-
+        
         private static void AppendDeviceInformation(StringBuilder builder, Device device)
         {
             builder.AppendLine("       ---===>Device Information<===---");
