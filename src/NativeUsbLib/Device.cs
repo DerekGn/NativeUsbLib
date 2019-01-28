@@ -46,8 +46,7 @@ namespace NativeUsbLib
 
                 UsbIoControl.UsbConnectionStatus status = NodeConnectionInfo.ConnectionStatus;
                 Status = status.ToString();
-                UsbSpec.UsbDeviceSpeed speed = NodeConnectionInfo.Speed;
-                Speed = speed.ToString();
+                Speed = NodeConnectionInfo.Speed;
                 IsConnected = (NodeConnectionInfo.ConnectionStatus == UsbIoControl.UsbConnectionStatus.DeviceConnected);
                 IsHub = Convert.ToBoolean(NodeConnectionInfo.DeviceIsHub);
             }
@@ -141,7 +140,7 @@ namespace NativeUsbLib
         /// Gets or sets the speed.
         /// </summary>
         /// <value>The speed.</value>
-        public string Speed { get; set; } = string.Empty;
+        public UsbSpec.UsbDeviceSpeed Speed { get; protected set; }
 
         /// <summary>
         /// Gets or sets the adapter number.

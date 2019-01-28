@@ -49,7 +49,7 @@ namespace NativeUsbLib.WinApis
             public short BcdHid;
             public byte bCountryCode;
             public byte bNumDescriptors;
-            //public List<OptionalDescriptor> OptionalDescriptors;
+            public OptionalDescriptor OptionalDescriptors;
         }
 
         [StructLayout(LayoutKind.Sequential)]

@@ -205,150 +205,161 @@ namespace UsbViewer
                 //length checked in DisplayConfigDesc()
 
                 builder.AppendLine($"bLength:                           0x{endpointDescriptor.bLength:X02}");
-                builder.AppendLine($"bDescriptorType:                   0x{(int)endpointDescriptor.bDescriptorType:X02}");
+                builder.AppendLine(
+                    $"bDescriptorType:                   0x{(int) endpointDescriptor.bDescriptorType:X02}");
                 builder.Append($"bEndpointAddress:                  0x{endpointDescriptor.bEndpointAddress:X02}");
 
-                //if (endpointDescriptor.IsEndpointOut())
-                //{
-                //    builder.AppendLine($"  -> Direction: OUT - EndpointID: {endpointDescriptor.GetEndpointId():D}");
-                //}
-                //else if (endpointDescriptor.IsEndpointIn())
-                //{
-                //    builder.AppendLine($"  -> Direction: IN - EndpointID: {endpointDescriptor.GetEndpointId():D}");
-                //}
-                //else
-                //{
-                //    //@@TestCase A6.1
-                //    //@@ERROR
-                //    //@@Descriptor Field - bEndpointAddress
-                //    //@@An invalid endpoint addressl has been defined
-                //    builder.AppendLine("\r\n*!*ERROR:  This appears to be an invalid bEndpointAddress");
-                //}
+                if (endpointDescriptor.IsEndpointOut())
+                {
+                    builder.AppendLine($"  -> Direction: OUT - EndpointID: {endpointDescriptor.GetEndpointId():D}");
+                }
+                else if (endpointDescriptor.IsEndpointIn())
+                {
+                    builder.AppendLine($"  -> Direction: IN - EndpointID: {endpointDescriptor.GetEndpointId():D}");
+                }
+                else
+                {
+                    //@@TestCase A6.1
+                    //@@ERROR
+                    //@@Descriptor Field - bEndpointAddress
+                    //@@An invalid endpoint addressl has been defined
+                    builder.AppendLine("\r\n*!*ERROR:  This appears to be an invalid bEndpointAddress");
+                }
 
                 builder.Append($"bmAttributes:                      0x{endpointDescriptor.bmAttributes:X02}");
                 builder.Append("  -> ");
 
-                //switch (endpointDescriptor.GetEndpointType())
-                //{
-                //    case UsbSpec.UsbEndpointType.Control:
-                //        builder.AppendLine("Control Transfer Type\r\n");
-                //        if ((endpointDescriptor.bmAttributes & UsbSpec.UsbEndpointTypeControlReservedMask) > 0)
-                //        {
-                //            builder.AppendLine("\r\n*!*ERROR:     Bits 7..2 are reserved and must be set to 0\r\n");
-                //        }
-                //        break;
+                switch (endpointDescriptor.GetEndpointType())
+                {
+                    case UsbSpec.UsbEndpointType.Control:
+                        builder.AppendLine("Control Transfer Type\r\n");
+                        if ((endpointDescriptor.bmAttributes & UsbSpec.UsbEndpointTypeControlReservedMask) > 0)
+                        {
+                            builder.AppendLine("\r\n*!*ERROR:     Bits 7..2 are reserved and must be set to 0\r\n");
+                        }
 
-                //    case UsbSpec.UsbEndpointType.Isochronous:
-                //        builder.AppendLine("Isochronous Transfer Type, Synchronization Type = ");
+                        break;
 
-                //        switch (endpointDescriptor.GetSynchronization())
-                //        {
-                //            case UsbSpec.EndpointSynchronization.IsochronousSynchronizationNoSynchronization:
-                //                builder.AppendLine("No Synchronization");
-                //                break;
+                    case UsbSpec.UsbEndpointType.Isochronous:
+                        builder.AppendLine("Isochronous Transfer Type, Synchronization Type = ");
 
-                //            case UsbSpec.EndpointSynchronization.IsochronousSynchronizationAsynchronous:
-                //                builder.AppendLine("Asynchronous");
-                //                break;
+                        switch (endpointDescriptor.GetSynchronization())
+                        {
+                            case UsbSpec.EndpointSynchronization.IsochronousSynchronizationNoSynchronization:
+                                builder.AppendLine("No Synchronization");
+                                break;
 
-                //            case UsbSpec.EndpointSynchronization.IsochronousSynchronizationAdaptive:
-                //                builder.AppendLine("Adaptive");
-                //                break;
+                            case UsbSpec.EndpointSynchronization.IsochronousSynchronizationAsynchronous:
+                                builder.AppendLine("Asynchronous");
+                                break;
 
-                //            case UsbSpec.EndpointSynchronization.IsochronousSynchronizationSynchronous:
-                //                builder.AppendLine("Synchronous");
-                //                break;
-                //        }
-                //        builder.AppendLine(", Usage Type = ");
+                            case UsbSpec.EndpointSynchronization.IsochronousSynchronizationAdaptive:
+                                builder.AppendLine("Adaptive");
+                                break;
 
-                //        switch (endpointDescriptor.GetIsochronousUsage())
-                //        {
-                //            case UsbSpec.EndpointIsochronousUsage.IsochronousUsageDataEndoint:
-                //                builder.AppendLine("Data Endpoint");
-                //                break;
+                            case UsbSpec.EndpointSynchronization.IsochronousSynchronizationSynchronous:
+                                builder.AppendLine("Synchronous");
+                                break;
+                        }
 
-                //            case UsbSpec.EndpointIsochronousUsage.IsochronousUsageFeedbackEndpoint:
-                //                builder.AppendLine("Feedback Endpoint");
-                //                break;
+                        builder.AppendLine(", Usage Type = ");
 
-                //            case UsbSpec.EndpointIsochronousUsage.IsochronousUsageImplicitFeedbackDataEndpoint:
-                //                builder.AppendLine("Implicit Feedback Data Endpoint");
-                //                break;
+                        switch (endpointDescriptor.GetIsochronousUsage())
+                        {
+                            case UsbSpec.EndpointIsochronousUsage.IsochronousUsageDataEndoint:
+                                builder.AppendLine("Data Endpoint");
+                                break;
 
-                //            case UsbSpec.EndpointIsochronousUsage.IsochronousUsageReserved:
-                //                //@@TestCase A6.2
-                //                //@@ERROR
-                //                //@@Descriptor Field - bmAttributes
-                //                //@@A reserved bit has a value
-                //                builder.AppendLine("\r\n*!*ERROR:     This value is Reserved");
-                                
-                //                break;
-                //        }
-                //        if ((endpointDescriptor.bmAttributes & UsbSpec.UsbEndpointTypeIsochronousReservedMask) > 0)
-                //        {
-                //            builder.AppendLine("\r\n*!*ERROR:     Bits 7..6 are reserved and must be set to 0");
-                //        }
-                //        break;
+                            case UsbSpec.EndpointIsochronousUsage.IsochronousUsageFeedbackEndpoint:
+                                builder.AppendLine("Feedback Endpoint");
+                                break;
 
-                //    case UsbSpec.UsbEndpointType.Bulk:
-                //        builder.AppendLine("Bulk Transfer Type");
-                //        if ((endpointDescriptor.bmAttributes & UsbSpec.UsbEndpointTypeBulkReservedMask) > 0)
-                //        {
-                //            builder.AppendLine("\r\n*!*ERROR:     Bits 7..2 are reserved and must be set to 0");
-                            
-                //        }
-                //        break;
+                            case UsbSpec.EndpointIsochronousUsage.IsochronousUsageImplicitFeedbackDataEndpoint:
+                                builder.AppendLine("Implicit Feedback Data Endpoint");
+                                break;
 
-                //    case UsbSpec.UsbEndpointType.Interrupt:
+                            case UsbSpec.EndpointIsochronousUsage.IsochronousUsageReserved:
+                                //@@TestCase A6.2
+                                //@@ERROR
+                                //@@Descriptor Field - bmAttributes
+                                //@@A reserved bit has a value
+                                builder.AppendLine("\r\n*!*ERROR:     This value is Reserved");
 
-                //        //if (gDeviceSpeed != UsbSuperSpeed)
-                //        //{
-                //        //    builder.AppendLine("Interrupt Transfer Type\r\n");
-                //        //    if (endpointDescriptor.bmAttributes & USB_20_ENDPOINT_TYPE_INTERRUPT_RESERVED_MASK)
-                //        //    {
-                //        //        builder.AppendLine("\r\n*!*ERROR:     Bits 7..2 are reserved and must be set to 0\r\n");
-                //        //    }
-                //        //}
-                //        //else
-                //        //{
-                //        //    builder.AppendLine("Interrupt Transfer Type, Usage Type = ");
+                                break;
+                        }
 
-                //        //    switch (USB_30_ENDPOINT_TYPE_INTERRUPT_USAGE(endpointDescriptor.bmAttributes))
-                //        //    {
-                //        //        case USB_30_ENDPOINT_TYPE_INTERRUPT_USAGE_PERIODIC:
-                //        //            builder.AppendLine("Periodic\r\n");
-                //        //            break;
+                        if ((endpointDescriptor.bmAttributes & UsbSpec.UsbEndpointTypeIsochronousReservedMask) > 0)
+                        {
+                            builder.AppendLine("\r\n*!*ERROR:     Bits 7..6 are reserved and must be set to 0");
+                        }
 
-                //        //        case USB_30_ENDPOINT_TYPE_INTERRUPT_USAGE_NOTIFICATION:
-                //        //            builder.AppendLine("Notification\r\n");
-                //        //            break;
+                        break;
 
-                //        //        case USB_30_ENDPOINT_TYPE_INTERRUPT_USAGE_RESERVED10:
-                //        //        case USB_30_ENDPOINT_TYPE_INTERRUPT_USAGE_RESERVED11:
-                //        //            builder.AppendLine("\r\n*!*ERROR:     This value is Reserved\r\n");
-                //        //            break;
-                //        //    }
+                    case UsbSpec.UsbEndpointType.Bulk:
+                        builder.AppendLine("Bulk Transfer Type");
+                        if ((endpointDescriptor.bmAttributes & UsbSpec.UsbEndpointTypeBulkReservedMask) > 0)
+                        {
+                            builder.AppendLine("\r\n*!*ERROR:     Bits 7..2 are reserved and must be set to 0");
+                        }
 
-                //        //    if (endpointDescriptor.bmAttributes & USB_30_ENDPOINT_TYPE_INTERRUPT_RESERVED_MASK)
-                //        //    {
-                //        //        builder.AppendLine("\r\n*!*ERROR:     Bits 7..6 and 3..2 are reserved and must be set to 0\r\n");
-                //        //    }
+                        break;
 
-                //        //    if (EpCompDescAvail)
-                //        //    {
-                //        //        if (EpCompDesc == NULL)
-                //        //        {
-                //        //            builder.AppendLine("\r\n*!*ERROR:     Endpoint Companion Descriptor missing\r\n");
-                //        //        }
-                //        //        else if (EpCompDesc->bmAttributes.Isochronous.SspCompanion == 1 &&
-                //        //            SspIsochEpCompDesc == NULL)
-                //        //        {
-                //        //            builder.AppendLine("\r\n*!*ERROR:     SuperSpeedPlus Isoch Endpoint Companion Descriptor missing\r\n");
-                //        //        }
-                //        //    }
-                //        //}
-                //        break;
-                //}
+                    case UsbSpec.UsbEndpointType.Interrupt:
+
+                        if (device.Speed != UsbSpec.UsbDeviceSpeed.UsbSuperSpeed)
+                        {
+                            builder.AppendLine("Interrupt Transfer Type\r\n");
+                            if ((endpointDescriptor.bmAttributes & UsbSpec.Usb20EndpointTypeInterruptReservedMask) > 0)
+                            {
+                                builder.AppendLine("\r\n*!*ERROR:     Bits 7..2 are reserved and must be set to 0\r\n");
+                            }
+                        }
+                        else
+                        {
+                            builder.AppendLine("Interrupt Transfer Type, Usage Type = ");
+
+                            switch (endpointDescriptor.GetInterruptUsage())
+                            {
+                                case UsbSpec.EndpointInterruptUseage.Periodic:
+                                    builder.AppendLine("Periodic");
+                                    break;
+                                case UsbSpec.EndpointInterruptUseage.Notification:
+                                    builder.AppendLine("Notification");
+                                    break;
+                                case UsbSpec.EndpointInterruptUseage.Reserved10:
+                                    builder.AppendLine("\r\n*!*ERROR:     This value is Reserved");
+                                    break;
+                                case UsbSpec.EndpointInterruptUseage.Reserved11:
+                                    builder.AppendLine("\r\n*!*ERROR:     This value is Reserved");
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException();
+                            }
+
+                            if ((endpointDescriptor.bmAttributes & UsbSpec.Usb30EndpointTypeInterruptReservedMask) > 0)
+                            {
+                                builder.AppendLine(
+                                    "\r\n*!*ERROR:     Bits 7..6 and 3..2 are reserved and must be set to 0\r\n");
+                            }
+
+#warning TODO handle endpoint companion descriptor
+                            //if (EpCompDescAvail)
+                            //{
+                            //    if (EpCompDesc == NULL)
+                            //    {
+                            //        builder.AppendLine("\r\n*!*ERROR:     Endpoint Companion Descriptor missing\r\n");
+                            //    }
+                            //    else if (EpCompDesc->bmAttributes.Isochronous.SspCompanion == 1 &&
+                            //             SspIsochEpCompDesc == NULL)
+                            //    {
+                            //        builder.AppendLine(
+                            //            "\r\n*!*ERROR:     SuperSpeedPlus Isoch Endpoint Companion Descriptor missing\r\n");
+                            //    }
+                            //}
+                        }
+
+                        break;
+                }
 
 
                 //@@TestCase A6.3
@@ -357,163 +368,155 @@ namespace UsbViewer
                 //@@Question - Should we test to verify bInterfaceNumber is valid?
                 builder.AppendLine($"wMaxPacketSize:                  0x{endpointDescriptor.wMaxPacketSize:X04}");
 
-                //switch (gDeviceSpeed)
-                //{
-                //    case UsbSuperSpeed:
-                //        switch (epType)
-                //        {
-                //            case USB_ENDPOINT_TYPE_BULK:
-                //                if (endpointDescriptor.wMaxPacketSize != USB_ENDPOINT_SUPERSPEED_BULK_MAX_PACKET_SIZE)
-                //                {
-                //                    builder.AppendLine("\r\n*!*ERROR:     SuperSpeed Bulk endpoints must be %d bytes\r\n",
-                //                        USB_ENDPOINT_SUPERSPEED_BULK_MAX_PACKET_SIZE);
-                //                }
-                //                else
-                //                {
-                //                    builder.AppendLine("\r\n");
-                //                }
-                //                break;
+                switch (device.Speed)
+                {
+                    case UsbSpec.UsbDeviceSpeed.UsbLowSpeed:
+                        break;
+                    case UsbSpec.UsbDeviceSpeed.UsbFullSpeed:
+                        // full speed
+                        builder.AppendLine($" = 0x{endpointDescriptor.wMaxPacketSize & 0x7FF:X02} bytes");
+                        break;
+                    case UsbSpec.UsbDeviceSpeed.UsbHighSpeed:
+                        var hsMaxPacket = endpointDescriptor.GetHighSpeedMaxPacket();
 
-                //            case USB_ENDPOINT_TYPE_CONTROL:
-                //                if (endpointDescriptor.wMaxPacketSize != USB_ENDPOINT_SUPERSPEED_CONTROL_MAX_PACKET_SIZE)
-                //                {
-                //                    builder.AppendLine("\r\n*!*ERROR:     SuperSpeed Control endpoints must be %d bytes\r\n",
-                //                        USB_ENDPOINT_SUPERSPEED_CONTROL_MAX_PACKET_SIZE);
-                //                }
-                //                else
-                //                {
-                //                    builder.AppendLine("\r\n");
-                //                }
-                //                break;
+                        switch (endpointDescriptor.GetEndpointType())
+                        {
+                            case UsbSpec.UsbEndpointType.Control:
+                                AppendHighSpeedMaxPacket(builder, hsMaxPacket);
+                                break;
+                            case UsbSpec.UsbEndpointType.Isochronous:
+                                AppendHighSpeedMaxPacket(builder, hsMaxPacket);
+                                break;
+                            case UsbSpec.UsbEndpointType.Bulk:
+                                builder.AppendLine($" = 0x{hsMaxPacket.MaxPacket:X02} max bytes");
+                                break;
+                            case UsbSpec.UsbEndpointType.Interrupt:
+                                builder.AppendLine($" = 0x{hsMaxPacket.MaxPacket:X02} max bytes");
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                        break;
+                    case UsbSpec.UsbDeviceSpeed.UsbSuperSpeed:
+                        switch (endpointDescriptor.GetEndpointType())
+                        {
+                            case UsbSpec.UsbEndpointType.Control:
+                                if (endpointDescriptor.wMaxPacketSize !=
+                                    UsbSpec.UsbEndpointSuperspeedControlMaxPacketSize)
+                                {
+                                    builder.AppendLine(
+                                        $"\r\n*!*ERROR:     SuperSpeed Control endpoints must be {UsbSpec.UsbEndpointSuperspeedControlMaxPacketSize} bytes");
+                                }
+                                else
+                                {
+                                    builder.AppendLine();
+                                }
 
-                //            case USB_ENDPOINT_TYPE_ISOCHRONOUS:
+                                break;
+                            case UsbSpec.UsbEndpointType.Isochronous:
+#warning TODO
+                                //if (EpCompDesc != NULL)
+                                //{
+                                //    if (EpCompDesc->bMaxBurst > 0)
+                                //    {
+                                //        if (endpointDescriptor.wMaxPacketSize !=
+                                //            USB_ENDPOINT_SUPERSPEED_ISO_MAX_PACKET_SIZE)
+                                //        {
+                                //            builder.AppendLine(
+                                //                "\r\n*!*ERROR:     SuperSpeed isochronous endpoints must have wMaxPacketSize value of %d bytes\r\n",
+                                //                USB_ENDPOINT_SUPERSPEED_ISO_MAX_PACKET_SIZE);
+                                //            builder.AppendLine(
+                                //                "                  when the SuperSpeed endpoint companion descriptor bMaxBurst value is greater than 0\r\n");
+                                //        }
+                                //        else
+                                //        {
+                                //            builder.AppendLine("\r\n");
+                                //        }
+                                //    }
+                                //    else if (endpointDescriptor.wMaxPacketSize >
+                                //             USB_ENDPOINT_SUPERSPEED_ISO_MAX_PACKET_SIZE)
+                                //    {
+                                //        builder.AppendLine(
+                                //            "\r\n*!*ERROR:     Invalid SuperSpeed isochronous maximum packet size\r\n");
+                                //    }
+                                //    else
+                                //    {
+                                //        builder.AppendLine("\r\n");
+                                //    }
+                                //}
+                                //else
+                                //{
+                                //    builder.AppendLine("\r\n");
+                                //}
+                                break;
+                            case UsbSpec.UsbEndpointType.Bulk:
+                                if (endpointDescriptor.wMaxPacketSize != UsbSpec.UsbEndpointSuperspeedBulkMaxPacketSize)
+                                {
+                                    builder.AppendLine(
+                                        $"\r\n*!*ERROR:     SuperSpeed Bulk endpoints must be {UsbSpec.UsbEndpointSuperspeedBulkMaxPacketSize} bytes");
+                                }
+                                else
+                                {
+                                    builder.AppendLine();
+                                }
 
-                //                if (EpCompDesc != NULL)
-                //                {
-                //                    if (EpCompDesc->bMaxBurst > 0)
-                //                    {
-                //                        if (endpointDescriptor.wMaxPacketSize != USB_ENDPOINT_SUPERSPEED_ISO_MAX_PACKET_SIZE)
-                //                        {
-                //                            builder.AppendLine("\r\n*!*ERROR:     SuperSpeed isochronous endpoints must have wMaxPacketSize value of %d bytes\r\n",
-                //                                USB_ENDPOINT_SUPERSPEED_ISO_MAX_PACKET_SIZE);
-                //                            builder.AppendLine("                  when the SuperSpeed endpoint companion descriptor bMaxBurst value is greater than 0\r\n");
-                //                        }
-                //                        else
-                //                        {
-                //                            builder.AppendLine("\r\n");
-                //                        }
-                //                    }
-                //                    else if (endpointDescriptor.wMaxPacketSize > USB_ENDPOINT_SUPERSPEED_ISO_MAX_PACKET_SIZE)
-                //                    {
-                //                        builder.AppendLine("\r\n*!*ERROR:     Invalid SuperSpeed isochronous maximum packet size\r\n");
-                //                    }
-                //                    else
-                //                    {
-                //                        builder.AppendLine("\r\n");
-                //                    }
-                //                }
-                //                else
-                //                {
-                //                    builder.AppendLine("\r\n");
-                //                }
-                //                break;
+                                break;
+                            case UsbSpec.UsbEndpointType.Interrupt:
+#warning TODO
+                                //if (EpCompDesc != NULL)
+                                //{
+                                //    if (EpCompDesc->bMaxBurst > 0)
+                                //    {
+                                //        if (endpointDescriptor.wMaxPacketSize !=
+                                //            USB_ENDPOINT_SUPERSPEED_INTERRUPT_MAX_PACKET_SIZE)
+                                //        {
+                                //            builder.AppendLine(
+                                //                "\r\n*!*ERROR:     SuperSpeed interrupt endpoints must have wMaxPacketSize value of %d bytes\r\n",
+                                //                USB_ENDPOINT_SUPERSPEED_INTERRUPT_MAX_PACKET_SIZE);
+                                //            builder.AppendLine(
+                                //                "                  when the SuperSpeed endpoint companion descriptor bMaxBurst value is greater than 0\r\n");
+                                //        }
+                                //        else
+                                //        {
+                                //            builder.AppendLine("\r\n");
+                                //        }
+                                //    }
+                                //    else if (endpointDescriptor.wMaxPacketSize >
+                                //             USB_ENDPOINT_SUPERSPEED_INTERRUPT_MAX_PACKET_SIZE)
+                                //    {
+                                //        builder.AppendLine(
+                                //            "\r\n*!*ERROR:     Invalid SuperSpeed interrupt maximum packet size\r\n");
+                                //    }
+                                //    else
+                                //    {
+                                //        builder.AppendLine("\r\n");
+                                //    }
+                                //}
+                                //else
+                                //{
+                                //    builder.AppendLine("\r\n");
+                                //}
 
-                //            case USB_ENDPOINT_TYPE_INTERRUPT:
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
 
-                //                if (EpCompDesc != NULL)
-                //                {
-                //                    if (EpCompDesc->bMaxBurst > 0)
-                //                    {
-                //                        if (endpointDescriptor.wMaxPacketSize != USB_ENDPOINT_SUPERSPEED_INTERRUPT_MAX_PACKET_SIZE)
-                //                        {
-                //                            builder.AppendLine("\r\n*!*ERROR:     SuperSpeed interrupt endpoints must have wMaxPacketSize value of %d bytes\r\n",
-                //                                USB_ENDPOINT_SUPERSPEED_INTERRUPT_MAX_PACKET_SIZE);
-                //                            builder.AppendLine("                  when the SuperSpeed endpoint companion descriptor bMaxBurst value is greater than 0\r\n");
-                //                        }
-                //                        else
-                //                        {
-                //                            builder.AppendLine("\r\n");
-                //                        }
-                //                    }
-                //                    else if (endpointDescriptor.wMaxPacketSize > USB_ENDPOINT_SUPERSPEED_INTERRUPT_MAX_PACKET_SIZE)
-                //                    {
-                //                        builder.AppendLine("\r\n*!*ERROR:     Invalid SuperSpeed interrupt maximum packet size\r\n");
-                //                    }
-                //                    else
-                //                    {
-                //                        builder.AppendLine("\r\n");
-                //                    }
-                //                }
-                //                else
-                //                {
-                //                    builder.AppendLine("\r\n");
-                //                }
-                //                break;
-                //        }
-                //        break;
-
-                //    case UsbHighSpeed:
-                //        hsMaxPacket = (PUSB_HIGH_SPEED_MAXPACKET) & endpointDescriptor.wMaxPacketSize;
-
-                //        switch (epType)
-                //        {
-                //            case USB_ENDPOINT_TYPE_ISOCHRONOUS:
-                //            case USB_ENDPOINT_TYPE_INTERRUPT:
-                //                switch (hsMaxPacket->HSmux)
-                //                {
-                //                    case 0:
-                //                        if ((hsMaxPacket->MaxPacket < 1) || (hsMaxPacket->MaxPacket > 1024))
-                //                        {
-                //                            builder.AppendLine("*!*ERROR:  Invalid maximum packet size, should be between 1 and 1024\r\n");
-                //                        }
-                //                        break;
-
-                //                    case 1:
-                //                        if ((hsMaxPacket->MaxPacket < 513) || (hsMaxPacket->MaxPacket > 1024))
-                //                        {
-                //                            builder.AppendLine("*!*ERROR:  Invalid maximum packet size, should be between 513 and 1024\r\n");
-                //                        }
-                //                        break;
-
-                //                    case 2:
-                //                        if ((hsMaxPacket->MaxPacket < 683) || (hsMaxPacket->MaxPacket > 1024))
-                //                        {
-                //                            builder.AppendLine("*!*ERROR:  Invalid maximum packet size, should be between 683 and 1024\r\n");
-                //                        }
-                //                        break;
-
-                //                    case 3:
-                //                        builder.AppendLine("*!*ERROR:  Bits 12-11 set to Reserved value in wMaxPacketSize\r\n");
-                //                        break;
-                //                }
-
-                //                builder.AppendLine(" = %d transactions per microframe, 0x%02X max bytes\r\n", hsMaxPacket->HSmux + 1, hsMaxPacket->MaxPacket);
-                //                break;
-
-                //            case USB_ENDPOINT_TYPE_BULK:
-                //            case USB_ENDPOINT_TYPE_CONTROL:
-                //                builder.AppendLine(" = 0x%02X max bytes\r\n", hsMaxPacket->MaxPacket);
-                //                break;
-                //        }
-                //        break;
-
-                //    case UsbFullSpeed:
-                //        // full speed
-                //        builder.AppendLine(" = 0x%02X bytes\r\n",
-                //            endpointDescriptor.wMaxPacketSize & 0x7FF);
-                //        break;
-                //    default:
-                //        // low or invalid speed
-                //        if (InterfaceClass == USB_DEVICE_CLASS_VIDEO)
-                //        {
-                //            builder.AppendLine(" = Invalid bus speed for USB Video Class\r\n");
-                //        }
-                //        else
-                //        {
-                //            builder.AppendLine("\r\n");
-                //        }
-                //        break;
-                //}
+                        break;
+                    default:
+#warning TODO
+                        // low or invalid speed
+                        //if (InterfaceClass == USB_DEVICE_CLASS_VIDEO)
+                        //{
+                        //    builder.AppendLine(" = Invalid bus speed for USB Video Class\r\n");
+                        //}
+                        //else
+                        //{
+                        //    builder.AppendLine("\r\n");
+                        //}
+                        builder.AppendLine();
+                        break;
+                }
 
 
                 if ((endpointDescriptor.wMaxPacketSize & 0xE000) > 0)
@@ -535,6 +538,7 @@ namespace UsbViewer
                 }
                 else
                 {
+#warning TODO
                     //PUSB_ENDPOINT_DESCRIPTOR2 endpointDesc2;
 
                     //endpointDesc2 = (PUSB_ENDPOINT_DESCRIPTOR2)EndpointDesc;
@@ -545,7 +549,7 @@ namespace UsbViewer
                     //builder.AppendLine("bSyncAddress:                      0x%02X\r\n",
                     //    endpointDesc2->bSyncAddress);
                 }
-
+#warning TODO
                 //if (EpCompDesc != NULL)
                 //{
                 //    DisplayEndointCompanionDescriptor(EpCompDesc, SspIsochEpCompDesc, epType);
@@ -557,16 +561,57 @@ namespace UsbViewer
             }
         }
 
+        private void AppendHighSpeedMaxPacket(StringBuilder builder, HighSpeedMaxPacket hsMaxPacket)
+        {
+            switch (hsMaxPacket.HSmux)
+            {
+                case 0:
+                    if ((hsMaxPacket.MaxPacket < 1) || (hsMaxPacket.MaxPacket > 1024))
+                    {
+                        builder.AppendLine(
+                            "*!*ERROR:  Invalid maximum packet size, should be between 1 and 1024");
+                    }
+
+                    break;
+
+                case 1:
+                    if ((hsMaxPacket.MaxPacket < 513) || (hsMaxPacket.MaxPacket > 1024))
+                    {
+                        builder.AppendLine(
+                            "*!*ERROR:  Invalid maximum packet size, should be between 513 and 1024");
+                    }
+
+                    break;
+
+                case 2:
+                    if ((hsMaxPacket.MaxPacket < 683) || (hsMaxPacket.MaxPacket > 1024))
+                    {
+                        builder.AppendLine(
+                            "*!*ERROR:  Invalid maximum packet size, should be between 683 and 1024");
+                    }
+
+                    break;
+
+                case 3:
+                    builder.AppendLine(
+                        "*!*ERROR:  Bits 12-11 set to Reserved value in wMaxPacketSize");
+                    break;
+            }
+
+            builder.AppendLine($" = {hsMaxPacket.HSmux + 1} transactions per microframe, 0x{hsMaxPacket.MaxPacket:0x2} max bytes");
+        }
+
         private void AppendHidDescriptors(StringBuilder builder, Device device)
         {
             foreach (var hidDescriptor in device.HidDescriptors)
             {
                 builder.AppendLine("\r\n          ===>HID Descriptor<===");
                 builder.AppendLine($"bLength:                           0x{hidDescriptor.bLength:X02}");
-                builder.AppendLine($"bDescriptorType:                   0x{(int)hidDescriptor.bDescriptorType:X02} -> {hidDescriptor.bDescriptorType}");
-                builder.AppendLine($"bcdHID:                            0x{(int)hidDescriptor.BcdHid:X04}");
-                builder.AppendLine($"bCountryCode:                      0x{(int)hidDescriptor.bCountryCode:X02}");
-                builder.AppendLine($"bNumDescriptors:                   0x{(int)hidDescriptor.bNumDescriptors:X02}");
+                builder.AppendLine(
+                    $"bDescriptorType:                   0x{(int) hidDescriptor.bDescriptorType:X02} -> {hidDescriptor.bDescriptorType}");
+                builder.AppendLine($"bcdHID:                            0x{(int) hidDescriptor.BcdHid:X04}");
+                builder.AppendLine($"bCountryCode:                      0x{(int) hidDescriptor.bCountryCode:X02}");
+                builder.AppendLine($"bNumDescriptors:                   0x{(int) hidDescriptor.bNumDescriptors:X02}");
 
 #warning TODO
                 //foreach (var optionalDescriptor in hidDescriptor.OptionalDescriptors)
@@ -614,7 +659,8 @@ namespace UsbViewer
                 //@@Question - Should we test to verify bNumEndpoints is valid?
                 builder.AppendLine($"bNumEndpoints:                     0x{interfaceDescriptor.bNumEndpoints:X02}");
 
-                builder.AppendLine($"bInterfaceClass:                   0x{(int)interfaceDescriptor.bInterfaceClass:X02} -> {interfaceDescriptor.bInterfaceClass}");
+                builder.AppendLine(
+                    $"bInterfaceClass:                   0x{(int) interfaceDescriptor.bInterfaceClass:X02} -> {interfaceDescriptor.bInterfaceClass}");
 
                 switch (interfaceDescriptor.bInterfaceClass)
                 {
@@ -1333,7 +1379,7 @@ namespace UsbViewer
             builder.AppendLine(
                 $"Companion Hub Symbolic Link Name: {usbPortConnectorProperties.CompanionHubSymbolicLinkName}");
         }
-        
+
         private static void AppendDeviceInformation(StringBuilder builder, Device device)
         {
             builder.AppendLine("       ---===>Device Information<===---");

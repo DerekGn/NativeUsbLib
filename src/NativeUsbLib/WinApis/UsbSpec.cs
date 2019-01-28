@@ -89,6 +89,14 @@ namespace NativeUsbLib.WinApis
             Interrupt = 0x3
         }
 
+        public enum EndpointInterruptUseage
+        {
+            Periodic = 0x00,
+            Notification = 0x10,
+            Reserved10 = 0x20,
+            Reserved11 = 0x30,
+        }
+
         public const int MaximumUsbStringLength = 255;
 
         //
@@ -133,6 +141,11 @@ namespace NativeUsbLib.WinApis
         public const int UsbEndpointTypeIsochronousUsageImplicitFeedbackDataEndpoint = 0x20;
         public const int UsbEndpointTypeIsochronousUsageReserved = 0x30;
 
+        public const int UsbEndpointSuperspeedBulkMaxPacketSize = 1024;
+        public const int UsbEndpointSuperspeedControlMaxPacketSize = 512;
+        public const int UsbEndpointSuperspeedIsoMaxPacketSize = 1024;
+        public const int UsbEndpointSuperspeedInterruptMaxPacketSize = 1024;
+
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct UsbStringDescriptor
         {
@@ -143,47 +156,58 @@ namespace NativeUsbLib.WinApis
             public string String;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct UsbEndpointDescriptor
         {
             public byte bLength;
             public UsbDescriptorType bDescriptorType;
             public byte bEndpointAddress;
             public byte bmAttributes;
-            public short wMaxPacketSize;
+            public ushort wMaxPacketSize;
             public byte bInterval;
 
-            //public bool IsEndpointOut()
-            //{
-            //    return (bEndpointAddress & UsbEndpointDirectionMask) > 0;
-            //}
+            public bool IsEndpointOut()
+            {
+                return (bEndpointAddress & UsbEndpointDirectionMask) > 0;
+            }
 
-            //public bool IsEndpointIn()
-            //{
-            //    return (bEndpointAddress & UsbEndpointDirectionMask) == 0;
-            //}
+            public bool IsEndpointIn()
+            {
+                return (bEndpointAddress & UsbEndpointDirectionMask) == 0;
+            }
 
-            //public byte GetEndpointId()
-            //{
-            //    return (byte) (bEndpointAddress & UsbEndpointAddressMask);
-            //}
+            public byte GetEndpointId()
+            {
+                return (byte) (bEndpointAddress & UsbEndpointAddressMask);
+            }
 
-            //public UsbEndpointType GetEndpointType()
-            //{
-            //    return (UsbEndpointType) (bmAttributes & UsbEndpointTypeMask);
-            //}
+            public UsbEndpointType GetEndpointType()
+            {
+                return (UsbEndpointType) (bmAttributes & UsbEndpointTypeMask);
+            }
 
-            //public EndpointSynchronization GetSynchronization()
-            //{
-            //    return (EndpointSynchronization) (bmAttributes &
-            //                                      UsbEndpointTypeIsochronousSynchronizationMask);
-            //}
+            public EndpointSynchronization GetSynchronization()
+            {
+                return (EndpointSynchronization) (bmAttributes &
+                                                  UsbEndpointTypeIsochronousSynchronizationMask);
+            }
 
-            //public EndpointIsochronousUsage GetIsochronousUsage()
-            //{
-            //    return (EndpointIsochronousUsage)(bmAttributes &
-            //                                     UsbEndpointTypeIsochronousUsageMask);
-            //}
+            public EndpointIsochronousUsage GetIsochronousUsage()
+            {
+                return (EndpointIsochronousUsage) (bmAttributes &
+                                                   UsbEndpointTypeIsochronousUsageMask);
+            }
+
+            public EndpointInterruptUseage GetInterruptUsage()
+            {
+                return (EndpointInterruptUseage)(bmAttributes &
+                                                 Usb30EndpointTypeInterruptUsageMask);
+            }
+
+            public HighSpeedMaxPacket GetHighSpeedMaxPacket()
+            {
+                return new HighSpeedMaxPacket(wMaxPacketSize);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -250,5 +274,18 @@ namespace NativeUsbLib.WinApis
             public byte bInterfaceProtocol;
             public byte iInterface;
         }
+    }
+
+    public struct HighSpeedMaxPacket
+    {
+        public HighSpeedMaxPacket(ushort maxPacketSize)
+        {
+            MaxPacket = (ushort) (maxPacketSize & 0xFFF);
+            HSmux = (ushort)(maxPacketSize & 0x3000);
+        }
+
+        public ushort HSmux { get; }
+
+        public ushort MaxPacket { get; }
     }
 }
