@@ -23,7 +23,7 @@ namespace NativeUsbLib.WinApis
 
         [DllImport("hid.dll", SetLastError = true)]
         internal static extern bool
-            HidD_GetAttributes(SafeFileHandle hidDeviceObject, ref HidApi.HiddAttributes attributes);
+            HidD_GetAttributes(SafeFileHandle hidDeviceObject, ref HiddAttributes attributes);
 
         [DllImport("hid.dll", SetLastError = true)]
         internal static extern bool HidD_GetFeature(SafeFileHandle hidDeviceObject, byte[] lpReportBuffer,

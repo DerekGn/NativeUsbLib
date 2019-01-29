@@ -414,7 +414,7 @@ namespace UsbViewer
 
                                 break;
                             case UsbSpec.UsbEndpointType.Isochronous:
-#warning TODO
+#warning TODO handle endpoint companion descriptor
                                 //if (EpCompDesc != NULL)
                                 //{
                                 //    if (EpCompDesc->bMaxBurst > 0)
@@ -462,7 +462,7 @@ namespace UsbViewer
 
                                 break;
                             case UsbSpec.UsbEndpointType.Interrupt:
-#warning TODO
+#warning TODO handle endpoint companion descriptor
                                 //if (EpCompDesc != NULL)
                                 //{
                                 //    if (EpCompDesc->bMaxBurst > 0)
@@ -538,7 +538,7 @@ namespace UsbViewer
                 }
                 else
                 {
-#warning TODO
+#warning TODO handle endpointDesc2
                     //PUSB_ENDPOINT_DESCRIPTOR2 endpointDesc2;
 
                     //endpointDesc2 = (PUSB_ENDPOINT_DESCRIPTOR2)EndpointDesc;
@@ -549,7 +549,7 @@ namespace UsbViewer
                     //builder.AppendLine("bSyncAddress:                      0x%02X\r\n",
                     //    endpointDesc2->bSyncAddress);
                 }
-#warning TODO
+#warning TODO handle endpoint companion descriptor
                 //if (EpCompDesc != NULL)
                 //{
                 //    DisplayEndointCompanionDescriptor(EpCompDesc, SspIsochEpCompDesc, epType);
@@ -613,7 +613,7 @@ namespace UsbViewer
                 builder.AppendLine($"bCountryCode:                      0x{(int) hidDescriptor.bCountryCode:X02}");
                 builder.AppendLine($"bNumDescriptors:                   0x{(int) hidDescriptor.bNumDescriptors:X02}");
 
-#warning TODO
+#warning TODO handle optional descriptor
                 //foreach (var optionalDescriptor in hidDescriptor.OptionalDescriptors)
                 //{
                 //    if (optionalDescriptor.bDescriptorType == 0x22)
@@ -945,7 +945,7 @@ namespace UsbViewer
                 //        LatestDevicePowerState);
                 //}
 
-#warning TODO
+#warning TODO handle PUSB_INTERFACE_DESCRIPTOR2
                 //if (interfaceDescriptor.bLength == sizeof(USB_INTERFACE_DESCRIPTOR2))
                 //{
                 //    PUSB_INTERFACE_DESCRIPTOR2 interfaceDesc2;
@@ -1310,7 +1310,7 @@ namespace UsbViewer
             }
 
             builder.AppendLine($"idVendor:                        0x{connectInfo.DeviceDescriptor.idVendor:X04}  = ");
-#warning TODO
+#warning TODO get vendor string
             //VendorString = GetVendorString(connectInfo.DeviceDescriptor.IdVendor);
             //if (VendorString != NULL)
             //{
@@ -1344,7 +1344,7 @@ namespace UsbViewer
                                    "one configuration per speed\r\n");
             }
 
-#warning TODO
+#warning TODO handle open pipes
             if (connectInfo.NumberOfOpenPipes > 0)
             {
                 builder.AppendLine("\r\n          ---===>Open Pipes<===---");

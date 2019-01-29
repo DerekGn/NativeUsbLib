@@ -79,7 +79,7 @@ namespace NativeUsbLib
             return device;
         }
 
-        private static bool GetNodeConnectionInformationExV2(uint portCount, IntPtr deviceHandle,
+        private static void GetNodeConnectionInformationExV2(uint portCount, IntPtr deviceHandle,
             out UsbIoControl.UsbNodeConnectionInformationExV2 usbNodeConnectionInformationExV2)
         {
             IntPtr structPtr = IntPtr.Zero;
@@ -110,8 +110,6 @@ namespace NativeUsbLib
                 {
                     Trace.TraceError(
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetNodeConnectionInformationExV2)}] Result: [{KernelApi.GetLastError():X}]");
-
-                    return false;
                 }
             }
             finally
@@ -121,11 +119,9 @@ namespace NativeUsbLib
                     Marshal.FreeHGlobal(structPtr);
                 }
             }
-
-            return true;
         }
 
-        private static bool GetUsbPortConnectorProperties(uint portCount, IntPtr deviceHandle,
+        private static void GetUsbPortConnectorProperties(uint portCount, IntPtr deviceHandle,
             out UsbIoControl.UsbPortConnectorProperties usbPortConnectorProperties)
         {
             IntPtr structPtr = IntPtr.Zero;
@@ -150,8 +146,6 @@ namespace NativeUsbLib
                 {
                     Trace.TraceError(
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetPortConnectorProperties)}] Result: [{KernelApi.GetLastError():X}]");
-
-                    return false;
                 }
             }
             finally
@@ -161,8 +155,6 @@ namespace NativeUsbLib
                     Marshal.FreeHGlobal(structPtr);
                 }
             }
-
-            return true;
         }
 
         private static bool GetNodeConnectionInformationEx(uint portCount, IntPtr deviceHandle,

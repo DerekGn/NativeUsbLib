@@ -5,7 +5,6 @@ using System.Collections.ObjectModel;
 using NativeUsbLib.Exceptions;
 using System.Diagnostics;
 using System.Globalization;
-using System.Security.Cryptography;
 using NativeUsbLib.WinApis;
 
 namespace NativeUsbLib
@@ -52,7 +51,7 @@ namespace NativeUsbLib
 
         public uint Revision { get; private set; }
 
-        public IList<UsbUser.UsbPowerInfo> PowerInfo { get; private set; }
+        public IList<UsbUser.UsbPowerInfo> PowerInfo { get; }
 
         public UsbUser.UsbControllerInfo0 ControllerInfo { get; private set; }
 
@@ -253,36 +252,45 @@ namespace NativeUsbLib
 
                 powerInfoRequest.Header.RequestBufferLength = (uint) Marshal.SizeOf(powerInfoRequest);
 
-                //
-                // Now query USBHUB for the USB_POWER_INFO structure for this hub.
-                // For Selective Suspend support
-                //
-                int nBytes = Marshal.SizeOf(powerInfoRequest);
-                IntPtr ptrPowerInfoRequest = Marshal.AllocHGlobal(nBytes);
-                Marshal.StructureToPtr(powerInfoRequest, ptrPowerInfoRequest, true);
+                IntPtr ptrPowerInfoRequest = IntPtr.Zero;
 
-                var success = KernelApi.DeviceIoControl(handle,
-                    UsbUser.IoctlUsbUserRequest,
-                    ptrPowerInfoRequest,
-                    nBytes,
-                    ptrPowerInfoRequest,
-                    nBytes,
-                    out _,
-                    IntPtr.Zero);
-
-                if (!success)
+                try
                 {
-                    Trace.WriteLine(
-                        $"[{nameof(KernelApi.DeviceIoControl)}] Returned Error Code: [{KernelApi.GetLastError():X}]");
-                }
-                else
-                {
-                    powerInfoRequest = (UsbUser.UsbuserPowerInfoRequest) Marshal.PtrToStructure(ptrPowerInfoRequest,
-                        typeof(UsbUser.UsbuserPowerInfoRequest));
-                    PowerInfo.Add(powerInfoRequest.PowerInformation);
-                }
+                    //
+                    // Now query USBHUB for the USB_POWER_INFO structure for this hub.
+                    // For Selective Suspend support
+                    //
+                    int nBytes = Marshal.SizeOf(powerInfoRequest);
+                    ptrPowerInfoRequest = Marshal.AllocHGlobal(nBytes);
 
-                Marshal.FreeHGlobal(ptrPowerInfoRequest);
+                    Marshal.StructureToPtr(powerInfoRequest, ptrPowerInfoRequest, true);
+
+                    var success = KernelApi.DeviceIoControl(handle,
+                        UsbUser.IoctlUsbUserRequest,
+                        ptrPowerInfoRequest,
+                        nBytes,
+                        ptrPowerInfoRequest,
+                        nBytes,
+                        out _,
+                        IntPtr.Zero);
+
+                    if (!success)
+                    {
+                        Trace.WriteLine(
+                            $"[{nameof(KernelApi.DeviceIoControl)}] Returned Error Code: [{KernelApi.GetLastError():X}]");
+                    }
+                    else
+                    {
+                        powerInfoRequest = (UsbUser.UsbuserPowerInfoRequest)Marshal.PtrToStructure(ptrPowerInfoRequest,
+                            typeof(UsbUser.UsbuserPowerInfoRequest));
+                        PowerInfo.Add(powerInfoRequest.PowerInformation);
+                    }
+                }
+                finally
+                {
+                    if(ptrPowerInfoRequest != IntPtr.Zero)
+                        Marshal.FreeHGlobal(ptrPowerInfoRequest);
+                }
             }
         }
     }

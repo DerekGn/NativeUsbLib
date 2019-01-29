@@ -84,15 +84,14 @@ namespace NativeUsbLib
             return SetDevice(DeviceControlFlags.Enable, vendorid, productid);
         }
 
-
         private bool SetDevice(DeviceControlFlags deviceControlFlag, ushort vendorid, ushort productid)
         {
-            Guid myGuid = System.Guid.Empty;
+            Guid myGuid = Guid.Empty;
             var deviceInfoData = new UsbApi.SpDevinfoData1
             {
                 CbSize = 28,
                 DevInst = 0,
-                ClassGuid = System.Guid.Empty,
+                ClassGuid = Guid.Empty,
                 Reserved = 0
             };
             UInt32 i = 0;
@@ -110,10 +109,9 @@ namespace NativeUsbLib
                 {
                     if (deviceName.ToString().Contains(@"USB\Vid_") && deviceName.ToString().Contains(vendorid.ToString("x")))
                     {
-                        if (deviceControlFlag == DeviceControlFlags.Disable)
-                            StateChange(UsbApi.DicsDisable, (int)i, theDevInfo);
-                        else
-                            StateChange(UsbApi.DicsEnable, (int)i, theDevInfo);
+                        StateChange(
+                            deviceControlFlag == DeviceControlFlags.Disable ? UsbApi.DicsDisable : UsbApi.DicsEnable,
+                            (int) i, theDevInfo);
 
                         UsbApi.SetupDiDestroyDeviceInfoList(theDevInfo);
                         break;
@@ -141,7 +139,7 @@ namespace NativeUsbLib
             return String.Empty;
         }
         
-        private bool StateChange(int newState, int selectedItem, IntPtr hDevInfo)
+        private void StateChange(int newState, int selectedItem, IntPtr hDevInfo)
         {
             var propChangeParams = new UsbApi.SpPropchangeParams();
             propChangeParams.Init();
@@ -150,19 +148,16 @@ namespace NativeUsbLib
             deviceInfoData.CbSize = Marshal.SizeOf(deviceInfoData);
 
             if (!UsbApi.SetupDiEnumDeviceInfo(hDevInfo, selectedItem, ref deviceInfoData))
-                return false;
+                return;
 
             propChangeParams.ClassInstallHeader.InstallFunction = UsbApi.DifPropertychange;
             propChangeParams.Scope = UsbApi.DicsFlagGlobal;
             propChangeParams.StateChange = newState;
 
             if (!UsbApi.SetupDiSetClassInstallParams(hDevInfo, ref deviceInfoData, ref propChangeParams.ClassInstallHeader, Marshal.SizeOf(propChangeParams)))
-                return false;
+                return;
 
-            if (!UsbApi.SetupDiCallClassInstaller(UsbApi.DifPropertychange, hDevInfo, ref deviceInfoData))
-                return false;
-
-            return true;
+            UsbApi.SetupDiCallClassInstaller(UsbApi.DifPropertychange, hDevInfo, ref deviceInfoData);
         }
     }
 }
