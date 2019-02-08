@@ -17,10 +17,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
-using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
 
 namespace NativeUsbLib
@@ -39,7 +36,7 @@ namespace NativeUsbLib
         /// Initializes a new instance of the <see cref="UsbBus"/> class.
         /// </summary>
         /// <param name="parent">The parent.</param>
-        public UsbBus(Device parent):base(parent, null, -1, null)
+        public UsbBus(Device parent):base(parent, null, 0, null)
         {
             ScanBus();
         }
@@ -63,7 +60,7 @@ namespace NativeUsbLib
         private bool ScanBus()
         {
             bool success = true;
-            for (int index = 0; success; index++)
+            for (uint index = 0; success; index++)
             {
 
                 // Initialize a new controller and save the index of the controller.
@@ -107,11 +104,11 @@ namespace NativeUsbLib
                     ScanHubs(vendorid, productid, serial, device as UsbHub, ref devices);
 
                 if (device.DeviceDescriptor != null && serial != null)
-                    if (device.DeviceDescriptor.IdVendor == vendorid && device.DeviceDescriptor.IdProduct == productid && device.SerialNumber.Equals(serial))
+                    if (device.DeviceDescriptor.idVendor == vendorid && device.DeviceDescriptor.idProduct == productid && device.SerialNumber.Equals(serial))
                         devices.Add(device as UsbDevice);
 
                 if (device.DeviceDescriptor != null && serial == null)
-                    if (device.DeviceDescriptor.IdVendor == vendorid && device.DeviceDescriptor.IdProduct == productid)
+                    if (device.DeviceDescriptor.idVendor == vendorid && device.DeviceDescriptor.idProduct == productid)
                         devices.Add(device as UsbDevice);
             }
         }

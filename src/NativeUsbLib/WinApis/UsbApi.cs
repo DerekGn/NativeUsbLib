@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Text;
 using System.Runtime.InteropServices;
-using Microsoft.Win32.SafeHandles;
-using NativeUsbLib.WinApis.Marshalling;
 
 namespace NativeUsbLib.WinApis
 {
@@ -32,13 +30,6 @@ namespace NativeUsbLib.WinApis
         public const int UsbuserGetControllerDriverKey = 0x00000002;
 
         public const int IoctlGetHcdDriverkeyName = 0x220424;
-        public const int IoctlUsbGetRootHubName = 0x220408;
-        public const int IoctlUsbGetNodeInformation = 0x220408;
-        public const int IoctlUsbGetNodeInformationEx = 0x220454;
-        public const int IoctlUsbGetNodeConnectionInformationEx = 0x220448;
-        public const int IoctlUsbGetDescriptorFromNodeConnection = 0x220410;
-        public const int IoctlUsbGetNodeConnectionName = 0x220414;
-        public const int IoctlUsbGetNodeConnectionDriverkeyName = 0x220420;
         public const int IoctlStorageGetDeviceNumber = 0x2D1080;
 
         public const int UsbDeviceDescriptorType = 0x1;
@@ -49,7 +40,6 @@ namespace NativeUsbLib.WinApis
 
         public const string GuidDevinterfaceHubcontroller = "3abf6f2d-71c4-462a-8a92-1e6861e6af27";
         public const int MaxBufferSize = 2048;
-        public const int MaximumUsbStringLength = 255;
         public const string RegstrKeyUsb = "USB";
         public const int RegSz = 1;
         public const int DifPropertychange = 0x00000012;
@@ -61,9 +51,6 @@ namespace NativeUsbLib.WinApis
         public const int DigcfProfile = 0x00000008;
         public const int DigcfDeviceinterface = 0x00000010;
 
-        public const int SpdrpDriver = 0x9;
-        public const int SpdrpDevicedesc = 0x0;
-
         public const int DicsEnable = 0x00000001;
         public const int DicsDisable = 0x00000002;
 
@@ -74,29 +61,6 @@ namespace NativeUsbLib.WinApis
         // *******************************************************************************************
 
         #region enumerations
-
-        public enum UsbDeviceClass : byte
-        {
-            UnspecifiedDevice = 0x00,
-            AudioInterface = 0x01,
-            CommunicationsAndCdcControlBoth = 0x02,
-            HidInterface = 0x03,
-            PhysicalInterfaceDevice = 0x5,
-            ImageInterface = 0x06,
-            PrinterInterface = 0x07,
-            MassStorageInterface = 0x08,
-            HubDevice = 0x09,
-            CdcDataInterface = 0x0A,
-            SmartCardInterface = 0x0B,
-            ContentSecurityInterface = 0x0D,
-            VidioInterface = 0x0E,
-            PersonalHeathcareInterface = 0x0F,
-            DiagnosticDeviceBoth = 0xDC,
-            WirelessControllerInterface = 0xE0,
-            MiscellaneousBoth = 0xEF,
-            ApplicationSpecificInterface = 0xFE,
-            VendorSpecificBoth = 0xFF
-        }
 
         public enum HubCharacteristics : byte
         {
@@ -116,57 +80,6 @@ namespace NativeUsbLib.WinApis
             UsbRootHub = 1,
             Usb20Hub = 2,
             Usb30Hub = 3
-        }
-
-        public enum UsbDescriptorType : byte
-        {
-            DeviceDescriptorType = 0x1,
-            ConfigurationDescriptorType = 0x2,
-            StringDescriptorType = 0x3,
-            InterfaceDescriptorType = 0x4,
-            EndpointDescriptorType = 0x5,
-            Hub20Descriptor = 0x29,
-            Hub30Descriptor = 0x2A
-        }
-
-        public enum UsbConfiguration : byte
-        {
-            RemoteWakeUp = 32,
-            SelfPowered = 64,
-            BusPowered = 128,
-            RemoteWakeUpBusPowered = 160,
-            RemoteWakeUpSelfPowered = 96
-        }
-
-        public enum UsbTransfer : byte
-        {
-            Control = 0x0,
-            Isochronous = 0x1,
-            Bulk = 0x2,
-            Interrupt = 0x3
-        }
-
-        public enum UsbConnectionStatus
-        {
-            NoDeviceConnected,
-            DeviceConnected,
-            DeviceFailedEnumeration,
-            DeviceGeneralFailure,
-            DeviceCausedOvercurrent,
-            DeviceNotEnoughPower,
-            DeviceNotEnoughBandwidth,
-            DeviceHubNestedTooDeeply,
-            DeviceInLegacyHub,
-            DeviceEnumerating,
-            DeviceReset
-        }
-
-        public enum UsbDeviceSpeed : byte
-        {
-            UsbLowSpeed,
-            UsbFullSpeed,
-            UsbHighSpeed,
-            UsbSuperSpeed
         }
 
         public enum DeviceInterfaceDataFlags : uint
@@ -477,38 +390,10 @@ namespace NativeUsbLib.WinApis
             public string RootHubName;
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct UsbHubDescriptor
-        {
-            public byte BDescriptorLength;
-            public UsbDescriptorType BDescriptorType;
-            public byte BNumberOfPorts;
-            public short WHubCharacteristics;
-            public byte BPowerOnToPowerGood;
-            public byte BHubControlCurrent;
-
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
-            public byte[] BRemoveAndPowerMask;
-        }
-
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct Usb30HubDescriptor
-        {
-            public byte bLength;
-            public UsbDescriptorType bDescriptorType;
-            public byte bNumberOfPorts;
-            public ushort wHubCharacteristics;
-            public byte bPowerOnToPowerGood;
-            public byte bHubControlCurrent;
-            public byte bHubHdrDecLat;
-            public ushort wHubDelay;
-            public ushort DeviceRemovable;
-        }
-
         [StructLayout(LayoutKind.Sequential)]
         public struct UsbHubInformation
         {
-            public UsbHubDescriptor HubDescriptor;
+            public UsbSpec.UsbHubDescriptor HubDescriptor;
             public bool HubIsBusPowered;
         }
 
@@ -519,79 +404,22 @@ namespace NativeUsbLib.WinApis
             public UsbHubInformation HubInformation;
         }
 
-        public struct UsbHubInformationEx : IMarshallable
-        {
-            public UsbHubType HubType;
-            public ushort HighestPortNumber;
-            public UsbHubDescriptor UsbHubDescriptor;
-            public Usb30HubDescriptor Usb30HubDescriptor;
-
-            public int SizeOf => sizeof(UsbHubType) + sizeof(ushort) +
-                                 Math.Max(Marshal.SizeOf(UsbHubDescriptor), Marshal.SizeOf(Usb30HubDescriptor));
-
-            public void MarshalFrom(IntPtr pointer)
-            {
-                HubType = (UsbHubType) Marshal.ReadInt32(pointer);
-                HighestPortNumber = (ushort) Marshal.ReadInt16(pointer, sizeof(UsbHubType));
-
-                IntPtr ptr = new IntPtr(pointer.ToInt64() + 6);
-
-                UsbHubDescriptor = (UsbHubDescriptor) Marshal.PtrToStructure(ptr, typeof(UsbHubDescriptor));
-                Usb30HubDescriptor = (Usb30HubDescriptor)Marshal.PtrToStructure(ptr, typeof(Usb30HubDescriptor));
-            }
-        }
-
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct UsbNodeConnectionInformationEx
+        public struct UsbHubCapabilitiesEx
         {
-            public int ConnectionIndex;
-            public UsbDeviceDescriptor DeviceDescriptor;
-            public byte CurrentConfigurationValue;
-            public UsbDeviceSpeed Speed;
-            public byte DeviceIsHub;
-            public short DeviceAddress;
-            public int NumberOfOpenPipes;
-            public UsbConnectionStatus ConnectionStatus;
+            public UsbHubCapFlags CapabilityFlags;
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public class UsbDeviceDescriptor
+        [Flags]
+        public enum UsbHubCapFlags
         {
-            public byte BLength;
-            public UsbDescriptorType BDescriptorType;
-            public short BcdUsb;
-            public UsbDeviceClass BDeviceClass;
-            public byte BDeviceSubClass;
-            public byte BDeviceProtocol;
-            public byte BMaxPacketSize0;
-            public ushort IdVendor;
-            public ushort IdProduct;
-            public short BcdDevice;
-            public byte IManufacturer;
-            public byte IProduct;
-            public byte ISerialNumber;
-            public byte BNumConfigurations;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct UsbEndpointDescriptor
-        {
-            public byte BLength;
-            public UsbDescriptorType BDescriptorType;
-            public byte BEndpointAddress;
-            public UsbTransfer BmAttributes;
-            public short WMaxPacketSize;
-            public byte BInterval;
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public struct UsbStringDescriptor
-        {
-            public byte BLength;
-            public UsbDescriptorType BDescriptorType;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaximumUsbStringLength)]
-            public string BString;
+            HubIsHighSpeedCapable = 1,
+            HubIsHighSpeed = 2,
+            HubIsMultiTtCapable = 4,
+            HubIsMultiTt = 8,
+            HubIsRoot = 16,
+            HubIsArmedWakeOnConnect = 32,
+            HubIsBusPowered = 64
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -599,32 +427,22 @@ namespace NativeUsbLib.WinApis
         {
             public byte BmRequest;
             public byte BRequest;
-            public short WValue;
-            public short WIndex;
-            public short WLength;
+            public short Value;
+            public short Index;
+            public short Length;
         }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct UsbDescriptorRequest
         {
-            public int ConnectionIndex;
+            public uint ConnectionIndex;
             public UsbSetupPacket SetupPacket;
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public struct UsbNodeConnectionName
-        {
-            public int ConnectionIndex;
-            public int ActualLength;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaxBufferSize)]
-            public string NodeName;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct UsbNodeConnectionDriverkeyName // Yes, this is the same as the structure above...
         {
-            public int ConnectionIndex;
+            public uint ConnectionIndex;
             public int ActualLength;
 
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaxBufferSize)]
@@ -637,33 +455,6 @@ namespace NativeUsbLib.WinApis
             public int DeviceType;
             public int DeviceNumber;
             public int PartitionNumber;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct UsbInterfaceDescriptor
-        {
-            public byte BLength;
-            public UsbDescriptorType BDescriptorType;
-            public byte BInterfaceNumber;
-            public byte BAlternateSetting;
-            public byte BNumEndpoints;
-            public byte BInterfaceClass;
-            public byte BInterfaceSubClass;
-            public byte BInterfaceProtocol;
-            public byte Interface;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct UsbConfigurationDescriptor
-        {
-            public byte BLength;
-            public UsbDescriptorType BDescriptorType;
-            public short WTotalLength;
-            public byte BNumInterface;
-            public byte BConfigurationsValue;
-            public byte IConfiguration;
-            public UsbConfiguration BmAttributes;
-            public byte MaxPower;
         }
 
         [StructLayout(LayoutKind.Sequential)]

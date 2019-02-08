@@ -5,7 +5,9 @@ VisualStudioVersion = 15.0.28010.2048
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnumerateUsb", "EnumerateUsb\EnumerateUsb.csproj", "{E907CEDB-A87F-4B5E-A510-3CE02A539F70}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NativeUsbLib", "NativeUsbLib\NativeUsbLib.csproj", "{B23C8746-B36F-4B10-9151-80255683651F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NativeUsbLib", "NativeUsbLib\NativeUsbLib.csproj", "{B23C8746-B36F-4B10-9151-80255683651F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UsbViewer", "UsbViewer\UsbViewer.csproj", "{CFEA1058-9003-4687-82CC-795D608D7F8D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,6 +33,14 @@ Global
 		{B23C8746-B36F-4B10-9151-80255683651F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B23C8746-B36F-4B10-9151-80255683651F}.Release|x64.ActiveCfg = Release|x64
 		{B23C8746-B36F-4B10-9151-80255683651F}.Release|x64.Build.0 = Release|x64
+		{CFEA1058-9003-4687-82CC-795D608D7F8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFEA1058-9003-4687-82CC-795D608D7F8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFEA1058-9003-4687-82CC-795D608D7F8D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CFEA1058-9003-4687-82CC-795D608D7F8D}.Debug|x64.Build.0 = Debug|Any CPU
+		{CFEA1058-9003-4687-82CC-795D608D7F8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFEA1058-9003-4687-82CC-795D608D7F8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFEA1058-9003-4687-82CC-795D608D7F8D}.Release|x64.ActiveCfg = Release|Any CPU
+		{CFEA1058-9003-4687-82CC-795D608D7F8D}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

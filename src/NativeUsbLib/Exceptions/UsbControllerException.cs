@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Runtime.Serialization;
 
 namespace NativeUsbLib.Exceptions
 {
-    [System.Serializable]
-    public class UsbControllerException : System.Exception
+    [Serializable]
+    public class UsbControllerException : Exception
     {
         //
         // For guidelines regarding the creation of new exception types, see
@@ -22,13 +21,13 @@ namespace NativeUsbLib.Exceptions
         {
         }
 
-        public UsbControllerException(string message, System.Exception inner) : base(message, inner)
+        public UsbControllerException(string message, Exception inner) : base(message, inner)
         {
         }
 
         protected UsbControllerException(
-            System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context)
+            SerializationInfo info,
+            StreamingContext context) : base(info, context)
         {
         }
     }
