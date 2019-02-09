@@ -56,8 +56,8 @@ namespace NativeUsbLib
         /// <param name="parent">The parent.</param>
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="devicePath">The device path.</param>
-        public UsbHub(Device parent, UsbSpec.UsbDeviceDescriptor deviceDescriptor, string devicePath)
-            : base(parent, deviceDescriptor, 0, devicePath)
+        public UsbHub(UsbSpec.UsbDeviceDescriptor deviceDescriptor, string devicePath)
+            : base(deviceDescriptor, 0, devicePath)
         {
             DeviceDescription = "Standard-USB-Hub";
             DevicePath = devicePath;

@@ -19,23 +19,21 @@ namespace NativeUsbLib
         /// <summary>
         /// Initializes a new instance of the <see cref="UsbDevice"/> class.
         /// </summary>
-        /// <param name="parent">The parent.</param>
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="adapterNumber">The adapter number.</param>
-        public UsbDevice(Device parent, UsbSpec.UsbDeviceDescriptor deviceDescriptor, uint adapterNumber)
-            : base(parent, deviceDescriptor, adapterNumber, null)
+        public UsbDevice(UsbSpec.UsbDeviceDescriptor deviceDescriptor, uint adapterNumber)
+            : base(deviceDescriptor, adapterNumber, null)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UsbDevice"/> class.
         /// </summary>
-        /// <param name="parent">The parent.</param>
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="adapterNumber">The adapter number.</param>
         /// <param name="devicePath">The device path.</param>
-        public UsbDevice(Device parent, UsbSpec.UsbDeviceDescriptor deviceDescriptor, uint adapterNumber, string devicePath)
-            : base(parent, deviceDescriptor, adapterNumber, devicePath)
+        public UsbDevice(UsbSpec.UsbDeviceDescriptor deviceDescriptor, uint adapterNumber, string devicePath)
+            : base(deviceDescriptor, adapterNumber, devicePath)
         {
         }
 

@@ -22,7 +22,7 @@ namespace NativeUsbLib
         /// <param name="parent">The parent.</param>
         /// <param name="index">The index.</param>
         public UsbController(Device parent, uint index)
-            : base(parent, null, index, null)
+            : base(null, index, null)
         {
             PowerInfo = new List<UsbUser.UsbPowerInfo>();
 
@@ -165,7 +165,7 @@ namespace NativeUsbLib
 
                     try
                     {
-                        Devices.Add(new UsbHub(this, null, DevicePath));
+                        Devices.Add(new UsbHub(null, DevicePath));
                     }
                     catch (Exception ex)
                     {

@@ -27,35 +27,14 @@ namespace NativeUsbLib
     /// </summary>
     public class UsbBus : Device
     {
-        #region constructor/destructor
-
-        #region constructor
-
-
         /// <summary>
         /// Initializes a new instance of the <see cref="UsbBus"/> class.
         /// </summary>
         /// <param name="parent">The parent.</param>
-        public UsbBus(Device parent):base(parent, null, 0, null)
+        public UsbBus():base(null, 0, null)
         {
             ScanBus();
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UsbBus"/> class.
-        /// </summary>
-        public UsbBus():this(null)
-        {
-        }
-
-        #endregion
-
-
-        #endregion
-
-        #region methodes
-
-        #region ScanBus
 
         private bool ScanBus()
         {
@@ -80,10 +59,6 @@ namespace NativeUsbLib
             return false;
         }
 
-        #endregion
-
-        #region methode Refresh
-
         /// <summary>
         /// Refreshes this instance.
         /// </summary>
@@ -93,8 +68,6 @@ namespace NativeUsbLib
             Devices.Clear();
             return ScanBus();
         }
-
-        #endregion
 
         private void ScanHubs(ushort vendorid, ushort productid, string serial, UsbHub hub, ref List<UsbDevice> devices)
         {
@@ -133,12 +106,6 @@ namespace NativeUsbLib
             return devices;
         }
 
-       #endregion
-
-        #region properties
-
-        #region Controller
-
         /// <summary>
         /// Gets the controller.
         /// </summary>
@@ -152,9 +119,5 @@ namespace NativeUsbLib
                 return new ReadOnlyCollection<UsbController>(controllers);
             }
         }
-
-        #endregion
-
-        #endregion
     }
 }

@@ -45,7 +45,7 @@ namespace NativeUsbLib
                                 {
                                     string name = @"\\?\" + connectionName.NodeName;
 
-                                    device = new UsbHub(parent, nodeConnection.DeviceDescriptor, name)
+                                    device = new UsbHub(nodeConnection.DeviceDescriptor, name)
                                     {
                                         NodeConnectionInfo = nodeConnection,
                                         NodeConnectionInfoV2 = nodeConnectionV2,
@@ -55,7 +55,7 @@ namespace NativeUsbLib
                             }
                             else
                             {
-                                device = new UsbDevice(parent, nodeConnection.DeviceDescriptor, portCount, devicePath)
+                                device = new UsbDevice(nodeConnection.DeviceDescriptor, portCount, devicePath)
                                 {
                                     NodeConnectionInfo = nodeConnection,
                                     NodeConnectionInfoV2 = nodeConnectionV2,
@@ -65,7 +65,7 @@ namespace NativeUsbLib
                         }
                         else
                         {
-                            device = new UsbDevice(parent, null, portCount) {NodeConnectionInfo = nodeConnection};
+                            device = new UsbDevice(null, portCount) {NodeConnectionInfo = nodeConnection};
                         }
                     }
                 }

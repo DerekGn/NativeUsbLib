@@ -9,18 +9,12 @@ using NativeUsbLib.WinApis;
 namespace NativeUsbLib
 {
     /// <summary>
-    ///     abstract class of al usb devices
+    ///     Abstract base class of all usb devices
     /// </summary>
-    public abstract class Device
+    public abstract class Device : IDisposable
     {
         private UsbIoControl.UsbNodeConnectionInformationEx _mNodeConnectionInfo;
         protected List<Device> Devices;
-
-        /// <summary>
-        ///     Gets the parent.
-        /// </summary>
-        /// <value>The parent.</value>
-        public Device Parent { get; private set; }
 
         /// <summary>
         ///     Gets the child devices
@@ -177,14 +171,12 @@ namespace NativeUsbLib
         /// <summary>
         ///     Initializes a new instance of the <see cref="Device" /> class.
         /// </summary>
-        /// <param name="parent">The parent.</param>
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="adapterNumber">The adapter number.</param>
         /// <param name="devicePath">The device path.</param>
-        protected Device(Device parent, UsbSpec.UsbDeviceDescriptor deviceDescriptor, uint adapterNumber,
+        protected Device(UsbSpec.UsbDeviceDescriptor deviceDescriptor, uint adapterNumber,
             string devicePath)
         {
-            Parent = parent;
             AdapterNumber = adapterNumber;
             DeviceDescriptor = deviceDescriptor;
             DevicePath = devicePath;
@@ -441,17 +433,6 @@ namespace NativeUsbLib
             }
 
             return result;
-        }
-
-        /// <summary>
-        ///     Releases unmanaged resources and performs other cleanup operations before the
-        ///     <see cref="Device" /> is reclaimed by garbage collection.
-        /// </summary>
-        ~Device()
-        {
-            Devices?.Clear();
-            Devices = null;
-            Parent = null;
         }
 
         /// <summary>
@@ -783,5 +764,31 @@ namespace NativeUsbLib
                 hnd.Dispose();
             }
         }
+
+        #region IDisposable Support
+        private bool disposed = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    foreach (var device in Devices)
+                    {
+                        device.Dispose();
+                    }
+                }
+
+                disposed = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
     }
 }
