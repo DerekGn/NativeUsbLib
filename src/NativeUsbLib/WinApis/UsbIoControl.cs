@@ -7,23 +7,6 @@ namespace NativeUsbLib.WinApis
 {
     public static class UsbIoControl
     {
-        [Flags]
-        public enum UsbProtocols : uint
-        {
-            Usb110 = 1,
-            Usb200 = 2,
-            Usb300 = 4
-        }
-
-        [Flags]
-        public enum UsbNodeConnectionInformationExV2Flags
-        {
-            DeviceIsOperatingAtSuperSpeedOrHigher = 1,
-            DeviceIsSuperSpeedCapableOrHigher = 2,
-            DeviceIsOperatingAtSuperSpeedPlusOrHigher = 4,
-            DeviceIsSuperSpeedPlusCapableOrHigher = 8
-        }
-
         public enum UsbConnectionStatus
         {
             NoDeviceConnected,
@@ -39,6 +22,21 @@ namespace NativeUsbLib.WinApis
             DeviceReset
         }
 
+        public enum UsbHubNode : uint
+        {
+            UsbHub,
+            UsbMiParent
+        }
+
+        [Flags]
+        public enum UsbNodeConnectionInformationExV2Flags
+        {
+            DeviceIsOperatingAtSuperSpeedOrHigher = 1,
+            DeviceIsSuperSpeedCapableOrHigher = 2,
+            DeviceIsOperatingAtSuperSpeedPlusOrHigher = 4,
+            DeviceIsSuperSpeedPlusCapableOrHigher = 8
+        }
+
         [Flags]
         public enum UsbPortProperties
         {
@@ -46,6 +44,14 @@ namespace NativeUsbLib.WinApis
             PortIsDebugCapable = 2,
             PortHasMultipleCompanions = 4,
             PortConnectorIsTypeC = 8
+        }
+
+        [Flags]
+        public enum UsbProtocols : uint
+        {
+            Usb110 = 1,
+            Usb200 = 2,
+            Usb300 = 4
         }
 
         private const int MaxBufferSize = 2048;
@@ -61,7 +67,6 @@ namespace NativeUsbLib.WinApis
                                                       DevIoControl.MethodBuffered;
 
 
-
         public const int IoctlUsbGetHubInformationEx = (UsbIoDefinitions.FileDeviceUsb << 16) |
                                                        (DevIoControl.FileAnyAccess << 14) |
                                                        (UsbIoDefinitions.UsbGetHubInformationEx << 2) |
@@ -74,10 +79,11 @@ namespace NativeUsbLib.WinApis
                                                                   DevIoControl.MethodBuffered;
 
         public const int IoctlUsbGetNodeConnectionInformationExV2 = (UsbIoDefinitions.FileDeviceUsb << 16) |
-                                                                  (DevIoControl.FileAnyAccess << 14) |
-                                                                  (UsbIoDefinitions.UsbGetNodeConnectionInformationExV2 <<
-                                                                   2) |
-                                                                  DevIoControl.MethodBuffered;
+                                                                    (DevIoControl.FileAnyAccess << 14) |
+                                                                    (UsbIoDefinitions
+                                                                         .UsbGetNodeConnectionInformationExV2 <<
+                                                                     2) |
+                                                                    DevIoControl.MethodBuffered;
 
 
         public const int IoctlUsbGetDescriptorFromNodeConnection = (UsbIoDefinitions.FileDeviceUsb << 16) |
@@ -128,6 +134,11 @@ namespace NativeUsbLib.WinApis
                     (UsbHubDescriptor) Marshal.PtrToStructure(ptr, typeof(UsbHubDescriptor));
                 Usb30HubDescriptor =
                     (Usb30HubDescriptor) Marshal.PtrToStructure(ptr, typeof(Usb30HubDescriptor));
+            }
+
+            public void MarshalTo(IntPtr pointer, bool fDeleteOld)
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -196,6 +207,42 @@ namespace NativeUsbLib.WinApis
 
             // A bitmask indicating properties of the connected device or port
             public UsbNodeConnectionInformationExV2Flags Flags;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct UsbHubInformation
+        {
+            public UsbHubDescriptor HubDescriptor;
+            public bool HubIsBusPowered;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct UsbNodeInformation : IMarshallable
+        {
+            public UsbHubNode NodeType;
+            public UsbHubInformation HubInformation;
+            public UsbMiParentInformation MiParentInformation;
+
+            public int SizeOf => 76;
+
+            public void MarshalFrom(IntPtr pointer)
+            {
+                NodeType = (UsbHubNode) Marshal.ReadInt32(pointer);
+                Marshal.PtrToStructure(pointer, HubInformation);
+            }
+
+            public void MarshalTo(IntPtr pointer, bool fDeleteOld)
+            {
+                Marshal.WriteInt32(pointer, (int)NodeType);
+                var ptr = new IntPtr(pointer.ToInt64() + sizeof(UsbHubNode));
+                Marshal.StructureToPtr(HubInformation, ptr, fDeleteOld);
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public class UsbMiParentInformation
+        {
+            public uint NumberOfInterfaces;
         }
     }
 }

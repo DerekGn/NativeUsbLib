@@ -7,5 +7,7 @@ namespace NativeUsbLib.WinApis.Marshalling
         int SizeOf { get; }
 
         void MarshalFrom(IntPtr pointer);
+
+        void MarshalTo(IntPtr pointer, bool fDeleteOld);
     }
 }

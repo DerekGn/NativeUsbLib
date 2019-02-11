@@ -69,12 +69,6 @@ namespace NativeUsbLib.WinApis
             // to do
         }
 
-        public enum UsbHubNode
-        {
-            UsbHub,
-            UsbMiParent
-        }
-
         public enum UsbHubType
         {
             UsbRootHub = 1,
@@ -388,20 +382,6 @@ namespace NativeUsbLib.WinApis
 
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaxBufferSize)]
             public string RootHubName;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct UsbHubInformation
-        {
-            public UsbSpec.UsbHubDescriptor HubDescriptor;
-            public bool HubIsBusPowered;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct UsbNodeInformation
-        {
-            public UsbHubNode NodeType;
-            public UsbHubInformation HubInformation;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]

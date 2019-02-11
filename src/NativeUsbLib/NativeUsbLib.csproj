@@ -8,18 +8,25 @@
     <Authors>Nick Vetter, Derek Goslin</Authors>
     <Copyright>copyright © inovel gmbh 2008 - 2018</Copyright>
     <RepositoryType>github</RepositoryType>
-    <AssemblyVersion>1.4.0.0</AssemblyVersion>
-    <FileVersion>1.4.0.0</FileVersion>
+    <AssemblyVersion>1.4.1.0</AssemblyVersion>
+    <FileVersion>1.4.1.0</FileVersion>
     <PackageReleaseNotes>1.1.0
 Original release
+
 1.2.0
 Nuget packaged release
 Updated to handle x64
+
 1.3.0
 Updated to prevent potential unmanaged memory leak in UsbController()
+
 1.4.0
-Added support for USB 3.0</PackageReleaseNotes>
-    <Version>1.4.0</Version>
+Added support for USB 3.0
+
+1.4.1
+Fixed unmamaged memory leak reading UsbNodeInformation
+Removed circular memory references in object model</PackageReleaseNotes>
+    <Version>1.4.1</Version>
     <PackageTags>usb windows</PackageTags>
     <RepositoryUrl>https://github.com/DerekGn/NativeUsbLib</RepositoryUrl>
     <Description>A .net library for the enumeration of usb devices, hubs and controllers</Description>
