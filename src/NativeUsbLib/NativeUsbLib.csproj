@@ -8,8 +8,8 @@
     <Authors>Nick Vetter, Derek Goslin</Authors>
     <Copyright>copyright © inovel gmbh 2008 - 2018</Copyright>
     <RepositoryType>github</RepositoryType>
-    <AssemblyVersion>1.4.2.0</AssemblyVersion>
-    <FileVersion>1.4.2.0</FileVersion>
+    <AssemblyVersion>1.4.3.0</AssemblyVersion>
+    <FileVersion>1.4.3.0</FileVersion>
     <PackageReleaseNotes>1.1.0
 Original release
 
@@ -28,8 +28,11 @@ Fixed unmamaged memory leak reading UsbNodeInformation
 Removed circular memory references in object model
 
 1.4.2
+Bug fix marshalling error
+
+1.4.3
 Bug fix marshalling error</PackageReleaseNotes>
-    <Version>1.4.2</Version>
+    <Version>1.4.3</Version>
     <PackageTags>usb windows</PackageTags>
     <RepositoryUrl>https://github.com/DerekGn/NativeUsbLib</RepositoryUrl>
     <Description>A .net library for the enumeration of usb devices, hubs and controllers</Description>

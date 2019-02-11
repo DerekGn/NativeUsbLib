@@ -181,21 +181,22 @@ namespace NativeUsbLib
 
         private void GetUsbNodeInformation(IntPtr hubHandle)
         {
-            NodeInformation =
+            var usbNodeInformation =
                 new UsbIoControl.UsbNodeInformation {NodeType = UsbIoControl.UsbHubNode.UsbHub};
 
-            int nBytes = NodeInformation.SizeOf;
+            int nBytes = usbNodeInformation.SizeOf;
             IntPtr ptrNodeInfo = IntPtr.Zero;
 
             try
             {
                 ptrNodeInfo = Marshal.AllocHGlobal(nBytes);
-                NodeInformation.MarshalTo(ptrNodeInfo, true);
+                usbNodeInformation.MarshalTo(ptrNodeInfo, true);
 
                 if (KernelApi.DeviceIoControl(hubHandle, UsbIoControl.IoctlUsbGetNodeInformation, ptrNodeInfo, nBytes, ptrNodeInfo,
                     nBytes, out _, IntPtr.Zero))
                 {
-                    NodeInformation.MarshalFrom(ptrNodeInfo);
+                    usbNodeInformation.MarshalFrom(ptrNodeInfo);
+                    NodeInformation = usbNodeInformation;
                 }
                 else
                 {
