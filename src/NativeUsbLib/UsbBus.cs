@@ -30,7 +30,6 @@ namespace NativeUsbLib
         /// <summary>
         /// Initializes a new instance of the <see cref="UsbBus"/> class.
         /// </summary>
-        /// <param name="parent">The parent.</param>
         public UsbBus():base(null, 0, null)
         {
             ScanBus();

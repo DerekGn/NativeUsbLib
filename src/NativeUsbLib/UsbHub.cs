@@ -53,7 +53,6 @@ namespace NativeUsbLib
         /// <summary>
         /// Initializes a new instance of the <see cref="UsbHub"/> class.
         /// </summary>
-        /// <param name="parent">The parent.</param>
         /// <param name="deviceDescriptor">The device descriptor.</param>
         /// <param name="devicePath">The device path.</param>
         public UsbHub(UsbSpec.UsbDeviceDescriptor deviceDescriptor, string devicePath)

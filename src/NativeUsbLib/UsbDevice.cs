@@ -120,22 +120,6 @@ namespace NativeUsbLib
 
             return true;
         }
-
-        private string GetDeviceInstanceId(IntPtr deviceInfoSet, UsbApi.SpDevinfoData deviceInfoData)
-        {
-            StringBuilder strId = new StringBuilder(0);
-            Int32 iRequiredSize;
-            Int32 iSize = 0;
-            bool success = UsbApi.SetupDiGetDeviceInstanceId(deviceInfoSet, ref deviceInfoData, strId, iSize, out iRequiredSize);
-            strId = new StringBuilder(iRequiredSize);
-            iSize = iRequiredSize;
-            success = UsbApi.SetupDiGetDeviceInstanceId(deviceInfoSet, ref deviceInfoData, strId, iSize, out iRequiredSize);
-
-            if (success)
-                return strId.ToString();
-
-            return String.Empty;
-        }
         
         private void StateChange(int newState, int selectedItem, IntPtr hDevInfo)
         {
