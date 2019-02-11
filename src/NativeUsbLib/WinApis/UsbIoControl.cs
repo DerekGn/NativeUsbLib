@@ -228,7 +228,10 @@ namespace NativeUsbLib.WinApis
             public void MarshalFrom(IntPtr pointer)
             {
                 NodeType = (UsbHubNode) Marshal.ReadInt32(pointer);
-                Marshal.PtrToStructure(pointer, HubInformation);
+                var ptr = new IntPtr(pointer.ToInt64() + sizeof(UsbHubNode));
+                HubInformation = (UsbHubInformation)Marshal.PtrToStructure(ptr, typeof(UsbHubInformation));
+                ptr = new IntPtr(pointer.ToInt64() + sizeof(UsbHubNode));
+                MiParentInformation = (UsbMiParentInformation)Marshal.PtrToStructure(ptr, typeof(UsbMiParentInformation));
             }
 
             public void MarshalTo(IntPtr pointer, bool fDeleteOld)
