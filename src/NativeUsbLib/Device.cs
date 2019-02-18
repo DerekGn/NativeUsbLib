@@ -647,10 +647,10 @@ namespace NativeUsbLib
             }
             finally
             {
-                if (ptr == IntPtr.Zero)
+                if (ptr != IntPtr.Zero)
                     Marshal.FreeHGlobal(ptr);
 
-                if (handle == IntPtr.Zero)
+                if (handle != IntPtr.Zero)
                     UsbApi.SetupDiDestroyDeviceInfoList(handle);
             }
 
