@@ -62,6 +62,38 @@ namespace NativeUsbLib.WinApis
 
         #region enumerations
 
+        public enum DicsFlag
+        {
+            /// <summary>
+            ///  This information is not specific to a particular hardware profile.
+            /// </summary>
+            Global = 0x00000001,
+            /// <summary>
+            /// Hardware profile-specific configuration information
+            /// </summary>
+            ConfigSpecific = 0x00000002,
+            /// <summary>
+            /// 1 or more hardware profile-specific changes to follow.
+            /// </summary>
+            ConfigGeneral = 0x00000004
+        }
+
+        public enum DiReg
+        {
+            /// <summary>
+            /// Open/Create/Delete device key
+            /// </summary>
+            Dev = 0x00000001,
+            /// <summary>
+            /// Open/Create/Delete driver key
+            /// </summary>
+            Drv = 0x00000002,
+            /// <summary>
+            /// Delete both driver and Device key
+            /// </summary>
+            Both = 0x00000004
+        }
+
         public enum HubCharacteristics : byte
         {
             GangedPowerSwitching = 0x00,
@@ -537,8 +569,9 @@ namespace NativeUsbLib.WinApis
         [DllImport("quickusb.dll", CharSet = CharSet.Ansi)]
         internal static extern int QuickUsbOpen(out IntPtr handle, string devName);
 
-        // Hid.dll definitions
-        // Length for use with HID Api functions
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SpDevinfoData deviceInfoData,
+            DicsFlag scope, int hwProfile, DiReg parameterRegistryValueKind, ulong samDesired);
 
         #endregion
 

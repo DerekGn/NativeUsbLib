@@ -10,6 +10,8 @@ namespace NativeUsbLib
     /// </summary>
     public class UsbDevice : Device
     {
+        private string _comPort = string.Empty;
+
         private enum DeviceControlFlags
         {
             Enable,
@@ -35,6 +37,18 @@ namespace NativeUsbLib
         public UsbDevice(UsbSpec.UsbDeviceDescriptor deviceDescriptor, uint adapterNumber, string devicePath)
             : base(deviceDescriptor, adapterNumber, devicePath)
         {
+        }
+
+        public string ComPort {
+            get
+            {
+                if(DeviceDescriptor.bDeviceClass == UsbDesc.DeviceClassType.UsbCommunicationDevice && string.IsNullOrEmpty(_comPort))
+                {
+                    GetComPort();
+                }
+
+                return _comPort;
+            }
         }
 
         public bool OpenDevice()
@@ -100,7 +114,7 @@ namespace NativeUsbLib
 
             //The SetupDiGetClassDevs function returns a handle to a device information set that contains requested device information elements for a local machine.
             IntPtr theDevInfo = UsbApi.SetupDiGetClassDevs(ref myGuid, 0, 0, UsbApi.DigcfAllclasses | UsbApi.DigcfPresent | UsbApi.DigcfProfile);
-            for (; UsbApi.SetupDiEnumDeviceInfo(theDevInfo, i, deviceInfoData); )
+            for (; UsbApi.SetupDiEnumDeviceInfo(theDevInfo, i, deviceInfoData);)
             {
 
                 if (UsbApi.SetupDiGetDeviceRegistryProperty(theDevInfo, deviceInfoData, (uint)UsbApi.Spdrp.SpdrpHardwareid, 0, deviceName, UsbApi.MaxBufferSize, IntPtr.Zero))
@@ -109,7 +123,7 @@ namespace NativeUsbLib
                     {
                         StateChange(
                             deviceControlFlag == DeviceControlFlags.Disable ? UsbApi.DicsDisable : UsbApi.DicsEnable,
-                            (int) i, theDevInfo);
+                            (int)i, theDevInfo);
 
                         UsbApi.SetupDiDestroyDeviceInfoList(theDevInfo);
                         break;
@@ -120,7 +134,7 @@ namespace NativeUsbLib
 
             return true;
         }
-        
+
         private void StateChange(int newState, int selectedItem, IntPtr hDevInfo)
         {
             var propChangeParams = new UsbApi.SpPropchangeParams();
@@ -140,6 +154,87 @@ namespace NativeUsbLib
                 return;
 
             UsbApi.SetupDiCallClassInstaller(UsbApi.DifPropertychange, hDevInfo, ref deviceInfoData);
+        }
+
+        private void GetComPort()
+        {
+            IntPtr regValue = IntPtr.Zero;
+            IntPtr regKey = IntPtr.Zero;
+            IntPtr handle = IntPtr.Zero;
+            IntPtr ptr = IntPtr.Zero;
+
+            try
+            {
+                handle =
+                    UsbApi.SetupDiGetClassDevs(0, UsbApi.RegstrKeyUsb, IntPtr.Zero, UsbApi.DigcfPresent | UsbApi.DigcfAllclasses);
+
+                if (handle.ToInt64() != UsbApi.InvalidHandleValue)
+                {
+                    ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
+                    var success = true;
+
+                    for (var i = 0; success; i++)
+                    {
+                        var deviceInfoData = new UsbApi.SpDevinfoData();
+                        deviceInfoData.CbSize = Marshal.SizeOf(deviceInfoData);
+
+                        success = UsbApi.SetupDiEnumDeviceInfo(handle, i, ref deviceInfoData);
+
+                        if (success)
+                        {
+                            var requiredSize = -1;
+                            var regType = UsbApi.RegSz;
+                            var driverKey = string.Empty;
+
+                            if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInfoData,
+                                (int)UsbApi.Spdrp.SpdrpDriver,
+                                ref regType, ptr, UsbApi.MaxBufferSize, ref requiredSize))
+                            {
+                                driverKey = Marshal.PtrToStringAuto(ptr);
+                            }
+
+                            if(DriverKey == driverKey)
+                            {
+                                regKey = UsbApi.SetupDiOpenDevRegKey(handle, ref deviceInfoData, UsbApi.DicsFlag.Global, 0, UsbApi.DiReg.Dev, WinNtApi.KeyRead);
+
+                                int size = 0;
+                                Advapi32.RegValueKind kind = Advapi32.RegValueKind.None;
+
+                                // Get the size of buffer we will need
+                                uint retVal = Advapi32.RegQueryValueEx(regKey, "PortName", 0, ref kind, IntPtr.Zero, ref size);
+                                if (size == 0)
+                                {
+                                    break;
+                                }
+
+                                regValue = Marshal.AllocHGlobal(size);
+
+                                if(Advapi32.RegQueryValueEx(regKey, "PortName", 0, ref kind, regValue, ref size) == 0)
+                                {
+                                    if(kind == Advapi32.RegValueKind.Sz)
+                                    {
+                                        _comPort = Marshal.PtrToStringAnsi(regValue);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                if(regValue != IntPtr.Zero)
+                    Marshal.FreeHGlobal(regValue);
+
+                if (regKey != IntPtr.Zero)
+                    Marshal.FreeHGlobal(regKey);
+
+                if (handle != IntPtr.Zero)
+                    Marshal.FreeHGlobal(ptr);
+
+                if (handle != IntPtr.Zero)
+                    UsbApi.SetupDiDestroyDeviceInfoList(handle);
+            }
         }
     }
 }

@@ -8,8 +8,8 @@
     <Authors>Nick Vetter, Derek Goslin</Authors>
     <Copyright>copyright © inovel gmbh 2008 - 2018</Copyright>
     <RepositoryType>github</RepositoryType>
-    <AssemblyVersion>1.4.4.0</AssemblyVersion>
-    <FileVersion>1.4.4.0</FileVersion>
+    <AssemblyVersion>1.4.5.0</AssemblyVersion>
+    <FileVersion>1.4.5.0</FileVersion>
     <PackageReleaseNotes>1.1.0
 Original release
 
@@ -34,8 +34,12 @@ Bug fix marshalling error
 Bug fix marshalling error
 
 1.4.4
-Bug fix handle cleanup</PackageReleaseNotes>
-    <Version>1.4.4</Version>
+Bug fix handle cleanup
+
+1.4.5
+
+Added friendly name and com port property for CDC devices</PackageReleaseNotes>
+    <Version>1.4.5</Version>
     <PackageTags>usb windows</PackageTags>
     <RepositoryUrl>https://github.com/DerekGn/NativeUsbLib</RepositoryUrl>
     <Description>A .net library for the enumeration of usb devices, hubs and controllers</Description>
