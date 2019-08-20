@@ -42,7 +42,7 @@ namespace NativeUsbLib
         public string ComPort {
             get
             {
-                if(DeviceDescriptor.bDeviceClass == UsbDesc.DeviceClassType.UsbCommunicationDevice && string.IsNullOrEmpty(_comPort))
+                if(string.IsNullOrEmpty(_comPort))
                 {
                     GetComPort();
                 }
