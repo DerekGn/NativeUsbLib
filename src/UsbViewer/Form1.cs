@@ -50,7 +50,7 @@ namespace UsbViewer
                 var usbNode =
                     new UsbTreeNode(controller, DeviceTyp.Controller, m_DeviceContextMenuStrip)
                     {
-                        Text = controller.DeviceDescription,
+                        Text = controller.GetDescription(),
                         ImageIndex = 3,
                         SelectedImageIndex = 3
                     };
@@ -74,14 +74,14 @@ namespace UsbViewer
                     {
                         ImageIndex = 3,
                         SelectedImageIndex = 3,
-                        Text = hub.DeviceDescription
+                        Text = hub.GetDescription()
                     };
                 else
                     usbNode = new UsbTreeNode(hub, DeviceTyp.Hub, m_DeviceContextMenuStrip)
                     {
                         ImageIndex = 2,
                         SelectedImageIndex = 2,
-                        Text = $"Port[{hub.AdapterNumber}] DeviceConnected: {hub.DeviceDescription}"
+                        Text = $"Port[{hub.AdapterNumber}] DeviceConnected: {hub.GetDescription()}"
                     };
                 node.Nodes.Add(usbNode);
 
@@ -107,7 +107,7 @@ namespace UsbViewer
                     var s = "Port[" + device.AdapterNumber + "]";
                     if (device.IsConnected)
                     {
-                        s += " DeviceConnected: " + device.DeviceDescription;
+                        s += " DeviceConnected: " + device.GetDescription();
 
                         if (device.DriverKey == string.Empty)
                         {
@@ -163,7 +163,7 @@ namespace UsbViewer
                     var device = usbNode.Device;
                     if (device.IsConnected)
                     {
-                        sb.AppendLine($"[Port{device.AdapterNumber}]  :  {device.DeviceDescription}\r\n");
+                        sb.AppendLine($"[Port{device.AdapterNumber}]  :  {device.GetDescription()}\r\n");
 
                         AppendUsbPortConnectorProperties(sb, device.UsbPortConnectorProperties);
 
@@ -1069,7 +1069,7 @@ namespace UsbViewer
                 builder.Append($"MaxPower:                          0x{configurationDescriptor.MaxPower:X02}");
 
                 var power = isSuperSpeed ? configurationDescriptor.MaxPower * 8 : configurationDescriptor.MaxPower * 2;
-                builder.AppendLine($" = %{power:d3} mA\r\n");
+                builder.AppendLine($" = {power:d3} mA\r\n");
             }
         }
 
@@ -1447,7 +1447,7 @@ namespace UsbViewer
 
         private static void AppendUsbHub(StringBuilder builder, UsbHub hub)
         {
-            builder.AppendLine(hub.DeviceDescription + "\r\n");
+            builder.AppendLine(hub.GetDescription() + "\r\n");
             builder.AppendLine($"Root Hub: {hub.DevicePath}");
             builder.AppendLine($"Hub Power:                    {(hub.IsBusPowered ? "Bus Power" : "Self Power")}");
             builder.AppendLine($"Number of Ports:              {hub.PortCount}");
@@ -1523,7 +1523,7 @@ namespace UsbViewer
 
         private static void AppendUsbController(StringBuilder sb, UsbController controller)
         {
-            sb.AppendLine($"{controller.DeviceDescription}\n\n");
+            sb.AppendLine($"{controller.GetDescription()}\n\n");
             sb.AppendLine($"DriverKey: {controller.DriverKey}");
             sb.AppendLine($"VendorID: {controller.VendorId:X4}");
             sb.AppendLine($"DeviceID: {controller.DeviceId:X4}");

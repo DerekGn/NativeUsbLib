@@ -26,7 +26,7 @@ namespace EnumerateUsb
         {
             if (controller != null)
             {
-                WriteLine($"Controller: [{controller.DeviceDescription}]");
+                WriteLine($"Controller: [{controller.GetDescription()}]");
 
                 foreach (UsbHub hub in controller.Hubs)
                 {
@@ -48,8 +48,8 @@ namespace EnumerateUsb
             if (hub != null)
             {
                 WriteLine(hub.IsRootHub
-                    ? $"[{hub.DeviceDescription}]"
-                    : $"Port[{hub.AdapterNumber}] DeviceConnected: {hub.DeviceDescription}");
+                    ? $"[{hub.GetDescription()}]"
+                    : $"Port[{hub.AdapterNumber}] DeviceConnected: {hub.GetDescription()}");
 
                 foreach (Device device in hub.ChildDevices)
                 {
@@ -72,14 +72,19 @@ namespace EnumerateUsb
                 {
                     ShowHub(hub);
                 }
-                else
+                else if(device is UsbDevice usbDevice)
                 {
                     IncrementNestLevel();
 
-                    string s = "Port[" + device.AdapterNumber + "]";
-                    if (device.IsConnected)
+                    string s = "Port[" + usbDevice.AdapterNumber + "]";
+                    if (usbDevice.IsConnected)
                     {
-                        s += " DeviceConnected: " + device.DeviceDescription;
+                        s += " DeviceConnected: " + usbDevice.GetDescription();
+
+                        if (usbDevice.DeviceDescriptor.bDeviceClass == NativeUsbLib.WinApis.UsbDesc.DeviceClassType.UsbCommunicationDevice)
+                        {
+                            s+= $" ComPort [{usbDevice.ComPort}]";
+                        }
                     }
                     else
                     {

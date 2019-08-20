@@ -108,6 +108,13 @@ namespace NativeUsbLib
         public string DeviceDescription { get; protected set; } = string.Empty;
 
         /// <summary>
+        ///     Gets the device friendly name.
+        /// </summary>
+        /// <value>The friendly name.</value>
+        /// <remarks>Not all devices have a friendly name</remarks>
+        public string FriendlyName { get; protected set; } = string.Empty;
+
+        /// <summary>
         ///     Gets or sets a value indicating whether this instance is connected.
         /// </summary>
         /// <value>
@@ -167,6 +174,10 @@ namespace NativeUsbLib
 
         public UsbIoControl.UsbNodeConnectionInformationExV2 NodeConnectionInfoV2 { get; internal set; }
 
+        public string GetDescription()
+        {
+            return string.IsNullOrEmpty(FriendlyName) ? DeviceDescription : FriendlyName;
+        }
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="Device" /> class.
@@ -343,8 +354,8 @@ namespace NativeUsbLib
                     DriverKey = driverKey.DriverKeyName;
 
                     // use the DriverKeyName to get the Device Description, Instance ID, and DevicePath for devices(not hubs)
-                    DeviceDescription = GetDescriptionByKeyName(DriverKey);
-                    InstanceId = GetInstanceIdByKeyName(DriverKey);
+                    GetDeviceAttributes(DriverKey);
+
                     if (!IsHub)
                     {
                         // Get USB DevicePath, or HID DevicePath, for use with CreateFile()
@@ -375,6 +386,83 @@ namespace NativeUsbLib
                 {
                     Marshal.FreeHGlobal(ptrDriverKey);
                 }
+            }
+        }
+
+        private void GetDeviceAttributes(string driverKey)
+        {
+            var devEnum = UsbApi.RegstrKeyUsb;
+
+            var handle = IntPtr.Zero;
+            var ptr = IntPtr.Zero;
+
+            try
+            {
+                // Use the "enumerator form" of the SetupDiGetClassDevs API 
+                // to generate a list of all USB devices
+                handle =
+                    UsbApi.SetupDiGetClassDevs(0, devEnum, IntPtr.Zero, UsbApi.DigcfPresent | UsbApi.DigcfAllclasses);
+                if (handle.ToInt64() != UsbApi.InvalidHandleValue)
+                {
+                    ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
+                    var success = true;
+
+                    for (var i = 0; success; i++)
+                    {
+                        // Create a device interface data structure.
+                        var deviceInterfaceData = new UsbApi.SpDevinfoData();
+                        deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
+
+                        // Start the enumeration.
+                        success = UsbApi.SetupDiEnumDeviceInfo(handle, i, ref deviceInterfaceData);
+                        if (success)
+                        {
+                            var requiredSize = -1;
+                            var regType = UsbApi.RegSz;
+                            var keyName = string.Empty;
+
+                            if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
+                                (int)UsbApi.Spdrp.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize,
+                                ref requiredSize))
+                                keyName = Marshal.PtrToStringAuto(ptr);
+
+                            if (keyName == driverKey)
+                            {
+                                if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
+                                    (int)UsbApi.Spdrp.SpdrpDevicedesc, ref regType, ptr, UsbApi.MaxBufferSize,
+                                    ref requiredSize))
+                                {
+                                    DeviceDescription = Marshal.PtrToStringAuto(ptr);
+                                }
+
+                                var sb = new StringBuilder(UsbApi.MaxBufferSize);
+
+                                if (UsbApi.SetupDiGetDeviceInstanceId(handle, ref deviceInterfaceData, sb, UsbApi.MaxBufferSize,
+                                    out requiredSize))
+                                {
+                                    InstanceId = sb.ToString();
+                                }
+
+                                if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
+                                    (int)UsbApi.Spdrp.SpdrpFriendlyname, ref regType, ptr, UsbApi.MaxBufferSize,
+                                    ref requiredSize))
+                                {
+                                    FriendlyName = Marshal.PtrToStringAuto(ptr);
+                                }
+
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                if (handle != IntPtr.Zero)
+                    Marshal.FreeHGlobal(ptr);
+
+                if (handle != IntPtr.Zero)
+                    UsbApi.SetupDiDestroyDeviceInfoList(handle);
             }
         }
 
@@ -433,143 +521,6 @@ namespace NativeUsbLib
             }
 
             return result;
-        }
-
-        /// <summary>
-        ///     Gets the name of the description by key.
-        /// </summary>
-        /// <param name="driverKeyName">Name of the driver key.</param>
-        /// <returns></returns>
-        protected static string GetDescriptionByKeyName(string driverKeyName)
-        {
-            var descriptionkeyname = string.Empty;
-            var devEnum = UsbApi.RegstrKeyUsb;
-
-            var handle = IntPtr.Zero;
-            var ptr = IntPtr.Zero;
-
-            try
-            {
-                // Use the "enumerator form" of the SetupDiGetClassDevs API 
-                // to generate a list of all USB devices
-                handle =
-                    UsbApi.SetupDiGetClassDevs(0, devEnum, IntPtr.Zero, UsbApi.DigcfPresent | UsbApi.DigcfAllclasses);
-                if (handle.ToInt64() != UsbApi.InvalidHandleValue)
-                {
-                    ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
-                    var success = true;
-
-                    for (var i = 0; success; i++)
-                    {
-                        // Create a device interface data structure.
-                        var deviceInterfaceData = new UsbApi.SpDevinfoData();
-                        deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
-
-                        // Start the enumeration.
-                        success = UsbApi.SetupDiEnumDeviceInfo(handle, i, ref deviceInterfaceData);
-                        if (success)
-                        {
-                            var requiredSize = -1;
-                            var regType = UsbApi.RegSz;
-                            var keyName = string.Empty;
-
-                            if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
-                                (int) UsbApi.Spdrp.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize,
-                                ref requiredSize))
-                                keyName = Marshal.PtrToStringAuto(ptr);
-
-                            // Is it a match?
-                            if (keyName == driverKeyName)
-                            {
-                                if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
-                                    (int) UsbApi.Spdrp.SpdrpDevicedesc, ref regType, ptr, UsbApi.MaxBufferSize,
-                                    ref requiredSize))
-                                    descriptionkeyname = Marshal.PtrToStringAuto(ptr);
-
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                if (handle != IntPtr.Zero)
-                    Marshal.FreeHGlobal(ptr);
-
-                if (handle != IntPtr.Zero)
-                    UsbApi.SetupDiDestroyDeviceInfoList(handle);
-            }
-
-            return descriptionkeyname;
-        }
-
-        /// <summary>
-        ///     Gets the name of the instance ID by key.
-        /// </summary>
-        /// <param name="driverKeyName">Name of the driver key.</param>
-        /// <returns></returns>
-        private static string GetInstanceIdByKeyName(string driverKeyName)
-        {
-            var descriptionkeyname = string.Empty;
-            var devEnum = UsbApi.RegstrKeyUsb;
-            var handle = IntPtr.Zero;
-            var ptr = IntPtr.Zero;
-
-            try
-            {
-                // Use the "enumerator form" of the SetupDiGetClassDevs API 
-                // to generate a list of all USB devices
-                handle =
-                    UsbApi.SetupDiGetClassDevs(0, devEnum, IntPtr.Zero, UsbApi.DigcfPresent | UsbApi.DigcfAllclasses);
-                if (handle.ToInt64() != UsbApi.InvalidHandleValue)
-                {
-                    ptr = Marshal.AllocHGlobal(UsbApi.MaxBufferSize);
-                    var success = true;
-
-                    for (var i = 0; success; i++)
-                    {
-                        // Create a device interface data structure.
-                        var deviceInterfaceData = new UsbApi.SpDevinfoData();
-                        deviceInterfaceData.CbSize = Marshal.SizeOf(deviceInterfaceData);
-
-                        // Start the enumeration.
-                        success = UsbApi.SetupDiEnumDeviceInfo(handle, i, ref deviceInterfaceData);
-                        if (success)
-                        {
-                            var requiredSize = -1;
-                            var regType = UsbApi.RegSz;
-                            var keyName = string.Empty;
-
-                            if (UsbApi.SetupDiGetDeviceRegistryProperty(handle, ref deviceInterfaceData,
-                                (int) UsbApi.Spdrp.SpdrpDriver, ref regType, ptr, UsbApi.MaxBufferSize,
-                                ref requiredSize))
-                                keyName = Marshal.PtrToStringAuto(ptr);
-
-                            // is it a match?
-                            if (keyName == driverKeyName)
-                            {
-                                var nBytes = UsbApi.MaxBufferSize;
-                                var sb = new StringBuilder(nBytes);
-                                UsbApi.SetupDiGetDeviceInstanceId(handle, ref deviceInterfaceData, sb, nBytes,
-                                    out requiredSize);
-                                descriptionkeyname = sb.ToString();
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                if (ptr != IntPtr.Zero)
-                    Marshal.FreeHGlobal(ptr);
-
-                if (handle != IntPtr.Zero)
-                    UsbApi.SetupDiDestroyDeviceInfoList(handle);
-            }
-
-            return descriptionkeyname;
         }
 
         /// <summary>
