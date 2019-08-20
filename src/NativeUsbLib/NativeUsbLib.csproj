@@ -43,6 +43,8 @@ Added friendly name and com port property for CDC devices
 1.4.6
 Relaxed CDC type check in ComPort property</PackageReleaseNotes>
     <Version>1.4.6</Version>
+Added friendly name and com port property for CDC devices</PackageReleaseNotes>
+    <Version>1.4.5</Version>
     <PackageTags>usb windows</PackageTags>
     <RepositoryUrl>https://github.com/DerekGn/NativeUsbLib</RepositoryUrl>
     <Description>A .net library for the enumeration of usb devices, hubs and controllers</Description>
