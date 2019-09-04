@@ -195,7 +195,7 @@ namespace NativeUsbLib
 
                             if(DriverKey == driverKey)
                             {
-                                regKey = UsbApi.SetupDiOpenDevRegKey(handle, ref deviceInfoData, UsbApi.DicsFlag.Global, 0, UsbApi.DiReg.Dev, WinNtApi.KeyRead);
+                                regKey = UsbApi.SetupDiOpenDevRegKey(handle, ref deviceInfoData, UsbApi.DicsFlag.Global, 0, UsbApi.DiReg.Dev, (uint) WinNtApi.KeyRead);
 
                                 int size = 0;
                                 Advapi32.RegValueKind kind = Advapi32.RegValueKind.None;

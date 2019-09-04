@@ -571,7 +571,7 @@ namespace NativeUsbLib.WinApis
 
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern IntPtr SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SpDevinfoData deviceInfoData,
-            DicsFlag scope, int hwProfile, DiReg parameterRegistryValueKind, ulong samDesired);
+            DicsFlag scope, int hwProfile, DiReg parameterRegistryValueKind, uint samDesired);
 
         #endregion
 
