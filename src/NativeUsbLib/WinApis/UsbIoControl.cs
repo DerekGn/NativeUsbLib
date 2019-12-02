@@ -172,8 +172,8 @@ namespace NativeUsbLib.WinApis
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct UsbNodeConnectionName
         {
-            public int ConnectionIndex;
-            public int ActualLength;
+            public uint ConnectionIndex;
+            public uint ActualLength;
 
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MaxBufferSize)]
             public string NodeName;

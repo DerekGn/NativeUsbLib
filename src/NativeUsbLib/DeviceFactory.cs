@@ -41,7 +41,7 @@ namespace NativeUsbLib
 
                             if (nodeConnection.DeviceDescriptor.bDeviceClass == UsbDesc.DeviceClassType.UsbHubDevice)
                             {
-                                if (GetUsbNodeConnectionName(deviceHandle, out var connectionName))
+                                if (GetUsbNodeConnectionName(portCount, deviceHandle, out var connectionName))
                                 {
                                     string name = @"\\?\" + connectionName.NodeName;
 
@@ -196,7 +196,7 @@ namespace NativeUsbLib
             return true;
         }
 
-        private static bool GetUsbNodeConnectionName(IntPtr deviceHandle,
+        private static bool GetUsbNodeConnectionName(uint portCount, IntPtr deviceHandle,
             out UsbIoControl.UsbNodeConnectionName nodeConnectionName)
         {
             IntPtr structPtr = IntPtr.Zero;
@@ -206,7 +206,11 @@ namespace NativeUsbLib
                 int bytesRequested = Marshal.SizeOf(typeof(UsbIoControl.UsbNodeConnectionName));
 
                 structPtr = Marshal.AllocHGlobal(bytesRequested);
-                nodeConnectionName = new UsbIoControl.UsbNodeConnectionName();
+                nodeConnectionName = new UsbIoControl.UsbNodeConnectionName()
+                {
+                    ConnectionIndex = portCount
+                };
+
                 Marshal.StructureToPtr(nodeConnectionName, structPtr, true);
 
                 if (KernelApi.DeviceIoControl(deviceHandle, UsbIoControl.IoctlUsbGetNodeConnectionName,
@@ -215,13 +219,13 @@ namespace NativeUsbLib
                     nodeConnectionName =
                         (UsbIoControl.UsbNodeConnectionName) Marshal.PtrToStructure(structPtr,
                             typeof(UsbIoControl.UsbNodeConnectionName));
-
-                    return false;
                 }
                 else
                 {
                     Trace.TraceError(
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetNodeConnectionName)}] Result: [{KernelApi.GetLastError():X}]");
+
+                    return false;
                 }
             }
             finally
