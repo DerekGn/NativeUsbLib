@@ -49,7 +49,10 @@ Relaxed CDC device descriptor check on reading comport
 Updated SetupDiOpenDevRegKey pinvoke signature
 
 1.4.8
-Resolved issue enumerating ports of usb controller</PackageReleaseNotes>
+Resolved issue enumerating ports of usb controller
+
+1.4.9
+Added trace source NativeUsbLib</PackageReleaseNotes>
     <Version>1.4.9</Version>
     <PackageTags>usb windows</PackageTags>
     <RepositoryUrl>https://github.com/DerekGn/NativeUsbLib</RepositoryUrl>
