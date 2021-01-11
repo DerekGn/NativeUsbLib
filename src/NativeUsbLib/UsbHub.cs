@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using NativeUsbLib.Diagnostics;
 using NativeUsbLib.Exceptions;
 using NativeUsbLib.WinApis;
 
@@ -113,7 +114,8 @@ namespace NativeUsbLib
                 }
                 catch (Exception e)
                 {
-                    Trace.TraceError("Unhandled exception occurred: {0}", e);
+                    CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.UsbHubSourceId,
+                        "Unhandled exception occurred: {0}", e);
                 }
             }
         }
@@ -138,7 +140,7 @@ namespace NativeUsbLib
                 }
                 else
                 {
-                    Trace.TraceError(
+                    CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.UsbHubSourceId,
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetHubCapabilitiesEx)}] Result: [{KernelApi.GetLastError():X}]");
                 }
             }
@@ -168,7 +170,7 @@ namespace NativeUsbLib
                 }
                 else
                 {
-                    Trace.TraceError(
+                    CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.UsbHubSourceId,
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetNodeInformation)}] Result: [{KernelApi.GetLastError():X}]");
                 }
             }
@@ -200,7 +202,7 @@ namespace NativeUsbLib
                 }
                 else
                 {
-                    Trace.TraceError(
+                    CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.UsbHubSourceId,
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetNodeInformation)}] Result: [{KernelApi.GetLastError():X}]");
                 }
             }
@@ -238,7 +240,7 @@ namespace NativeUsbLib
                 }
                 else
                 {
-                    Trace.TraceError(
+                    CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.UsbHubSourceId,
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetRootHubName)}] Result: [{KernelApi.GetLastError():X}]");
                 }
             }

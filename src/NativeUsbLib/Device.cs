@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using NativeUsbLib.Diagnostics;
 using NativeUsbLib.WinApis;
 
 namespace NativeUsbLib
@@ -320,7 +321,7 @@ namespace NativeUsbLib
                 }
                 else
                 {
-                    Trace.TraceError(
+                    CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.DeviceSourceId,
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetDescriptorFromNodeConnection)}] Result: [{KernelApi.GetLastError():X}]");
                 }
             }
@@ -510,7 +511,7 @@ namespace NativeUsbLib
                 }
                 else
                 {
-                    Trace.TraceError(
+                    CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.DeviceSourceId,
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetDescriptorFromNodeConnection)}] Result: [{KernelApi.GetLastError():X}]");
                 }
             }

@@ -6,6 +6,7 @@ using NativeUsbLib.Exceptions;
 using System.Diagnostics;
 using System.Globalization;
 using NativeUsbLib.WinApis;
+using NativeUsbLib.Diagnostics;
 
 namespace NativeUsbLib
 {
@@ -169,7 +170,8 @@ namespace NativeUsbLib
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceError("Unhandled exception occurred: {0}", ex);
+                        CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.UsbControllerSourceId,
+                            "Unhandled exception occurred: {0}", ex);
 
                         throw new UsbControllerException("Unhandled exception occurred", ex);
                     }
@@ -216,7 +218,7 @@ namespace NativeUsbLib
                     out _,
                     IntPtr.Zero))
                 {
-                    Trace.TraceError(
+                    CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.UsbControllerSourceId,
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbUser.IoctlUsbUserRequest)}] Result: [{KernelApi.GetLastError():X}]");
                 }
                 else
@@ -276,7 +278,7 @@ namespace NativeUsbLib
 
                     if (!success)
                     {
-                        Trace.WriteLine(
+                        CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.UsbControllerSourceId,
                             $"[{nameof(KernelApi.DeviceIoControl)}] Returned Error Code: [{KernelApi.GetLastError():X}]");
                     }
                     else
