@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using NativeUsbLib.Diagnostics;
 using NativeUsbLib.WinApis;
 
 namespace NativeUsbLib
@@ -108,7 +109,7 @@ namespace NativeUsbLib
                 }
                 else
                 {
-                    Trace.TraceError(
+                    CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.DeviceFactorySourceId,
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetNodeConnectionInformationExV2)}] Result: [{KernelApi.GetLastError():X}]");
                 }
             }
@@ -144,7 +145,7 @@ namespace NativeUsbLib
                 }
                 else
                 {
-                    Trace.TraceError(
+                    CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.DeviceFactorySourceId,
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetPortConnectorProperties)}] Result: [{KernelApi.GetLastError():X}]");
                 }
             }
@@ -179,7 +180,7 @@ namespace NativeUsbLib
                 }
                 else
                 {
-                    Trace.TraceError(
+                    CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.DeviceFactorySourceId,
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetNodeConnectionInformationEx)}] Result: [{KernelApi.GetLastError():X}]");
 
                     return false;
@@ -222,7 +223,7 @@ namespace NativeUsbLib
                 }
                 else
                 {
-                    Trace.TraceError(
+                    CoreTraceSource.Source.TraceEvent(TraceEventType.Error, CoreTraceSource.DeviceFactorySourceId,
                         $"[{nameof(KernelApi.DeviceIoControl)}] [{nameof(UsbIoControl.IoctlUsbGetNodeConnectionName)}] Result: [{KernelApi.GetLastError():X}]");
 
                     return false;
