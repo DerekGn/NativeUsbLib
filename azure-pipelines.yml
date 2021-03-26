@@ -25,3 +25,15 @@ steps:
     solution: $(BuildParameters.solution)
     configuration: $(BuildConfiguration)
     clean: true
+- task: GitHubRelease@1
+  displayName: "Publish Relase To GitHub"
+  inputs:
+    gitHubConnection: 'GitHub PAT'
+    repositoryName: '$(Build.Repository.Name)'
+    action: 'create'
+    target: '$(Build.SourceVersion)'
+    tagSource: 'userSpecifiedTag'
+    tag: '$(Build.BuildNumber)'
+    title: '$(Build.BuildNumber) - $(BuildConfiguration) - $(Build.SourceBranchName)'
+    changeLogCompareToRelease: 'lastFullRelease'
+    changeLogType: 'commitBased'
