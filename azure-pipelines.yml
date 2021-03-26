@@ -11,10 +11,12 @@ pool:
   vmImage: windows-latest
 
 steps:
+- task: NuGetToolInstaller@1
+  inputs:
+    versionSpec: 4.4
 - task: VSBuild@1
   displayName: 'Build Solution'
   inputs:
     solution: $(BuildParameters.solution)
     configuration: $(BuildConfiguration)
-    restoreNugetPackages: true
     clean: true
