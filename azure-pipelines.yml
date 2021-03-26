@@ -25,6 +25,11 @@ steps:
     solution: $(BuildParameters.solution)
     configuration: $(BuildConfiguration)
     clean: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
 - task: GitHubRelease@1
   displayName: "Publish Relase To GitHub"
   inputs:
